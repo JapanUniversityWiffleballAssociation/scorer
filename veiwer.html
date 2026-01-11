@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>野球速報 - 試合一覧</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .game-card { background: #333; margin: 10px 0; padding: 15px; border-radius: 8px; cursor: pointer; border: 1px solid #555; }
+        .game-card:hover { border-color: #2ecc71; }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .btn-sm { padding: 5px 15px; font-size: 0.8rem; }
+        .paused { background: #e67e22 !important; }
+    </style>
+</head>
+<body>
+    <div id="list-screen" class="container">
+        <h2 style="text-align: center;">進行中の試合</h2>
+        <div id="game-list-container">
+            <p style="text-align: center;">試合を探しています...</p>
+        </div>
+        <button onclick="fetchGameList()" style="width: 100%; margin-top: 20px;">リストを更新</button>
+    </div>
+
+    <div id="main-app" class="container hidden">
+        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn-sm" onclick="backToList()">← 戻る</button>
+            <span class="live-tag">LIVE</span>
+            <span id="display-game-id">ID: ----</span>
+        </div>
+        
+        <div id="sync-status" class="sync-indicator" style="text-align: right; font-size: 0.7rem; margin: 5px 0;">接続中...</div>
+
+        <section class="score-board">
+            <table id="scoreboard">
+                <thead id="scoreboard-head"></thead>
+                <tbody id="scoreboard-body"></tbody>
+            </table>
+        </section>
+
+        <div class="status-container">
+            <section class="counts">
+                <div class="count-row"><span class="label">B</span><div class="dots"><span class="dot ball"></span><span class="dot ball"></span><span class="dot ball"></span></div></div>
+                <div class="count-row"><span class="label">S</span><div class="dots"><span class="dot strike"></span><span class="dot strike"></span></div></div>
+                <div class="count-row"><span class="label">O</span><div class="dots"><span class="dot out"></span><span class="dot out"></span></div></div>
+            </section>
+            <section class="diamond">
+                <div class="base" id="base2"></div><div class="base" id="base3"></div><div class="base" id="base1"></div>
+            </section>
+        </div>
+
+        <div class="controls">
+            <button id="refresh-btn" class="btn-sm" onclick="syncPull()">今すぐ更新</button>
+            <button id="pause-btn" class="btn-sm" onclick="togglePause()">自動更新: ON</button>
+        </div>
+    </div>
+
+    <script src="viewer.js"></script>
+</body>
+</html>

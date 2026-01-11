@@ -1,0 +1,101 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #222;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    background: #333;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.hidden { display: none !important; }
+
+/* オーバーレイ設定画面 */
+.overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 100;
+}
+.setup-box {
+    background: #444; padding: 30px; border-radius: 10px; width: 85%; max-width: 400px;
+}
+.input-group { margin-bottom: 15px; }
+.input-group label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #ccc; }
+.input-group input {
+    width: 100%; padding: 10px; background: #222; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box;
+}
+
+/* スコアボード */
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #111; text-align: center; font-size: 0.8rem; }
+th, td { border: 1px solid #444; padding: 10px 2px; }
+.total { background: #444; color: #f1c40f; font-weight: bold; }
+
+/* 点滅制御 */
+@keyframes blink-score {
+    0% { background-color: transparent; }
+    50% { background-color: rgba(46, 204, 113, 0.4); }
+    100% { background-color: transparent; }
+}
+.active-cell {
+    color: #2ecc71 !important;
+    animation: blink-score 1.5s infinite;
+    border: 2px solid #2ecc71 !important;
+}
+.attacking-team-name { color: #2ecc71; font-weight: bold; }
+
+/* カウント・ダイヤモンド */
+.status-container { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; background: #222; padding: 15px; border-radius: 8px; }
+.header-status { display: flex; justify-content: space-between; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+.dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #444; margin-left: 5px; }
+.ball.active { background: #3498db; }
+.strike.active { background: #f1c40f; }
+.out.active { background: #e74c3c; }
+
+.diamond { position: relative; width: 70px; height: 70px; transform: rotate(45deg); border: 2px solid #444; }
+.base { position: absolute; width: 16px; height: 16px; background: #555; }
+#base1 { right: -8px; top: -8px; }
+#base2 { left: -8px; top: -8px; }
+#base3 { left: -8px; bottom: -8px; }
+.base.runner { background: #f1c40f; box-shadow: 0 0 8px #f1c40f; }
+
+/* ボタン */
+.controls { display: grid; gap: 10px; }
+.button-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.full-width { grid-template-columns: 1fr; }
+.btn { padding: 15px; border: none; border-radius: 5px; font-weight: bold; color: white; background: #555; cursor: pointer; }
+.strike { border-bottom: 4px solid #f1c40f; }
+.ball { border-bottom: 4px solid #3498db; }
+.out { border-bottom: 4px solid #e74c3c; }
+.hit, .hr { border-bottom: 4px solid #2ecc71; }
+.undo { background: #e67e22; border-bottom: 4px solid #d35400; }
+
+/* 閲覧用 */
+.game-card {
+    background: #2c3e50;
+    border-left: 5px solid #3498db;
+    margin-bottom: 15px;
+    padding: 12px;
+    transition: transform 0.2s;
+}
+.game-card:active { transform: scale(0.98); }
+.game-card[data-finished="true"] { border-left-color: #95a5a6; }
+
+/*コピーライト用*/
+.footer-bottom {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #2c3e50;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+}

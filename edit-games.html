@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スコアラー - 試合登録</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="setup-screen" class="overlay">
+        <div class="setup-box">
+            <h2>試合設定 & 同期</h2>
+            <div class="input-group">
+                <label>試合ID (英数字)</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="input-game-id" placeholder="例: GAME2024">
+                    <button id="gen-id-btn" style="width: 80px; font-size: 0.7rem;">ID生成</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>先攻チーム名</label>
+                <input type="text" id="input-top-team" value="先攻">
+            </div>
+            <div class="input-group">
+                <label>後攻チーム名</label>
+                <input type="text" id="input-bottom-team" value="後攻">
+            </div>
+            <div class="input-group">
+                <label>イニング数</label>
+                <input type="number" id="input-innings" value="3" min="1" max="12">
+            </div>
+            <button id="start-btn">試合開始</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="container hidden">
+        <div class="header-status">
+            <div id="display-game-id">ID: ----</div>
+            <div id="sync-status">同期オフライン</div>
+        </div>
+
+        <section class="score-board">
+            <table id="scoreboard">
+                <thead id="scoreboard-head"></thead>
+                <tbody id="scoreboard-body"></tbody>
+            </table>
+        </section>
+
+        <div class="status-container">
+            <section class="counts">
+                <div class="count-row">
+                    <span class="label">B</span>
+                    <div class="dots">
+                        <span class="dot ball"></span><span class="dot ball"></span><span class="dot ball"></span>
+                    </div>
+                </div>
+                <div class="count-row">
+                    <span class="label">S</span>
+                    <div class="dots">
+                        <span class="dot strike"></span><span class="dot strike"></span>
+                    </div>
+                </div>
+                <div class="count-row">
+                    <span class="label">O</span>
+                    <div class="dots">
+                        <span class="dot out"></span><span class="dot out"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="diamond">
+                <div class="base" id="base2"></div>
+                <div class="base" id="base3"></div>
+                <div class="base" id="base1"></div>
+            </section>
+        </div>
+
+        <section class="controls">
+            <div class="button-group">
+                <button class="btn strike">ストライク</button>
+                <button class="btn ball">ボール</button>
+                <button class="btn out">フライアウト</button>
+                <button class="btn out">ゴロアウト</button>
+            </div>
+            <div class="button-group">
+                <button class="btn hit">シングルヒット</button>
+                <button class="btn hit">ダブルヒット</button>
+                <button class="btn hit">トリプルヒット</button>
+                <button class="btn hr">ホームラン</button>
+            </div>
+            <div class="button-group full-width">
+                <button id="undo-btn" class="btn undo">1つ戻る（修正） </button>
+            </div>
+          <div class="button-group full-width" style="margin-top: 10px;">
+    <button id="end-game-btn" class="btn" style="background: #c0392b; border-bottom: 4px solid #a93226;">試合を終了する</button>
+</div>
+        </section>
+    </div>
+
+    <script src="edit-games.js"></script>
+  
+</body>
+</html>
