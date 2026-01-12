@@ -7,7 +7,7 @@ let runners = { base1: false, base2: false, base3: false };
 let score = { top: 0, bottom: 0 };
 let isBottomInning = false;
 let currentInning = 1;
-let totalInnings = 3;
+let totalInnings = 9;
 let gameId = "";
 let historyStack = [];
 let isGameEnded = false; 
@@ -31,15 +31,15 @@ function showStatus(msg) {
 
 // --- 同期通信機能 (Pull: 受信) ---
 async function syncPull() {
-    // 送信中、または送信直後の「余韻時間」は受信をスキップして上書きを防ぐ
+    // 送信中、または送信直後の「余韻時間」は受信をスキップ
     if (!gameId || !FIXED_GAS_URL || isGameEnded || isPushing) return;
 
     try {
-        const response = await fetch(`${FIXED_GAS_URL}?gameId=${gameId}`);
+        const response = await fetch(`${FIXED_GAS_URL}?gameId=${gameId}&_=${Date.now()}`);
         const lastState = await response.json();
         
-        // データが存在する場合のみ反映
-        if (lastState && Object.keys(lastState).length > 0) {
+        // データが正常で、かつ送信フラグが立っていないことを再確認
+        if (lastState && Object.keys(lastState).length > 0 && !isPushing) {
             counts = lastState.counts;
             runners = lastState.runners;
             score = lastState.score;
@@ -48,8 +48,6 @@ async function syncPull() {
             document.getElementById('scoreboard').innerHTML = lastState.tableHTML;
             updateDisplay();
             showStatus("最新");
-        } else {
-            showStatus("新規試合（未記録）");
         }
     } catch (e) { 
         showStatus("接続待機中"); 
@@ -57,28 +55,27 @@ async function syncPull() {
 }
 
 // --- 同期通信機能 (Push: 送信) ---
-async function syncPush(actionName = null, snapshotData = null) {
-    if (!gameId || !FIXED_GAS_URL || isGameEnded) return;
+async function syncPush(actionName = null, snapshotData = null, forceGameEnded = false) {
+    if (!gameId || !FIXED_GAS_URL) {
+        isPushing = false;
+        return;
+    }
 
-    // 送信フラグをONにする（Pullをブロック）
-    isPushing = true;
-
-    // サーバーに保存する「最新」の試合状況
-    // syncPush 内の currentState を以下のように修正
-const currentState = { 
-    counts, runners, score, 
-    isBottomInning, currentInning, 
-    isGameEnded, // 試合終了フラグも送る
-    topTeamName: document.getElementById('top-team').cells[0].textContent, 
-    bottomTeamName: document.getElementById('bottom-team').cells[0].textContent, // ★追加
-    tableHTML: document.getElementById('scoreboard').innerHTML 
-};
+    // サーバーに保存する「最新」の試合状況を作成
+    const currentState = { 
+        counts, runners, score, 
+        isBottomInning, currentInning, 
+        isGameEnded: forceGameEnded || isGameEnded, // ★引数または現在のフラグを採用
+        topTeamName: document.getElementById('top-team').cells[0].textContent,
+        bottomTeamName: document.getElementById('bottom-team').cells[0].textContent,
+        tableHTML: document.getElementById('scoreboard').innerHTML 
+    };
 
     const formData = new URLSearchParams();
     formData.append("gameId", gameId);
     formData.append("state", JSON.stringify(currentState));
-
-    // 打席結果がある場合、スナップショット（打席完了時のデータ）を別で送る
+    
+    // (以下、actionNameやlogDataのappend処理、fetch処理はそのまま)
     if (actionName && snapshotData) {
         formData.append("action", actionName);
         const logData = {
@@ -91,58 +88,23 @@ const currentState = {
 
     try {
         await fetch(FIXED_GAS_URL, { method: "POST", body: formData, mode: "no-cors" });
-        showStatus(actionName ? "打席記録完了" : "同期済");
+        showStatus(forceGameEnded ? "試合終了を送信済" : (actionName ? "打席記録完了" : "同期済"));
     } catch (e) { 
         showStatus("通信エラー"); 
     } finally {
-        // 送信完了後、サーバー側の反映ラグを考慮して2秒後に受信を解禁
-        setTimeout(() => { isPushing = false; }, 2000);
+        setTimeout(() => { isPushing = false; }, 2500);
     }
 }
 
-// --- 試合開始ボタン ---
-document.getElementById('start-btn').addEventListener('click', async () => {
-    gameId = document.getElementById('input-game-id').value.trim();
-    if (!gameId) return alert("試合IDを入力してください");
-
-    isGameEnded = false;
-    counts = { ball: 0, strike: 0, out: 0 };
-    runners = { base1: false, base2: false, base3: false };
-    score = { top: 0, bottom: 0 };
-    isBottomInning = false;
-    currentInning = 1;
-    historyStack = [];
-
-    totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
-    initScoreboard(
-        document.getElementById('input-top-team').value, 
-        document.getElementById('input-bottom-team').value, 
-        totalInnings
-    );
-    
-    document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
-    document.getElementById('setup-screen').classList.add('hidden');
-    document.getElementById('main-app').classList.remove('hidden');
-
-    // 初動：即座にサーバーの状態を確認
-    showStatus("接続中...");
-    await syncPull();
-
-    // 5秒おきの定期同期を開始
-    if (syncTimer) clearInterval(syncTimer); 
-    syncTimer = setInterval(syncPull, 5000); 
-});
-
 // --- 記録ボタン操作 ---
 document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
+    btn.addEventListener('click', (e) => { // asyncを外し、即時性を高める
         if (isGameEnded) return;
 
         const type = e.target.textContent;
-        // 特殊ボタンは除外
         if (type === '1つ戻る（修正）' || type === '試合を終了する') return; 
+        isPushing = true;
 
-        // ★重要: チェンジ前のデータをキャプチャ
         const topName = document.getElementById('top-team').cells[0].textContent;
         const bottomName = document.getElementById('bottom-team').cells[0].textContent;
         const snapshotData = {
@@ -182,7 +144,8 @@ document.querySelectorAll('.btn').forEach(btn => {
         if (counts.out === 3) changeInning();
         
         updateDisplay();
-        await syncPush(actionToLog, snapshotData);
+
+        syncPush(actionToLog, snapshotData);
     });
 });
 
@@ -208,6 +171,37 @@ function updateActiveCell() {
         if (cell) cell.classList.add('active-cell');
     }
 }
+
+// --- 試合開始ボタン ---
+document.getElementById('start-btn').addEventListener('click', async () => {
+    gameId = document.getElementById('input-game-id').value.trim();
+    if (!gameId) return alert("試合IDを入力してください");
+
+    isGameEnded = false;
+    counts = { ball: 0, strike: 0, out: 0 };
+    runners = { base1: false, base2: false, base3: false };
+    score = { top: 0, bottom: 0 };
+    isBottomInning = false;
+    currentInning = 1;
+    historyStack = [];
+
+    totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
+    initScoreboard(
+        document.getElementById('input-top-team').value, 
+        document.getElementById('input-bottom-team').value, 
+        totalInnings
+    );
+    
+    document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+
+    showStatus("接続中...");
+    await syncPull();
+
+    if (syncTimer) clearInterval(syncTimer); 
+    syncTimer = setInterval(syncPull, 5000); 
+});
 
 // --- スコアボード・進塁・交代ロジック ---
 function initScoreboard(top, bottom, innings) {
@@ -260,9 +254,10 @@ function advanceRunners(numBases, isWalk = false) {
     counts.ball = 0; counts.strike = 0;
 }
 
-// --- 試合終了・管理機能 ---
 function finishGame(message = "試合終了") {
-    isGameEnded = true; if (syncTimer) clearInterval(syncTimer); updateDisplay();
+    isGameEnded = true; 
+    if (syncTimer) clearInterval(syncTimer); 
+    updateDisplay();
     alert(message + "\n" + score.top + " - " + score.bottom);
     document.getElementById('main-app').classList.add('hidden');
     document.getElementById('setup-screen').classList.remove('hidden');
@@ -277,8 +272,31 @@ function saveHistory() {
     if (historyStack.length > 20) historyStack.shift();
 }
 
-document.getElementById('end-game-btn').addEventListener('click', () => {
-    if (confirm("試合を途中で終了しますか？")) { syncPush(); finishGame("試合終了（打ち切り）"); }
+document.getElementById('undo-btn').addEventListener('click', () => {
+    if (historyStack.length === 0) return;
+    const s = JSON.parse(historyStack.pop());
+    counts = s.counts; runners = s.runners; score = s.score; 
+    isBottomInning = s.isBottomInning; currentInning = s.currentInning;
+    document.getElementById('scoreboard').innerHTML = s.tableHTML;
+    updateDisplay();
+    syncPush();
+});
+
+// 試合終了ボタンの処理を確実に修正
+document.getElementById('end-game-btn').addEventListener('click', async () => {
+    if (confirm("試合を終了しますか？（一覧のステータスが終了になります）")) { 
+        // 1. まずローカルのフラグを立てる
+        isGameEnded = true; 
+        
+        updateDisplay(); 
+        
+        // 3. サーバーへ送信（awaitで完了を待つ）
+        showStatus("終了データを送信中...");
+        await syncPush(null, null, true);
+        
+        // 4. アプリを閉じる処理へ
+        finishGame("試合終了（記録完了）"); 
+    }
 });
 
 document.getElementById('gen-id-btn').addEventListener('click', () => {

@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スコアラー - 試合登録</title>
+    <title>JUWA 試合速報システム - 試合登録</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="setup-screen" class="overlay">
+
         <div class="setup-box">
+          <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn-sm"  onclick="location.href='index.html'">メニューに戻る</button>
+        </div>
             <h2>試合設定 & 同期</h2>
             <div class="input-group">
                 <label>試合ID (英数字)</label>
@@ -35,6 +39,10 @@
     </div>
 
     <div id="main-app" class="container hidden">
+      <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+        </div>
+        <br>
         <div class="header-status">
             <div id="display-game-id">ID: ----</div>
             <div id="sync-status">同期オフライン</div>
@@ -98,7 +106,7 @@
         </section>
     </div>
 
-    <script src="edit-games.js"></script>
+    <script src="script.js"></script>
   
 </body>
 </html>
