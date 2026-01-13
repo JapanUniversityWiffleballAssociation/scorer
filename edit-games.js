@@ -1,7 +1,7 @@
 /**
  * 設定: GASウェブアプリURL
  */
-const FIXED_GAS_URL = "https://script.google.com/macros/s/AKfycbzx7-UDqghHMzATrFXg2uAT7zDtp_xZEC92o5aIvMA9iXsyXBJ8tlE3RoldI2Hc739oZw/exec";
+const FIXED_GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
 
 // --- 状態管理変数 ---
 let counts = { ball: 0, strike: 0, out: 0 };
@@ -20,31 +20,28 @@ let isPushing = false; // 通信ロック用（フリッカー防止）
  * 起動時の処理
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. リーグ一覧の読み込み（開催中のもの）
+    // 1. リーグ一覧の読み込み（エラー対策版）
     loadLeagues();
 
     // 2. ID自動生成ボタン
     const genBtn = document.getElementById('gen-id-btn');
     if (genBtn) {
         genBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // スマホでの誤動作防止
+            e.preventDefault(); // スマホでのリロード防止
             const select = document.getElementById('select-league');
             const leagueId = select.value;
             
             if (!leagueId) {
-                alert("先にリーグを選択してください");
+                alert("先にリーグを選択してください。読み込み中の場合は少し待ってからお試しください。");
                 return;
             }
 
-            // 日付部分 (YYMMDD)
             const now = new Date();
             const dateStr = now.getFullYear().toString().slice(-2) + 
                             ("0" + (now.getMonth() + 1)).slice(-2) + 
                             ("0" + now.getDate()).slice(-2);
             
-            // ランダム部分 (3文字)
             const randomPart = Math.random().toString(36).substring(2, 5).toUpperCase();
-            
             const idField = document.getElementById('input-game-id');
             if (idField) {
                 idField.value = `G-${leagueId}-${dateStr}${randomPart}`;
@@ -61,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const leagueId = document.getElementById('select-league').value;
 
             if (!leagueId || !gameId) {
-                return alert("リーグ選択と試合IDの発行を完了してください");
+                return alert("リーグを選択し、試合IDを発行してください。");
             }
 
             // 初期化
@@ -92,17 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. 打席記録ボタン一括設定
+    // 4. 記録ボタン一括設定 (スマホ対応)
     document.querySelectorAll('.btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
             if (isGameEnded) return;
 
             const type = e.target.textContent;
-            // メイン操作以外のボタンは除外
-            if (type === '1つ戻る（修正）' || type === '試合を終了する' || type === 'リーグを作成する') return; 
+            // メイン記録以外のボタン（Undo等）は除外
+            const ignoredButtons = ['1つ戻る（修正）', '試合を終了する', 'リーグを作成する', '自動発行'];
+            if (ignoredButtons.includes(type)) return; 
 
-            isPushing = true; // 受信を一時停止
+            isPushing = true; 
 
             const topName = document.getElementById('top-team').cells[0].textContent;
             const bottomName = document.getElementById('bottom-team').cells[0].textContent;
@@ -146,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 5. 修正（戻る）ボタン
+    // 5. 戻るボタン
     document.getElementById('undo-btn').addEventListener('click', (e) => {
         e.preventDefault();
         if (historyStack.length === 0) return;
@@ -162,43 +160,61 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. 試合終了ボタン
     document.getElementById('end-game-btn').addEventListener('click', async (e) => {
         e.preventDefault();
-        if (confirm("試合を終了しますか？")) { 
+        if (confirm("試合を終了し、結果を確定させますか？")) { 
             isGameEnded = true; 
             updateDisplay(); 
             showStatus("終了データを送信中...");
-            await syncPush(null, null, true); // 強制終了フラグを送信
-            finishGame("試合終了（全データ送信完了）"); 
+            await syncPush(null, null, true); 
+            finishGame("試合終了（記録完了）"); 
         }
     });
 });
 
 /**
- * リーグ一覧の取得
+ * リーグ一覧取得 (リトライ機能付き)
  */
+
 async function loadLeagues() {
     const select = document.getElementById('select-league');
     if (!select) return;
+
+    select.innerHTML = `<option value="">読み込み中...</option>`;
+
     try {
-        const res = await fetch(`${FIXED_GAS_URL}?mode=getLeagues`);
+        const res = await fetch(`${FIXED_GAS_URL}?mode=getLeagues&v=${Date.now()}`);
+        if (!res.ok) throw new Error("サーバー応答エラー");
+
         const leagues = await res.json();
-        // 開催中のリーグのみ表示
         const activeLeagues = leagues.filter(l => l.status === "開催中");
         
         if (activeLeagues.length === 0) {
-            select.innerHTML = `<option value="">開催中のリーグがありません</option>`;
+            select.innerHTML = `<option value="">（開催中のリーグがありません）</option>`;
             return;
         }
         
         select.innerHTML = activeLeagues.map(l => 
             `<option value="${l.id}" data-name="${l.name}">${l.name} (${l.start}～)</option>`
         ).join('');
+
+        // --- ここから追加：URLパラメータのチェック ---
+        const params = new URLSearchParams(window.location.search);
+        const urlLeagueId = params.get('leagueId');
+        if (urlLeagueId) {
+            select.value = urlLeagueId;        
+            setTimeout(() => {
+                document.getElementById('gen-id-btn')?.click();
+            }, 500);
+        }
+        // --- ここまで ---
+
     } catch (e) {
-        select.innerHTML = `<option value="">リーグ読み込み失敗</option>`;
+        console.error("League Load Error:", e);
+        select.innerHTML = `<option value="">読み込み失敗</option>`;
     }
 }
 
 /**
- * 通信処理 (Pull)
+ * 通信関連 (Pull/Push)
  */
 async function syncPull() {
     if (!gameId || isGameEnded || isPushing) return;
@@ -213,20 +229,16 @@ async function syncPull() {
             currentInning = lastState.currentInning;
             document.getElementById('scoreboard').innerHTML = lastState.tableHTML;
             updateDisplay();
-            showStatus("最新");
+            showStatus("最新（受信済）");
         }
-    } catch (e) { showStatus("接続待機中"); }
+    } catch (e) { showStatus("接続待機中..."); }
 }
 
-/**
- * 通信処理 (Push)
- */
 async function syncPush(actionName = null, snapshotData = null, forceGameEnded = false) {
     if (!gameId) return;
-    
     const leagueSelect = document.getElementById('select-league');
     const selectedOption = leagueSelect.options[leagueSelect.selectedIndex];
-    
+
     const currentState = { 
         leagueName: selectedOption ? selectedOption.getAttribute('data-name') : "不明なリーグ",
         counts, runners, score, isBottomInning, currentInning, 
@@ -249,16 +261,16 @@ async function syncPush(actionName = null, snapshotData = null, forceGameEnded =
 
     try {
         await fetch(FIXED_GAS_URL, { method: "POST", body: formData, mode: "no-cors" });
-        showStatus(forceGameEnded ? "試合終了" : "同期済");
+        showStatus(forceGameEnded ? "試合終了送信" : "同期完了");
     } catch (e) { showStatus("通信エラー"); }
     finally { 
-        // サーバー反映ラグを考慮し、2.5秒後に受信ロックを解除
+        // サーバー側の反映遅延を考慮して2.5秒後に受信再開
         setTimeout(() => { isPushing = false; }, 2500); 
     }
 }
 
 /**
- * UI表示・共通ロジック
+ * UI表示更新・計算ロジック
  */
 function showStatus(msg) { 
     const el = document.getElementById('sync-status');

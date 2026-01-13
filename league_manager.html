@@ -117,13 +117,20 @@
                 return;
             }
 
+            // league_manager.html の loadLeagues 関数内、map処理の部分を修正
             listEl.innerHTML = leagues.reverse().map(l => `
-                <div class="league-item">
-                    <span class="status-badge">${l.status}</span>
-                    <strong>${l.name}</strong><br>
-                    <small>ID: ${l.id} | 期間: ${l.start} ～ ${l.end}</small>
-                </div>
-            `).join('');
+            <div class="league-item">
+                <span class="status-badge">${l.status}</span>
+                <strong>${l.name}</strong><br>
+            <small>ID: ${l.id} | 期間: ${l.start} ～ ${l.end}</small>
+            <div style="margin-top: 10px; text-align: right;">
+            <button onclick="location.href='edit-games.html?leagueId=${l.id}'" 
+                    style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;">
+                このリーグの試合を記録する
+            </button>
+            </div>
+            </div>
+        `).join('');
         } catch (e) {
             listEl.innerHTML = "<p>データの読み込みに失敗しました</p>";
         }
