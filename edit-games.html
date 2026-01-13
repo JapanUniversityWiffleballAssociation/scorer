@@ -16,6 +16,21 @@
         </div>
             <h2>試合設定 & 同期</h2>
             <div class="input-group">
+            <label>参加する大会を選択</label>
+            <select id="select-league">
+                <option value="">リーグを読み込み中...</option>
+            </select>
+            </div>
+
+            <div class="input-group">
+                <label>試合ID</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="input-game-id" readonly placeholder="リーグを選択してください">
+                    <button type="button" id="gen-id-btn" class="btn-sm">自動発行</button>
+                </div>
+            </div>
+
+            <div class="input-group">
                 <label>試合ID (英数字)</label>
                 <div style="display: flex; gap: 5px;">
                     <input type="text" id="input-game-id" placeholder="例: GAME2024">

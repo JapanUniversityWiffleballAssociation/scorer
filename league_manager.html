@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA リーグ管理</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>リーグ・大会管理</h1>
+            <a href="index.html">← メインメニューへ</a>
+        </header>
+
+        <section class="card">
+            <h3>新規リーグ登録</h3>
+            <div class="input-group">
+                <label>大会略称 (ID用・半角英数)</label>
+                <input type="text" id="league-id" placeholder="例: JUWA26SPRING">
+            </div>
+            <div class="input-group">
+                <label>正式名称 (表示用)</label>
+                <input type="text" id="league-name" placeholder="例: 2026年度 春季大学リーグ">
+            </div>
+            <button type="button" id="save-league-btn" class="btn">リーグを作成する</button>
+        </section>
+
+        <section class="card">
+            <h3>登録済みリーグ一覧</h3>
+            <div id="league-list">読み込み中...</div>
+        </section>
+    </div>
+
+    <script>
+        const GAS_URL = "YOUR_GAS_URL_HERE"; // 同じURLを使用
+
+        // リーグ保存処理
+        document.getElementById('save-league-btn').addEventListener('click', async () => {
+            const id = document.getElementById('league-id').value.trim();
+            const name = document.getElementById('league-name').value.trim();
+            if(!id || !name) return alert("全て入力してください");
+
+            const formData = new URLSearchParams();
+            formData.append("mode", "saveLeague");
+            formData.append("leagueId", id);
+            formData.append("leagueName", name);
+
+            await fetch(GAS_URL, { method: "POST", body: formData, mode: "no-cors" });
+            alert("登録しました");
+            location.reload();
+        });
+
+        // リーグ一覧取得
+        window.onload = async () => {
+            const res = await fetch(`${GAS_URL}?mode=getLeagues`);
+            const leagues = await res.json();
+            const listEl = document.getElementById('league-list');
+            listEl.innerHTML = leagues.map(l => `
+                <div style="border-bottom: 1px solid #34495e; padding: 10px 0;">
+                    <strong>${l.name}</strong> (${l.id}) - <span>${l.status}</span>
+                </div>
+            `).join('');
+        };
+    </script>
+</body>
+</html>
