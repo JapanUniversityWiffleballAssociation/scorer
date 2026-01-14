@@ -1,186 +1,102 @@
-/**
- * 設定: GASウェブアプリURL
- */
-const FIXED_GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
-
-// --- 状態管理 ---
-let autoUpdateTimer = null;
-let isPaused = false;
-
-/**
- * 起動時の処理
- */
-document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const gameId = params.get('id');
-
-    if (gameId) {
-        // A. 詳細画面モード
-        showScreen('main-app');
-        document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
-        fetchGameDetail(gameId);
-        startAutoUpdate(() => fetchGameDetail(gameId), 10000); // 10秒更新
-    } else {
-        // B. 一覧画面モード
-        showScreen('list-screen');
-        fetchGameList();
-        startAutoUpdate(fetchGameList, 30000); // 30秒更新
-    }
-});
-
-/**
- * 画面の切り替えヘルパー
- */
-function showScreen(screenId) {
-    document.getElementById('list-screen').classList.add('hidden');
-    document.getElementById('main-app').classList.add('hidden');
-    document.getElementById(screenId).classList.remove('hidden');
-}
-
-/**
- * 一覧に戻る
- */
-function backToList() {
-    location.href = 'viewer.html';
-}
-
-/**
- * 【一覧画面】取得と表示
- */
-async function fetchGameList() {
-    const container = document.getElementById('game-list-container');
-    if (!container) return;
-
-    try {
-        const response = await fetch(`${FIXED_GAS_URL}?_=${Date.now()}`);
-        const gameList = await response.json();
-
-        if (!gameList || gameList.length === 0) {
-            container.innerHTML = "<p style='text-align:center;'>現在、進行中の試合はありません。</p>";
-            return;
-        }
-
-        // リーグごとにグループ化
-        const grouped = gameList.reduce((acc, g) => {
-            const name = g.leagueName || "その他";
-            if (!acc[name]) acc[name] = [];
-            acc[name].push(g);
-            return acc;
-        }, {});
-
-        container.innerHTML = "";
-        for (const league in grouped) {
-            const section = document.createElement('div');
-            section.innerHTML = `<h3 style="border-left:4px solid #2ecc71; padding-left:10px; margin-top:20px;">${league}</h3>`;
-            
-            const gamesHtml = grouped[league].map(g => `
-                <div class="game-card" onclick="location.href='viewer.html?id=${g.id}'">
-                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; margin-bottom:5px;">
-                        <span>${g.isFinished ? '【終了】' : '【LIVE】'}</span>
-                        <span>ID: ${g.id}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-around; align-items:center;">
-                        <div style="text-align:center; flex:1;"><strong>${g.topTeam}</strong></div>
-                        <div style="font-size:1.5rem; font-weight:bold; flex:1; text-align:center;">${g.score.top} - ${g.score.bottom}</div>
-                        <div style="text-align:center; flex:1;"><strong>${g.bottomTeam}</strong></div>
-                    </div>
-                    <div style="text-align:center; font-size:0.9rem; margin-top:5px; color:#2ecc71;">
-                        ${g.isFinished ? '試合終了' : g.inning + '回' + (g.isBottom ? '裏' : '表')}
-                    </div>
-                </div>
-            `).join('');
-            
-            section.innerHTML += gamesHtml;
-            container.appendChild(section);
-        }
-    } catch (e) {
-        container.innerHTML = "<p>データ取得エラーが発生しました。</p>";
-    }
-}
-
-/**
- * 【詳細画面】取得と反映
- */
-async function fetchGameDetail(id) {
-    if (isPaused) return;
-    const statusEl = document.getElementById('sync-status');
-    if (statusEl) statusEl.textContent = "更新中...";
-
-    try {
-        const response = await fetch(`${FIXED_GAS_URL}?gameId=${id}&_=${Date.now()}`);
-        const state = await response.json();
-
-        if (!state || state.error) {
-            alert("試合データが見つかりません。");
-            backToList();
-            return;
-        }
-
-        // スコアボードの流し込み
-        // HTML側には tableHTML がそのまま入るので、thead/tbodyを分けずに scoreboard に直接入れる
-        document.getElementById('scoreboard').innerHTML = state.tableHTML;
-
-        // カウントの更新
-        updateDots('ball', state.counts.ball);
-        updateDots('strike', state.counts.strike);
-        updateDots('out', state.counts.out);
-
-        // ランナーの更新
-        document.getElementById('base1').classList.toggle('runner', state.runners.base1);
-        document.getElementById('base2').classList.toggle('runner', state.runners.base2);
-        document.getElementById('base3').classList.toggle('runner', state.runners.base3);
-
-        if (statusEl) statusEl.textContent = "同期済み";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA 野球速報 - Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root { --bg: #1a1a1a; --card: #2c3e50; --text: #ecf0f1; --accent: #2ecc71; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .hidden { display: none !important; }
         
-        if (state.isGameEnded) {
-            document.querySelector('.live-tag').textContent = "試合終了";
-            document.querySelector('.live-tag').style.background = "#7f8c8d";
-            stopAutoUpdate();
-        }
-    } catch (e) {
-        if (statusEl) statusEl.textContent = "通信エラー";
-    }
-}
+        /* 一覧画面スタイル */
+        .game-card { background: var(--card); margin: 12px 0; padding: 15px; border-radius: 10px; cursor: pointer; border: 1px solid #444; transition: transform 0.2s; }
+        .game-card:active { transform: scale(0.98); }
+        
+        /* 詳細画面スタイル */
+        .viewer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .live-tag { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+        
+        /* スコアボード */
+        table { width: 100%; border-collapse: collapse; background: #fff; color: #333; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #f8f9fa; font-size: 0.8rem; }
+        .active-cell { background: #e8f5e9; font-weight: bold; border: 2px solid var(--accent); }
+        
+        /* カウント・ダイヤモンド */
+        .status-container { display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; }
+        .count-row { display: flex; align-items: center; margin-bottom: 8px; }
+        .label { width: 20px; font-weight: bold; font-size: 1.2rem; }
+        .dots { display: flex; gap: 8px; margin-left: 10px; }
+        .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #555; }
+        .dot.ball.active { background: #3498db; border-color: #3498db; }
+        .dot.strike.active { background: #f1c40f; border-color: #f1c40f; }
+        .dot.out.active { background: #e74c3c; border-color: #e74c3c; }
+        
+        /* 野球ダイヤモンド */
+        .diamond { position: relative; width: 100px; height: 100px; transform: rotate(45deg); margin: 20px; }
+        .base { position: absolute; width: 25px; height: 25px; border: 2px solid #888; transition: 0.3s; }
+        #base1 { top: 0; right: 0; }
+        #base2 { top: 0; left: 0; }
+        #base3 { bottom: 0; left: 0; }
+        .base.runner { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
 
-/**
- * ドット更新用
- */
-function updateDots(type, count) {
-    const dots = document.querySelectorAll(`.dot.${type}`);
-    dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i < count);
-    });
-}
+        /* コントロール */
+        .controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; background: #34495e; color: white; cursor: pointer; font-weight: bold; }
+        button:active { opacity: 0.8; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        .paused { background: #e67e22 !important; }
+    </style>
+</head>
+<body>
 
-/**
- * 自動更新制御
- */
-function startAutoUpdate(func, interval) {
-    stopAutoUpdate();
-    autoUpdateTimer = setInterval(func, interval);
-}
+    <div id="list-screen" class="container">
+        <h2 style="text-align: center; color: var(--accent);">🏆 進行中の試合</h2>
+        <div id="game-list-container">
+            <p style="text-align: center; color: #888; padding: 40px;">試合データを読み込み中...</p>
+        </div>
+        <button onclick="fetchGameList()" style="width: 100%; background: var(--accent);">リストを最新に更新</button>
+    </div>
 
-function stopAutoUpdate() {
-    if (autoUpdateTimer) clearInterval(autoUpdateTimer);
-}
+    <div id="main-app" class="container hidden">
+        <div class="viewer-header">
+            <button class="btn-sm" onclick="backToList()">← 一覧に戻る</button>
+            <span class="live-tag">LIVE</span>
+            <span id="display-game-id" style="font-family: monospace; color: #aaa;">ID: ----</span>
+        </div>
+        
+        <div id="sync-status" style="text-align: right; font-size: 0.7rem; color: #2ecc71; margin-bottom: 5px;">接続中...</div>
 
-function togglePause() {
-    isPaused = !isPaused;
-    const btn = document.getElementById('pause-btn');
-    if (isPaused) {
-        btn.textContent = "自動更新: OFF";
-        btn.classList.add('paused');
-    } else {
-        btn.textContent = "自動更新: ON";
-        btn.classList.remove('paused');
-        // 再開時に一度即時更新
-        const params = new URLSearchParams(window.location.search);
-        fetchGameDetail(params.get('id'));
-    }
-}
+        <section class="score-board">
+            <div id="scoreboard" style="overflow-x: auto;">
+                </div>
+        </section>
 
-// 手動更新ボタン用
-function syncPull() {
-    const params = new URLSearchParams(window.location.search);
-    fetchGameDetail(params.get('id'));
-}
+        <div class="status-container">
+            <section class="counts">
+                <div class="count-row"><span class="label" style="color:#3498db">B</span><div class="dots"><span class="dot ball"></span><span class="dot ball"></span><span class="dot ball"></span></div></div>
+                <div class="count-row"><span class="label" style="color:#f1c40f">S</span><div class="dots"><span class="dot strike"></span><span class="dot strike"></span></div></div>
+                <div class="count-row"><span class="label" style="color:#e74c3c">O</span><div class="dots"><span class="dot out"></span><span class="dot out"></span></div></div>
+            </section>
+
+            <section class="diamond-wrapper">
+                <div class="diamond">
+                    <div class="base" id="base2"></div>
+                    <div class="base" id="base3"></div>
+                    <div class="base" id="base1"></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="controls">
+            <button id="refresh-btn" class="btn-sm" onclick="syncPull()">今すぐ手動更新</button>
+            <button id="pause-btn" class="btn-sm" onclick="togglePause()">自動更新: ON</button>
+        </div>
+    </div>
+
+    <script src="viewer.js"></script>
+</body>
+</html>
