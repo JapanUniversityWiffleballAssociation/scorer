@@ -3,8 +3,9 @@
  */
 const FIXED_GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
 
-// --- グローバル変数 ---
+// --- 状態管理 ---
 let autoUpdateTimer = null;
+let isPaused = false;
 
 /**
  * 起動時の処理
@@ -14,18 +15,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameId = params.get('id');
 
     if (gameId) {
-        // A. 試合IDがある場合：詳細画面（個別スコア表示）
+        // A. 詳細画面モード
+        showScreen('main-app');
+        document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
         fetchGameDetail(gameId);
-        startAutoUpdate(() => fetchGameDetail(gameId), 10000); // 10秒おき更新
+        startAutoUpdate(() => fetchGameDetail(gameId), 10000); // 10秒更新
     } else {
-        // B. 試合IDがない場合：一覧画面（リーグ別リスト表示）
+        // B. 一覧画面モード
+        showScreen('list-screen');
         fetchGameList();
-        startAutoUpdate(fetchGameList, 30000); // 30秒おき更新
+        startAutoUpdate(fetchGameList, 30000); // 30秒更新
     }
 });
 
 /**
- * 【一覧画面用】リーグごとにグループ化した試合リストを取得・表示
+ * 画面の切り替えヘルパー
+ */
+function showScreen(screenId) {
+    document.getElementById('list-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+    document.getElementById(screenId).classList.remove('hidden');
+}
+
+/**
+ * 一覧に戻る
+ */
+function backToList() {
+    location.href = 'viewer.html';
+}
+
+/**
+ * 【一覧画面】取得と表示
  */
 async function fetchGameList() {
     const container = document.getElementById('game-list-container');
@@ -36,131 +56,131 @@ async function fetchGameList() {
         const gameList = await response.json();
 
         if (!gameList || gameList.length === 0) {
-            container.innerHTML = "<p class='empty-msg'>現在、公開中の試合はありません。</p>";
+            container.innerHTML = "<p style='text-align:center;'>現在、進行中の試合はありません。</p>";
             return;
         }
 
-        // 1. リーグ名ごとにグループ化
-        const groupedGames = gameList.reduce((acc, game) => {
-            const league = game.leagueName || "その他・オープン戦";
-            if (!acc[league]) acc[league] = [];
-            acc[league].push(game);
+        // リーグごとにグループ化
+        const grouped = gameList.reduce((acc, g) => {
+            const name = g.leagueName || "その他";
+            if (!acc[name]) acc[name] = [];
+            acc[name].push(g);
             return acc;
         }, {});
 
-        // 2. HTML組み立て
         container.innerHTML = "";
-        for (const leagueName in groupedGames) {
-            const leagueSection = document.createElement('div');
-            leagueSection.className = 'league-group';
+        for (const league in grouped) {
+            const section = document.createElement('div');
+            section.innerHTML = `<h3 style="border-left:4px solid #2ecc71; padding-left:10px; margin-top:20px;">${league}</h3>`;
             
-            let gamesHtml = groupedGames[leagueName].map(game => `
-                <div class="game-card ${game.isFinished ? 'finished' : ''}" onclick="location.href='viewer.html?id=${game.id}'">
-                    <div class="game-header">
-                        <span class="status-badge">${game.isFinished ? '試合終了' : 'LIVE'}</span>
-                        <span class="update-time">${formatTime(game.updatedAt)} 更新</span>
+            const gamesHtml = grouped[league].map(g => `
+                <div class="game-card" onclick="location.href='viewer.html?id=${g.id}'">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; margin-bottom:5px;">
+                        <span>${g.isFinished ? '【終了】' : '【LIVE】'}</span>
+                        <span>ID: ${g.id}</span>
                     </div>
-                    <div class="score-row">
-                        <div class="team-info">
-                            <span class="team-name">${game.topTeam}</span>
-                            <span class="score-val">${game.score.top}</span>
-                        </div>
-                        <div class="score-divider">-</div>
-                        <div class="team-info">
-                            <span class="score-val">${game.score.bottom}</span>
-                            <span class="team-name">${game.bottomTeam}</span>
-                        </div>
+                    <div style="display:flex; justify-content:space-around; align-items:center;">
+                        <div style="text-align:center; flex:1;"><strong>${g.topTeam}</strong></div>
+                        <div style="font-size:1.5rem; font-weight:bold; flex:1; text-align:center;">${g.score.top} - ${g.score.bottom}</div>
+                        <div style="text-align:center; flex:1;"><strong>${g.bottomTeam}</strong></div>
                     </div>
-                    <div class="game-footer">
-                        <span>${game.isFinished ? '最終スコア' : game.inning + '回' + (game.isBottom ? '裏' : '表')}</span>
-                        <span class="game-id">ID: ${game.id}</span>
+                    <div style="text-align:center; font-size:0.9rem; margin-top:5px; color:#2ecc71;">
+                        ${g.isFinished ? '試合終了' : g.inning + '回' + (g.isBottom ? '裏' : '表')}
                     </div>
                 </div>
             `).join('');
-
-            leagueSection.innerHTML = `
-                <h2 class="league-title">${leagueName}</h2>
-                <div class="league-games-grid">${gamesHtml}</div>
-            `;
-            container.appendChild(leagueSection);
+            
+            section.innerHTML += gamesHtml;
+            container.appendChild(section);
         }
     } catch (e) {
-        container.innerHTML = "<p class='error-msg'>通信エラーが発生しました。再読み込みしてください。</p>";
+        container.innerHTML = "<p>データ取得エラーが発生しました。</p>";
     }
 }
 
 /**
- * 【個別画面用】特定の試合の詳細データを取得・反映
+ * 【詳細画面】取得と反映
  */
 async function fetchGameDetail(id) {
+    if (isPaused) return;
+    const statusEl = document.getElementById('sync-status');
+    if (statusEl) statusEl.textContent = "更新中...";
+
     try {
         const response = await fetch(`${FIXED_GAS_URL}?gameId=${id}&_=${Date.now()}`);
         const state = await response.json();
 
-        if (!state || Object.keys(state).length === 0) {
-            alert("試合データが見つかりません。一覧に戻ります。");
-            location.href = "viewer.html";
+        if (!state || state.error) {
+            alert("試合データが見つかりません。");
+            backToList();
             return;
         }
 
-        // 画面要素への反映
-        const scoreboard = document.getElementById('scoreboard');
-        if (scoreboard) scoreboard.innerHTML = state.tableHTML;
+        // スコアボードの流し込み
+        // HTML側には tableHTML がそのまま入るので、thead/tbodyを分けずに scoreboard に直接入れる
+        document.getElementById('scoreboard').innerHTML = state.tableHTML;
 
-        // カウント等の反映（要素がある場合のみ）
-        updateDetailStats(state);
+        // カウントの更新
+        updateDots('ball', state.counts.ball);
+        updateDots('strike', state.counts.strike);
+        updateDots('out', state.counts.out);
 
-        // 試合終了判定
+        // ランナーの更新
+        document.getElementById('base1').classList.toggle('runner', state.runners.base1);
+        document.getElementById('base2').classList.toggle('runner', state.runners.base2);
+        document.getElementById('base3').classList.toggle('runner', state.runners.base3);
+
+        if (statusEl) statusEl.textContent = "同期済み";
+        
         if (state.isGameEnded) {
-            document.getElementById('live-indicator')?.classList.add('hidden');
-            document.getElementById('final-badge')?.classList.remove('hidden');
-            stopAutoUpdate(); // 終了していれば更新を止める
+            document.querySelector('.live-tag').textContent = "試合終了";
+            document.querySelector('.live-tag').style.background = "#7f8c8d";
+            stopAutoUpdate();
         }
     } catch (e) {
-        console.error("詳細取得エラー:", e);
+        if (statusEl) statusEl.textContent = "通信エラー";
     }
 }
 
 /**
- * ヘルパー：時刻のフォーマット (HH:mm)
+ * ドット更新用
  */
-function formatTime(dateStr) {
-    if (!dateStr) return "--:--";
-    const date = new Date(dateStr);
-    return date.getHours().toString().padStart(2, '0') + ":" + 
-           date.getMinutes().toString().padStart(2, '0');
+function updateDots(type, count) {
+    const dots = document.querySelectorAll(`.dot.${type}`);
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i < count);
+    });
 }
 
 /**
- * 自動更新の管理
+ * 自動更新制御
  */
-function startAutoUpdate(callback, interval) {
+function startAutoUpdate(func, interval) {
     stopAutoUpdate();
-    autoUpdateTimer = setInterval(callback, interval);
+    autoUpdateTimer = setInterval(func, interval);
 }
 
 function stopAutoUpdate() {
-    if (autoUpdateTimer) {
-        clearInterval(autoUpdateTimer);
-        autoUpdateTimer = null;
+    if (autoUpdateTimer) clearInterval(autoUpdateTimer);
+}
+
+function togglePause() {
+    isPaused = !isPaused;
+    const btn = document.getElementById('pause-btn');
+    if (isPaused) {
+        btn.textContent = "自動更新: OFF";
+        btn.classList.add('paused');
+    } else {
+        btn.textContent = "自動更新: ON";
+        btn.classList.remove('paused');
+        // 再開時に一度即時更新
+        const params = new URLSearchParams(window.location.search);
+        fetchGameDetail(params.get('id'));
     }
 }
 
-/**
- * 詳細画面での統計情報更新（カウント・走者など）
- */
-function updateDetailStats(state) {
-    // 走者情報の反映例
-    const b1 = document.getElementById('base1');
-    if (b1 && state.runners) {
-        b1.classList.toggle('runner', state.runners.base1);
-        document.getElementById('base2').classList.toggle('runner', state.runners.base2);
-        document.getElementById('base3').classList.toggle('runner', state.runners.base3);
-    }
-    // カウント情報の反映例
-    if (state.counts) {
-        document.querySelectorAll('.dot.ball').forEach((d, i) => d.classList.toggle('active', i < state.counts.ball));
-        document.querySelectorAll('.dot.strike').forEach((d, i) => d.classList.toggle('active', i < state.counts.strike));
-        document.querySelectorAll('.dot.out').forEach((d, i) => d.classList.toggle('active', i < state.counts.out));
-    }
+// 手動更新ボタン用
+function syncPull() {
+    const params = new URLSearchParams(window.location.search);
+    fetchGameDetail(params.get('id'));
 }
