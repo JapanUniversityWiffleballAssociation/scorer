@@ -1,3 +1,17 @@
+
+/*
+======================================================================
+Project Name    : Scorer
+File Name       : edit-games.js
+Version         : v1.0.0
+ 
+Copyright © 2026 JapanUniversityWiffleballAssosiation. All rights reserved.
+ 
+This source code or any portion thereof must not be  
+reproduced or used in any manner whatsoever.
+======================================================================
+ */
+
 /**
  * 設定: GASウェブアプリURL
  */
