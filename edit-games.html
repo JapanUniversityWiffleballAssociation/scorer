@@ -24,7 +24,7 @@
             <div class="input-group">
                 <label>試合ID</label>
                 <div style="display: flex; gap: 5px;">
-                    <input type="text" id="input-game-id" readonly placeholder="リーグを選択してください">
+                    <input type="text" id="input-game-id" placeholder="リーグを選択してください">
                     <button type="button" id="gen-id-btn" class="btn-sm">自動発行</button>
                 </div>
             </div>
@@ -56,10 +56,20 @@
         </div>
 
         <section class="score-board">
-            <table id="scoreboard">
-                <thead id="scoreboard-head"></thead>
-                <tbody id="scoreboard-body"></tbody>
-            </table>
+<table id="scoreboard">
+    <thead id="scoreboard-head">
+        </thead>
+    <tbody id="scoreboard-body">
+        <tr id="score-row-top">
+            <td id="top-team-name" class="team-name-cell">先攻</td>
+            <td class="total-cell" id="total-score-top">0</td>
+        </tr>
+        <tr id="score-row-bottom">
+            <td id="bottom-team-name" class="team-name-cell">後攻</td>
+            <td class="total-cell" id="total-score-bottom">0</td>
+        </tr>
+    </tbody>
+</table>
         </section>
 
         <div class="status-container">
@@ -92,18 +102,18 @@
         </div>
 
         <section class="controls">
-            <div class="button-group">
-                <button type="button" class="btn strike">ストライク</button>
-                <button type="button" class="btn ball">ボール</button>
-                <button type="button" class="btn out">フライアウト</button>
-                <button type="button" class="btn out">ゴロアウト</button>
-            </div>
-            <div class="button-group">
-                <button type="button" class="btn hit">シングルヒット</button>
-                <button type="button" class="btn hit">ダブルヒット</button>
-                <button type="button" class="btn hit">トリプルヒット</button>
-                <button type="button" class="btn hr">ホームラン</button>
-            </div>
+<div class="button-group">
+    <button type="button" id="strike-btn" class="btn strike">ストライク</button>
+    <button type="button" id="ball-btn" class="btn ball">ボール</button>
+    <button type="button" id="fly-out-btn" class="btn out">フライアウト</button>
+    <button type="button" id="ground-out-btn" class="btn out">ゴロアウト</button>
+</div>
+<div class="button-group">
+    <button type="button" id="single-hit-btn" class="btn hit">シングルヒット</button>
+    <button type="button" id="double-hit-btn" class="btn hit">ダブルヒット</button>
+    <button type="button" id="triple-hit-btn" class="btn hit">トリプルヒット</button>
+    <button type="button" id="hr-btn" class="btn hr">ホームラン</button>
+</div>
             <div class="button-group full-width">
                 <button type="button" id="undo-btn" class="btn undo">1つ戻る（修正） </button>
             </div>
