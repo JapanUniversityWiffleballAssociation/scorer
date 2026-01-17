@@ -382,6 +382,7 @@ function handleInningChange() {
     }
     updateDiamondDisplay();
     updateScoreboardUI();
+    updateCountDisplay();
 }
 
 /**
