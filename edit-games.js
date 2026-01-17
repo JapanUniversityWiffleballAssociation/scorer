@@ -30,90 +30,88 @@ let totalInnings = 9;
 document.addEventListener('DOMContentLoaded', () => {
     fetchLeagues();
     
-    // 試合IDの自動生成ボタン
-    document.getElementById('gen-id-btn').addEventListener('click', () => {
-        const leagueId = document.getElementById('select-league').value || "G";
-        const dateStr = new Date().toISOString().slice(2,10).replace(/-/g, "");
-        const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
-        const generated = `${leagueId}-${dateStr}-${rand}`;
-        const input = document.getElementById('input-game-id');
-        input.value = generated;
-        input.style.backgroundColor = "#333"; // 暗いグレー
-        input.style.color = "#fff";           // 白文字
-        input.style.border = "2px solid #2ecc71"; // 枠線を光らせて「入力された」ことを示す
-    });
+    // 1. 試合IDの自動生成ボタン
+    const genIdBtn = document.getElementById('gen-id-btn');
+    if (genIdBtn) {
+        genIdBtn.addEventListener('click', () => {
+            const leagueId = document.getElementById('select-league').value || "G";
+            const dateStr = new Date().toISOString().slice(2,10).replace(/-/g, '');
+            const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
+            document.getElementById('input-game-id').value = `${leagueId}-${dateStr}-${rand}`;
+        });
+    }
 
-    // --- 試合開始ボタンの処理 ---
-const startBtn = document.getElementById('start-btn');
-if (startBtn) {
-    startBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        console.log("試合開始ボタンが押されました"); // ★コンソールで確認用
+    // 2. 試合開始ボタン
+    const startBtn = document.getElementById('start-btn');
+    if (startBtn) {
+        startBtn.addEventListener('click', handleStartGame); // 関数に切り出し
+    }
 
-        // 1. 値の取得
-        const idInput = document.getElementById('input-game-id');
-        const leagueSelect = document.getElementById('select-league');
-        
-        // 要素がない場合のエラー回避
-        if (!idInput || !leagueSelect) {
-            alert("HTML要素が見つかりません（ID不一致）");
-            return;
-        }
+    // 3. 各操作ボタンの紐付け（★ここが足りていませんでした）
+    const bindBtn = (id, fn) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', fn);
+    };
 
-        gameId = idInput.value.trim();
-        const leagueId = leagueSelect.value;
-        const topName = document.getElementById('input-top-team').value || "先攻";
-        const bottomName = document.getElementById('input-bottom-team').value || "後攻";
+    bindBtn('strike-btn', () => addCount('strike'));
+    bindBtn('ball-btn', () => addCount('ball'));
+    bindBtn('fly-out-btn', () => addCount('out'));
+    bindBtn('ground-out-btn', () => addCount('out'));
 
-        // 2. バリデーション
-        if (!leagueId || !gameId) {
-            alert("リーグを選択し、試合IDを入力してください。");
-            return;
-        }
+    bindBtn('single-hit-btn', () => recordPlay('シングルヒット'));
+    bindBtn('double-hit-btn', () => recordPlay('ダブルヒット'));
+    bindBtn('triple-hit-btn', () => recordPlay('トリプルヒット'));
+    bindBtn('hr-btn', () => recordPlay('ホームラン'));
 
-        // 3. 画面のセットアップ
-        try {
-            totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
-            initScoreboard(topName, bottomName, totalInnings);
-
-            document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-        } catch (err) {
-            console.error("画面初期化エラー:", err);
-            alert("画面生成に失敗しました。");
-            return;
-        }
-
-        // 4. データ送信
-        showStatus("試合を登録中...");
-        isPushing = true;
-        
-        try {
-            await syncPush("試合開始", {
-                inning: 1, 
-                isBottom: false, 
-                team: topName,
-                leagueName: leagueSelect.selectedOptions[0].text
-            });
-            showStatus("同期完了");
-            
-            // 定期更新スタート
-            if (syncTimer) clearInterval(syncTimer);
-            syncTimer = setInterval(syncPull, 10000);
-            
-        } catch (error) {
-            console.error("通信エラー:", error);
-            showStatus("登録失敗（再試行してください）");
-        } finally {
-            isPushing = false;
-        }
-    });
-} else {
-    console.error("重大なエラー: id='start-btn' のボタンが見つかりません");
-}
-    // --- 試合開始ボタンの処理ここまで ---
+    bindBtn('undo-btn', undo);
+    bindBtn('end-game-btn', endGame);
 });
+
+/**
+ * 試合開始ボタンの本体処理
+ */
+async function handleStartGame(e) {
+    e.preventDefault();
+    const idInput = document.getElementById('input-game-id');
+    const leagueSelect = document.getElementById('select-league');
+    
+    gameId = idInput.value.trim();
+    const leagueId = leagueSelect.value;
+    const topName = document.getElementById('input-top-team').value || "先攻";
+    const bottomName = document.getElementById('input-bottom-team').value || "後攻";
+
+    if (!leagueId || !gameId) {
+        alert("リーグを選択し、試合IDを入力してください。");
+        return;
+    }
+
+    totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
+    initScoreboard(topName, bottomName, totalInnings);
+
+    document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+
+    showStatus("試合を登録中...");
+    isPushing = true;
+    try {
+        await syncPush("試合開始", {
+            inning: 1, 
+            isBottom: false, 
+            team: topName,
+            leagueName: leagueSelect.selectedOptions[0].text
+        });
+        showStatus("同期完了");
+        if (syncTimer) clearInterval(syncTimer);
+        syncTimer = setInterval(syncPull, 10000);
+    } catch (err) {
+        console.error(err);
+        showStatus("登録エラー（再試行してください）");
+    } finally {
+        isPushing = false;
+    }
+}
+
 
 /**
  * GASへデータを送信 (POST)
@@ -148,7 +146,24 @@ async function syncPush(actionName = null, logData = null) {
             body: formData,
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         });
-        return await response.json();
+
+        //ここからコピー
+        // --- syncPush 関数の中の response 処理部分を以下に書き換え ---
+        const text = await response.text(); // 一旦、生の文字として受け取る
+        console.log("サーバーからの応答:", text);
+
+    let result;
+    try {
+        result = JSON.parse(text); // もしJSON形式なら解析する
+    } catch (e) {
+        result = { status: text }; // JSONじゃなければそのままステータスに入れる
+    }
+
+if (text.includes("success") || result.result === "success") {
+    showStatus("同期完了");
+} else {
+    showStatus("同期失敗");
+}
     } catch (e) {
         console.error("Push Error:", e);
         showStatus("送信エラー");
@@ -186,8 +201,8 @@ function initScoreboard(top, bottom, innings) {
     const bodyBottom = document.getElementById('score-row-bottom');
     
     let headHtml = '<tr><th>TEAM</th>';
-    let topHtml = `<td>${top}</td>`;
-    let bottomHtml = `<td>${bottom}</td>`;
+    let topHtml = `<td id="top-team-name">${top}</td>`;
+    let bottomHtml = `<td id="bottom-team-name">${bottom}</td>`;
     
     for (let i = 1; i <= innings; i++) {
         headHtml += `<th>${i}</th>`;
