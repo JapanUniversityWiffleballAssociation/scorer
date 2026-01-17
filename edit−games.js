@@ -380,8 +380,15 @@ function saveHistory() {
  * UI更新系
  */
 function updateCountDisplay() {
-    // 既存のドット更新ロジックをここに配置
+    const updateDots = (type, count) => {
+        const dots = document.querySelectorAll(`.dot.${type}`);
+        dots.forEach((dot, i) => dot.classList.toggle('active', i < count));
+    };
+    updateDots('ball', counts.ball);
+    updateDots('strike', counts.strike);
+    updateDots('out', counts.out);
 }
+
 function updateDiamondDisplay() {
     document.getElementById('base1').classList.toggle('runner', runners.base1);
     document.getElementById('base2').classList.toggle('runner', runners.base2);
@@ -393,4 +400,14 @@ function updateScoreboardUI() {
         (isBottomInning ? score.bottom : score.top); // 実際にはそのイニングの得点を計算
     document.getElementById('total-score-top').textContent = score.top;
     document.getElementById('total-score-bottom').textContent = score.bottom;
+}
+
+function handleWalk() {
+    saveHistory();
+    if (runners.base1 && runners.base2 && runners.base3) addScore(1);
+    if (runners.base1 && runners.base2) runners.base3 = true;
+    if (runners.base1) runners.base2 = true;
+    runners.base1 = true;
+    updateDiamondDisplay();
+    updateScoreboardUI();
 }
