@@ -43,67 +43,76 @@ document.addEventListener('DOMContentLoaded', () => {
         input.style.border = "2px solid #2ecc71"; // 枠線を光らせて「入力された」ことを示す
     });
 
-    // 試合開始ボタンの処理 (全文)
-    const startBtn = document.getElementById('start-btn');
-    if (startBtn) {
-        startBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
+    // --- 試合開始ボタンの処理 ---
+const startBtn = document.getElementById('start-btn');
+if (startBtn) {
+    startBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        console.log("試合開始ボタンが押されました"); // ★コンソールで確認用
 
-            gameId = document.getElementById('input-game-id').value.trim();
-            const leagueId = document.getElementById('select-league').value;
-            const topTeamName = document.getElementById('input-top-team').value || "先攻";
-            const bottomTeamName = document.getElementById('input-bottom-team').value || "後攻";
+        // 1. 値の取得
+        const idInput = document.getElementById('input-game-id');
+        const leagueSelect = document.getElementById('select-league');
+        
+        // 要素がない場合のエラー回避
+        if (!idInput || !leagueSelect) {
+            alert("HTML要素が見つかりません（ID不一致）");
+            return;
+        }
 
-            if (!leagueId || !gameId) {
-                alert("リーグ選択と試合ID入力は必須です。");
-                return;
-            }
+        gameId = idInput.value.trim();
+        const leagueId = leagueSelect.value;
+        const topName = document.getElementById('input-top-team').value || "先攻";
+        const bottomName = document.getElementById('input-bottom-team').value || "後攻";
 
-            // 状態初期化
-            isGameEnded = false;
-            counts = { ball: 0, strike: 0, out: 0 };
-            runners = { base1: false, base2: false, base3: false };
-            score = { top: 0, bottom: 0 };
-            currentInning = 1;
-            isBottomInning = false;
+        // 2. バリデーション
+        if (!leagueId || !gameId) {
+            alert("リーグを選択し、試合IDを入力してください。");
+            return;
+        }
 
+        // 3. 画面のセットアップ
+        try {
             totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
-            initScoreboard(topTeamName, bottomTeamName, totalInnings);
-            
-            // UI切り替え
+            initScoreboard(topName, bottomName, totalInnings);
+
             document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
+        } catch (err) {
+            console.error("画面初期化エラー:", err);
+            alert("画面生成に失敗しました。");
+            return;
+        }
 
-            // ★バグ②修正：開始と同時にGASへ初回登録を行う
-            showStatus("試合を登録中...");
-            isPushing = true;
+        // 4. データ送信
+        showStatus("試合を登録中...");
+        isPushing = true;
+        
+        try {
+            await syncPush("試合開始", {
+                inning: 1, 
+                isBottom: false, 
+                team: topName,
+                leagueName: leagueSelect.selectedOptions[0].text
+            });
+            showStatus("同期完了");
             
-            const snapshotData = {
-                inning: 1,
-                isBottom: false,
-                team: topTeamName,
-                leagueName: document.getElementById('select-league').selectedOptions[0].text
-            };
-
-            try {
-                await syncPush("試合開始", snapshotData);
-                showStatus("同期完了");
-            } catch (err) {
-                console.error(err);
-                showStatus("初回登録失敗");
-            } finally {
-                isPushing = false;
-            }
-
-            // 定期的なPull（受信）を開始
-            if (syncTimer) clearInterval(syncTimer); 
-            syncTimer = setInterval(syncPull, 10000); 
-
-            // スマホキーボードを閉じる
-            document.activeElement.blur();
-        });
-    }
+            // 定期更新スタート
+            if (syncTimer) clearInterval(syncTimer);
+            syncTimer = setInterval(syncPull, 10000);
+            
+        } catch (error) {
+            console.error("通信エラー:", error);
+            showStatus("登録失敗（再試行してください）");
+        } finally {
+            isPushing = false;
+        }
+    });
+} else {
+    console.error("重大なエラー: id='start-btn' のボタンが見つかりません");
+}
+    // --- 試合開始ボタンの処理ここまで ---
 });
 
 /**

@@ -132,7 +132,7 @@ async function fetchGameDetail(id) {
 
         // スコアボードの流し込み
         // HTML側には tableHTML がそのまま入るので、thead/tbodyを分けずに scoreboard に直接入れる
-        document.getElementById('scoreboard').innerHTML = state.tableHTML;
+        document.getElementById('scoreboard-container').innerHTML = state.tableHTML;
 
         // カウントの更新
         updateDots('ball', state.counts.ball);
