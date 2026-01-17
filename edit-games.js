@@ -18,6 +18,7 @@ let gameId = "";
 let counts = { ball: 0, strike: 0, out: 0 };
 let runners = { base1: false, base2: false, base3: false };
 let score = { top: 0, bottom: 0 };
+let totalScore = {top:0, bottom:0};
 let currentInning = 1;
 let isBottomInning = false;
 let isGameEnded = false;
@@ -25,6 +26,7 @@ let historyStack = [];
 let isPushing = false;
 let syncTimer = null;
 let totalInnings = 9;
+let lastPushTime = 0;
 
 // --- 初期化処理 ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -147,9 +149,7 @@ async function syncPush(actionName = null, logData = null) {
             body: formData,
             headers: { "Content-Type": "application/x-www-form-urlencoded" }
         });
-
-        //ここからコピー
-        // --- syncPush 関数の中の response 処理部分を以下に書き換え ---
+        lastPushTime = Date.now(); // ★送信完了時刻を記録
         const text = await response.text(); // 一旦、生の文字として受け取る
         console.log("サーバーからの応答:", text);
 
@@ -217,6 +217,7 @@ function initScoreboard(top, bottom, innings) {
     head.innerHTML = headHtml;
     bodyTop.innerHTML = topHtml;
     bodyBottom.innerHTML = bottomHtml;
+    updateScoreboardUI();
 }
 
 /**
@@ -233,7 +234,10 @@ function showStatus(msg) {
  */
 async function syncPull() {
     if (isPushing || !gameId) return; // 送信中は受信しない
-
+    if (Date.now() - lastPushTime < 15000) {
+        console.log("自分の操作直後のため、外部更新をスキップします");
+        return;
+    }
     try {
         const response = await fetch(`${FIXED_GAS_URL}?gameId=${gameId}&_=${Date.now()}`);
         const state = await response.json();
@@ -271,41 +275,33 @@ function applyState(state) {
  * カウント操作関数
  */
 function addCount(type) {
-    if (isGameEnded) return;
-    saveHistory(); // Undo用に現在の状態を保存
-
+    if (isGameEnded || isPushing) return;
+    saveHistory();
     if (type === 'strike') {
         counts.strike++;
-        if (counts.strike >= 3) {
-            counts.strike = 0;
-            counts.ball = 0;
-            addCount('out'); // 3ストライクで自動アウト
-            syncPush("三振", getLogSnapshot());
-        }
+        if (counts.strike >= 3) { counts.strike = 0; counts.ball = 0; addCount('out'); return; }
     } else if (type === 'ball') {
         counts.ball++;
-        if (counts.ball >= 4) {
-            counts.ball = 0;
-            counts.strike = 0;
-            handleWalk(); // 四球処理
-            syncPush("四球", getLogSnapshot());
-        }
+        if (counts.ball >= 4) { recordPlay('四球'); return; }
     } else if (type === 'out') {
         counts.out++;
+        // アウトになっても score.top/bottom は増やさない（addScoreを呼ばない）
         if (counts.out >= 3) {
-            handleInningChange();
+            handleInningChange(); // ここで score はリセットされるはず
+            return;
         }
     }
     updateCountDisplay();
-    syncPush(); // カウントのみの更新を保存
+    updateScoreboardUI();
+    syncPush();
 }
 
 /**
  * 打撃結果の処理
- * @param {string} actionName - "シングルヒット", "ダブルヒット" など
+ * @param {string} actionName - "シングルヒット", "四球" など
  */
 function recordPlay(actionName) {
-    if (isGameEnded) return;
+    if (isGameEnded || isPushing) return;
     saveHistory();
 
     if (actionName === "ホームラン") {
@@ -323,42 +319,51 @@ function recordPlay(actionName) {
         runners.base1 = true;
     } 
     else if (actionName === "ダブルヒット") {
-        // 2塁・3塁ランナーは生還
         if (runners.base3) addScore(1);
         if (runners.base2) addScore(1);
-        // 1塁ランナーは3塁へ
         runners.base3 = runners.base1;
-        runners.base2 = true; // 打者は2塁へ
+        runners.base2 = true;
         runners.base1 = false;
     } 
     else if (actionName === "トリプルヒット") {
-        // 全ランナーが生還
         let runs = 0;
         if (runners.base1) runs++;
         if (runners.base2) runs++;
         if (runners.base3) runs++;
         addScore(runs);
-        // 打者は3塁へ
         runners = { base1: false, base2: false, base3: true };
     }
+    // --- 追加：四球（押し出し）のロジック ---
+    else if (actionName === "四球") {
+        if (runners.base1 && runners.base2 && runners.base3) {
+            // 満塁なら押し出し得点
+            addScore(1);
+        } else if (runners.base1 && runners.base2) {
+            // 1,2塁なら3塁へ進塁
+            runners.base3 = true;
+        } else if (runners.base1) {
+            // 1塁のみなら2塁へ進塁
+            runners.base2 = true;
+        }
+        // どんな状況でも1塁は埋まる
+        runners.base1 = true;
+    }
 
-    // 打席が終わったのでストライク・ボールカウントをリセット
+    // カウントリセット
     counts.strike = 0;
     counts.ball = 0;
     
-    // 表示の更新
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
     
-    // サーバーへ送信
     syncPush(actionName, getLogSnapshot());
 }
-
 /**
  * イニング交代処理
  */
 function handleInningChange() {
+    // イニング交代時に「その回の得点」をリセットする
     counts = { ball: 0, strike: 0, out: 0 };
     runners = { base1: false, base2: false, base3: false };
     if (isBottomInning) {
@@ -369,22 +374,31 @@ function handleInningChange() {
         } else {
             currentInning++;
             isBottomInning = false;
+            score.top = 0;
         }
     } else {
         isBottomInning = true;
+        score.bottom = 0;
     }
+    updateDiamondDisplay();
     updateScoreboardUI();
 }
 
 /**
  * スコア加算
  */
-function addScore(run) {
-    if (isBottomInning) {
-        score.bottom += run;
+function addScore(runs) {
+    if (isGameEnded || runs <= 0) return; // 0点以下のときは何もしない
+    
+    if (!isBottomInning) {
+        score.top += runs;
+        totalScore.top += runs;
     } else {
-        score.top += run;
+        score.bottom += runs;
+        totalScore.bottom += runs;
     }
+    // ここでは変数の中身を変えるだけ。描画は updateScoreboardUI に任せる
+    updateScoreboardUI();
 }
 
 /**
@@ -442,12 +456,38 @@ function updateDiamondDisplay() {
     document.getElementById('base2').classList.toggle('runner', runners.base2);
     document.getElementById('base3').classList.toggle('runner', runners.base3);
 }
+
+
 function updateScoreboardUI() {
-    const side = isBottomInning ? 'bottom' : 'top';
-    document.getElementById(`score-${currentInning}-${side}`).textContent = 
-        (isBottomInning ? score.bottom : score.top); // 実際にはそのイニングの得点を計算
-    document.getElementById('total-score-top').textContent = score.top;
-    document.getElementById('total-score-bottom').textContent = score.bottom;
+    const topRow = document.getElementById('score-row-top');
+    const bottomRow = document.getElementById('score-row-bottom');
+    if (!topRow || !bottomRow) return;
+
+    // 現在のイニングのセルを特定
+    const topInningCells = Array.from(topRow.querySelectorAll('td')).filter(td => 
+        !td.classList.contains('team-name-cell') && !td.classList.contains('total-cell')
+    );
+    const bottomInningCells = Array.from(bottomRow.querySelectorAll('td')).filter(td => 
+        !td.classList.contains('team-name-cell') && !td.classList.contains('total-cell')
+    );
+
+    const idx = currentInning;
+
+    // ★重要：変数の値をセルに「代入」するだけ。+= は絶対に使わない！
+    if (topInningCells[idx]) {
+        topInningCells[idx].textContent = score.top; 
+    }
+    if (bottomInningCells[idx]) {
+        bottomInningCells[idx].textContent = score.bottom;
+    }
+
+    // 点滅処理
+    document.querySelectorAll('.active-cell').forEach(el => el.classList.remove('active-cell'));
+    const targetCells = isBottomInning ? bottomInningCells : topInningCells;
+    if (targetCells[idx]) targetCells[idx].classList.add('active-cell');
+
+    document.getElementById('total-score-top').textContent = totalScore.top;
+    document.getElementById('total-score-bottom').textContent = totalScore.bottom;
 }
 
 function handleWalk() {
