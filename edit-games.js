@@ -136,6 +136,7 @@ async function syncPush(actionName = null, logData = null) {
     };
 
     const formData = new URLSearchParams();
+    formData.append("gameId", gameId);
     formData.append("state", JSON.stringify(state));
     if (actionName) formData.append("action", actionName);
     if (logData) formData.append("logData", JSON.stringify(logData));
