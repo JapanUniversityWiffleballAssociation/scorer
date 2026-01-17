@@ -146,8 +146,8 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
     width: 100%;
     border-collapse: collapse; /* 枠線を一本にする */
     margin-bottom: 20px;
-    background: #fff;
-    color: #333;
+    background: #222;
+    color: #fff;
 }
 
 #scoreboard-container th, 
@@ -159,12 +159,12 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
 }
 
 #scoreboard-container th {
-    background-color: #f8f9fa;
+    background-color: #222;
     font-weight: bold;
 }
 
 .team-name-cell {
-    background-color: #eee;
+    background-color: #222;
     font-weight: bold;
     text-align: left !important;
     padding-left: 10px !important;
