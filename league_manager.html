@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA リーグ管理システム</title>
+    <style>
+        :root { --primary: #2ecc71; --bg: #1a1a1a; --card: #2c3e50; --text: #ecf0f1; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        h1, h2 { color: var(--primary); text-align: center; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #bdc3c7; }
+        input { width: 100%; padding: 12px; border: none; border-radius: 5px; background: #34495e; color: white; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 5px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .league-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+        .league-item small { color: #bdc3c7; }
+        .status-badge { float: right; font-size: 0.8rem; padding: 2px 8px; border-radius: 10px; background: var(--primary); color: white; }
+        .nav-link { text-align: center; display: block; color: var(--primary); text-decoration: none; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏆 リーグ管理</h1>
+
+    <section class="card">
+        <h2>新規リーグ登録</h2>
+        <div class="input-group">
+            <label>大会略称 (ID用・半角英数推奨)</label>
+            <input type="text" id="league-id" placeholder="例: JUWA2026S">
+        </div>
+        <div class="input-group">
+            <label>正式名称 (表示用)</label>
+            <input type="text" id="league-name" placeholder="例: 2026年度 春季リーグ">
+        </div>
+        <div class="input-group" style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label>開始日</label>
+                <input type="date" id="league-start">
+            </div>
+            <div style="flex: 1;">
+                <label>終了日</label>
+                <input type="date" id="league-end">
+            </div>
+        </div>
+        <button type="button" id="save-btn" class="btn">リーグを開設する</button>
+    </section>
+
+    <section class="card">
+        <h2>登録済みリーグ一覧</h2>
+        <div id="league-list">読み込み中...</div>
+    </section>
+
+    <a href="edit-games.html" class="nav-link">記録用アプリへ →</a>
+</div>
+
+<script>
+    // あなたのGAS URLをここに貼り付けてください
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
+
+    /**
+     * 保存処理
+     */
+    document.getElementById('save-btn').addEventListener('click', async () => {
+        const id = document.getElementById('league-id').value.trim();
+        const name = document.getElementById('league-name').value.trim();
+        const start = document.getElementById('league-start').value;
+        const end = document.getElementById('league-end').value;
+
+        if (!id || !name || !start || !end) {
+            alert("すべての項目を入力してください");
+            return;
+        }
+
+        const btn = document.getElementById('save-btn');
+        btn.disabled = true;
+        btn.textContent = "送信中...";
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append("mode", "saveLeague");
+            formData.append("leagueId", id);
+            formData.append("leagueName", name);
+            formData.append("startDate", start);
+            formData.append("endDate", end);
+
+            // POST送信 (no-corsモード)
+            await fetch(GAS_URL, {
+                method: "POST",
+                body: formData,
+                mode: "no-cors"
+            });
+
+            alert("リーグを登録しました！");
+            location.reload();
+        } catch (e) {
+            alert("エラーが発生しました");
+            btn.disabled = false;
+            btn.textContent = "リーグを開設する";
+        }
+    });
+
+    /**
+     * 一覧取得
+     */
+    async function loadLeagues() {
+        const listEl = document.getElementById('league-list');
+        try {
+            const res = await fetch(`${GAS_URL}?mode=getLeagues&_=${Date.now()}`);
+            const leagues = await res.json();
+
+            if (leagues.length === 0) {
+                listEl.innerHTML = "<p>登録されたリーグはありません</p>";
+                return;
+            }
+
+            // league_manager.html の loadLeagues 関数内、map処理の部分を修正
+            listEl.innerHTML = leagues.reverse().map(l => `
+            <div class="league-item">
+                <span class="status-badge">${l.status}</span>
+                <strong>${l.name}</strong><br>
+            <small>ID: ${l.id} | 期間: ${l.start} ～ ${l.end}</small>
+            <div style="margin-top: 10px; text-align: right;">
+            <button onclick="location.href='edit-games.html?leagueId=${l.id}'" 
+                    style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;">
+                このリーグの試合を記録する
+            </button>
+            </div>
+            </div>
+        `).join('');
+        } catch (e) {
+            listEl.innerHTML = "<p>データの読み込みに失敗しました</p>";
+        }
+    }
+
+    loadLeagues();
+</script>
+
+</body>
+</html>

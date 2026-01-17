@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA 野球速報 - Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root { --bg: #1a1a1a; --card: #2c3e50; --text: #ecf0f1; --accent: #2ecc71; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .hidden { display: none !important; }
+        
+        /* 一覧画面スタイル */
+        .game-card { background: var(--card); margin: 12px 0; padding: 15px; border-radius: 10px; cursor: pointer; border: 1px solid #444; transition: transform 0.2s; }
+        .game-card:active { transform: scale(0.98); }
+        
+        /* 詳細画面スタイル */
+        .viewer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .live-tag { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+        
+        /* スコアボード */
+        table { width: 100%; border-collapse: collapse; background: #fff; color: #333; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #f8f9fa; font-size: 0.8rem; }
+        .active-cell { background: #e8f5e9; font-weight: bold; border: 2px solid var(--accent); }
+        
+        /* カウント・ダイヤモンド */
+        .status-container { display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; }
+        .count-row { display: flex; align-items: center; margin-bottom: 8px; }
+        .label { width: 20px; font-weight: bold; font-size: 1.2rem; }
+        .dots { display: flex; gap: 8px; margin-left: 10px; }
+        .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #555; }
+        .dot.ball.active { background: #3498db; border-color: #3498db; }
+        .dot.strike.active { background: #f1c40f; border-color: #f1c40f; }
+        .dot.out.active { background: #e74c3c; border-color: #e74c3c; }
+        
+        /* 野球ダイヤモンド */
+        .diamond { position: relative; width: 100px; height: 100px; transform: rotate(45deg); margin: 20px; }
+        .base { position: absolute; width: 25px; height: 25px; border: 2px solid #888; transition: 0.3s; }
+        #base1 { top: 0; right: 0; }
+        #base2 { top: 0; left: 0; }
+        #base3 { bottom: 0; left: 0; }
+        .base.runner { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        /* コントロール */
+        .controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; background: #34495e; color: white; cursor: pointer; font-weight: bold; }
+        button:active { opacity: 0.8; }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        .paused { background: #e67e22 !important; }
+    </style>
+</head>
+<body>
+
+    <div id="list-screen" class="container">
+        <h2 style="text-align: center; color: var(--accent);">🏆 進行中の試合</h2>
+        <div id="game-list-container">
+            <p style="text-align: center; color: #888; padding: 40px;">試合データを読み込み中...</p>
+        </div>
+        <button onclick="fetchGameList()" style="width: 100%; background: var(--accent);">リストを最新に更新</button>
+    </div>
+
+    <div id="main-app" class="container hidden">
+        <div class="viewer-header">
+            <button class="btn-sm" onclick="backToList()">← 一覧に戻る</button>
+            <span class="live-tag">LIVE</span>
+            <span id="display-game-id" style="font-family: monospace; color: #aaa;">ID: ----</span>
+        </div>
+        
+        <div id="sync-status" style="text-align: right; font-size: 0.7rem; color: #2ecc71; margin-bottom: 5px;">接続中...</div>
+
+        <section class="score-board">
+            <div id="scoreboard" style="overflow-x: auto;">
+                </div>
+        </section>
+
+        <div class="status-container">
+            <section class="counts">
+                <div class="count-row"><span class="label" style="color:#3498db">B</span><div class="dots"><span class="dot ball"></span><span class="dot ball"></span><span class="dot ball"></span></div></div>
+                <div class="count-row"><span class="label" style="color:#f1c40f">S</span><div class="dots"><span class="dot strike"></span><span class="dot strike"></span></div></div>
+                <div class="count-row"><span class="label" style="color:#e74c3c">O</span><div class="dots"><span class="dot out"></span><span class="dot out"></span></div></div>
+            </section>
+
+            <section class="diamond-wrapper">
+                <div class="diamond">
+                    <div class="base" id="base2"></div>
+                    <div class="base" id="base3"></div>
+                    <div class="base" id="base1"></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="controls">
+            <button id="refresh-btn" class="btn-sm" onclick="syncPull()">今すぐ手動更新</button>
+            <button id="pause-btn" class="btn-sm" onclick="togglePause()">自動更新: ON</button>
+        </div>
+    </div>
+
+    <script src="viewer.js"></script>
+</body>
+</html>

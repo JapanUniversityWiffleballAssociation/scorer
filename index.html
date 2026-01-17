@@ -1,24 +1,89 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>
-            ウィッフルボールスコアラー（β版）
-        </title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <H1>ウィッフルボールスコアラー（β版）</H1>
-        <h2>使い方</h2>
-        誠意作成中
-        <h2>アプリ</h2>
-        <div class="botton-group">
-            <a href="edit-games.html">試合登録</a>
-            <a href="veiwer.html">試合中継</a>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA 試合速報システム（プロトタイプ） - メインメニュー</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 40px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .menu-card {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+        }
+        .menu-card:hover {
+            border-color: #2ecc71;
+            transform: translateY(-5px);
+            background: #34495e;
+        }
+        .menu-card h2 {
+            margin: 0 0 10px 0;
+            color: #2ecc71;
+        }
+        .menu-card p {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin: 0;
+        }
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .footer-simple {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header style="text-align: center; margin-bottom: 40px;">
+            <h1 style="color: #2ecc71; letter-spacing: 2px;">JUWA</h1>
+            <p style="color: #bdc3c7;">Japan University Wiffleball Association</p>
+            <h2 style="margin-top: 10px;">試合速報システム</h2>
+        </header>
+
+        <div class="menu-container">
+
+            <a href="league_manager.html" class="menu-card">
+                <span class="icon">🏆</span>
+                <h2>大会を作成する</h2>
+                <p>大会情報を入力・保存します。</p>
+            </a>
+
+            <a href="edit-games.html" class="menu-card">
+                <span class="icon">📝</span>
+                <h2>記録をつける</h2>
+                <p>試合のスコア、カウント、打席結果をリアルタイムで入力・保存します。</p>
+            </a>
+
+            <a href="viewer.html" target="_blank" rel="noopener noreferrer" class="menu-card">
+                <span class="icon">📱</span>
+                <h2>速報を見る（新規タブ）</h2>
+                <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況を観戦します。</p>
+            </a>
         </div>
-        <div class="footer-bottom">
-        <p>&copy; 2026 Japan University Wiffleball Association. All Rights Reserved.</p>
-        </div>
-        Copyright © 2026 日本ウィッフルボール協会 (Japan University Wiffleball Association). All rights reserved.
-    </body>
+
+        <footer class="footer-simple">
+            <p>&copy; 2026 Japan University Wiffleball Association. All Rights Reserved.</p>
+        </footer>
+    </div>
+</body>
 </html>
