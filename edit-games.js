@@ -301,13 +301,12 @@ function addCount(type) {
 
 /**
  * 打撃結果の処理
- * @param {string} actionName - "シングルヒット", "ホームラン" など
+ * @param {string} actionName - "シングルヒット", "ダブルヒット" など
  */
 function recordPlay(actionName) {
     if (isGameEnded) return;
     saveHistory();
 
-    // 簡易的な走者・スコア処理（ルールに合わせて調整が必要）
     if (actionName === "ホームラン") {
         let runs = 1;
         if (runners.base1) runs++;
@@ -315,22 +314,43 @@ function recordPlay(actionName) {
         if (runners.base3) runs++;
         addScore(runs);
         runners = { base1: false, base2: false, base3: false };
-    } else if (actionName === "シングルヒット") {
+    } 
+    else if (actionName === "シングルヒット") {
         if (runners.base3) addScore(1);
         runners.base3 = runners.base2;
         runners.base2 = runners.base1;
         runners.base1 = true;
+    } 
+    else if (actionName === "ダブルヒット") {
+        // 2塁・3塁ランナーは生還
+        if (runners.base3) addScore(1);
+        if (runners.base2) addScore(1);
+        // 1塁ランナーは3塁へ
+        runners.base3 = runners.base1;
+        runners.base2 = true; // 打者は2塁へ
+        runners.base1 = false;
+    } 
+    else if (actionName === "トリプルヒット") {
+        // 全ランナーが生還
+        let runs = 0;
+        if (runners.base1) runs++;
+        if (runners.base2) runs++;
+        if (runners.base3) runs++;
+        addScore(runs);
+        // 打者は3塁へ
+        runners = { base1: false, base2: false, base3: true };
     }
-    // ... 他の結果処理 ...
 
+    // 打席が終わったのでストライク・ボールカウントをリセット
     counts.strike = 0;
     counts.ball = 0;
     
+    // 表示の更新
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
     
-    // スプレッドシートへ送信
+    // サーバーへ送信
     syncPush(actionName, getLogSnapshot());
 }
 
@@ -339,6 +359,7 @@ function recordPlay(actionName) {
  */
 function handleInningChange() {
     counts = { ball: 0, strike: 0, out: 0 };
+    runners = { base1: false, base2: false, base3: false };
     if (isBottomInning) {
         if (currentInning >= totalInnings) {
             isGameEnded = true;
