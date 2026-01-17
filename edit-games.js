@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const generated = `${leagueId}-${dateStr}-${rand}`;
         const input = document.getElementById('input-game-id');
         input.value = generated;
-        input.style.backgroundColor = "#fff"; // 入力可能であることを強調
+        input.style.backgroundColor = "#333"; // 暗いグレー
+        input.style.color = "#fff";           // 白文字
+        input.style.border = "2px solid #2ecc71"; // 枠線を光らせて「入力された」ことを示す
     });
 
     // 試合開始ボタンの処理 (全文)
