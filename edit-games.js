@@ -97,7 +97,7 @@ async function handleStartGame(e) {
     showStatus("試合を登録中...");
     isPushing = true;
     try {
-        await syncPush("試合開始", {
+        await syncPush(null, {
             inning: 1, 
             isBottom: false, 
             team: topName,
@@ -241,6 +241,10 @@ async function syncPull() {
     try {
         const response = await fetch(`${FIXED_GAS_URL}?gameId=${gameId}&_=${Date.now()}`);
         const state = await response.json();
+        if(new Date().toISOString >= state.updatedAt){
+            console.log("画面上の状態がサーバーの更新時間より最新のため、上書きしません。")
+            return;
+        }
 
         if (state && !state.error) {
             // サーバー側のデータが新しい場合のみ反映（簡易的な競合回避）
@@ -274,22 +278,27 @@ function applyState(state) {
 /**
  * カウント操作関数
  */
-function addCount(type) {
+function addCount(type, isKnockout = false) {
     if (isGameEnded || isPushing) return;
     saveHistory();
     if (type === 'strike') {
         counts.strike++;
-        if (counts.strike >= 3) { counts.strike = 0; counts.ball = 0; addCount('out'); return; }
+        if (counts.strike >= 3) { counts.strike = 0; counts.ball = 0; addCount('out',true); }
     } else if (type === 'ball') {
         counts.ball++;
-        if (counts.ball >= 4) { recordPlay('四球'); return; }
+        if (counts.ball >= 4) { recordPlay('四球'); return;}
     } else if (type === 'out') {
         counts.out++;
+        if(isKnockout){
+            recordPlay('三振');
+        }else{
+            recordPlay(counts.out+'アウト');
+        }
         // アウトになっても score.top/bottom は増やさない（addScoreを呼ばない）
         if (counts.out >= 3) {
             handleInningChange(); // ここで score はリセットされるはず
-            return;
         }
+        return;
     }
     updateCountDisplay();
     updateScoreboardUI();
@@ -300,10 +309,11 @@ function addCount(type) {
  * 打撃結果の処理
  * @param {string} actionName - "シングルヒット", "四球" など
  */
-function recordPlay(actionName) {
+async function recordPlay(actionName) {
     if (isGameEnded || isPushing) return;
+    setControlsDisabled(true);
     saveHistory();
-
+    try{
     if (actionName === "ホームラン") {
         let runs = 1;
         if (runners.base1) runs++;
@@ -357,7 +367,13 @@ function recordPlay(actionName) {
     updateDiamondDisplay();
     updateScoreboardUI();
     
-    syncPush(actionName, getLogSnapshot());
+    await syncPush(actionName, getLogSnapshot());
+    }   catch(error) {
+        console.error("送信エラー:", error);
+        alert("データの送信に失敗しました。通信環境を確認してください。");
+    }finally {
+        setControlsDisabled(false);
+    }
 }
 /**
  * イニング交代処理
@@ -375,6 +391,7 @@ function handleInningChange() {
             currentInning++;
             isBottomInning = false;
             score.top = 0;
+            score.bottom = 0;
         }
     } else {
         isBottomInning = true;
@@ -499,4 +516,39 @@ function handleWalk() {
     runners.base1 = true;
     updateDiamondDisplay();
     updateScoreboardUI();
+}
+
+async function endGame() {
+    if (!confirm("試合を終了しますか？")) return;
+
+    isGameEnded = true;
+    const finalAction = "試合終了";
+    
+    // ボタンを無効化して連打を防ぐ
+    const endBtn = document.getElementById('end-game-btn');
+    if (endBtn) endBtn.disabled = true;
+
+    // サーバーに「終了状態」を確実に送り出す
+    await syncPush(finalAction);
+    
+    alert("試合が終了しました。この画面は閲覧専用になります。");
+    
+    // 最後にUIを更新
+    updateScoreboardUI();
+    document.body.classList.add('game-over');
+}
+
+/**
+ * 操作ボタンの状態を一括切り替え
+ * @param {boolean} disabled - trueで無効化、falseで有効化
+ */
+function setControlsDisabled(disabled) {
+    // 制御対象のボタンを選択（クラス名などで一括指定すると楽）
+    const buttons = document.querySelectorAll('button:not(#undo-btn)'); // Undo以外を対象にする例
+    buttons.forEach(btn => {
+        btn.disabled = disabled;
+        // 視覚的に分かりやすくするために透明度を変える
+        btn.style.opacity = disabled ? "0.5" : "1.0";
+        btn.style.cursor = disabled ? "not-allowed" : "pointer";
+    });
 }
