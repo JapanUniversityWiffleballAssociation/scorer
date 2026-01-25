@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startBtn.addEventListener('click', handleStartGame); // 関数に切り出し
     }
 
-    // 3. 各操作ボタンの紐付け（★ここが足りていませんでした）
+    // 3. 各操作ボタンの紐付け
     const bindBtn = (id, fn) => {
         const btn = document.getElementById(id);
         if (btn) btn.addEventListener('click', fn);
