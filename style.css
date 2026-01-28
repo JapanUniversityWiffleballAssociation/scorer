@@ -140,32 +140,3 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
     }
 }
 
-/*閲覧者用のスコアボード*/
-/* スコアボード全体のデザイン */
-#scoreboard-container table {
-    width: 100%;
-    border-collapse: collapse; /* 枠線を一本にする */
-    margin-bottom: 20px;
-    background: #222;
-    color: #fff;
-}
-
-#scoreboard-container th, 
-#scoreboard-container td {
-    border: 1px solid #ccc; /* ここで枠線を引く */
-    padding: 8px;
-    text-align: center;
-    min-width: 30px;
-}
-
-#scoreboard-container th {
-    background-color: #222;
-    font-weight: bold;
-}
-
-.team-name-cell {
-    background-color: #222;
-    font-weight: bold;
-    text-align: left !important;
-    padding-left: 10px !important;
-}
