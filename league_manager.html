@@ -56,10 +56,9 @@
 
     <a href="edit-games.html" class="nav-link">記録用アプリへ →</a>
 </div>
-
+<script src="common.js"></script>
 <script>
-    // あなたのGAS URLをここに貼り付けてください
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
+    const GAS_URL = CONST_GAS_URL;
 
     /**
      * 保存処理
@@ -74,33 +73,31 @@
             alert("すべての項目を入力してください");
             return;
         }
-
+        if (id.includes("-")){
+            alert("リーグIDに使用不許可文字「-（半角ハイフン）」が含まれているため登録できません。");
+            return;
+        }
         const btn = document.getElementById('save-btn');
         btn.disabled = true;
         btn.textContent = "送信中...";
 
+        const payload = {
+            mode: "saveLeague",
+            leagueId: id,
+            leagueName: name,
+            startDate: start,
+            endDate: end
+        };
+
         try {
-            const formData = new URLSearchParams();
-            formData.append("mode", "saveLeague");
-            formData.append("leagueId", id);
-            formData.append("leagueName", name);
-            formData.append("startDate", start);
-            formData.append("endDate", end);
-
-            // POST送信 (no-corsモード)
-            await fetch(GAS_URL, {
-                method: "POST",
-                body: formData,
-                mode: "no-cors"
-            });
-
+            await postToGAS(GAS_URL, payload);
             alert("リーグを登録しました！");
             location.reload();
         } catch (e) {
             alert("エラーが発生しました");
             btn.disabled = false;
             btn.textContent = "リーグを開設する";
-        }
+        } 
     });
 
     /**

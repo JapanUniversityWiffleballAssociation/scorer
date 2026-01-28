@@ -1,4 +1,4 @@
-const GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
+const GAS_URL = CONST_GAS_URL;
 
 // ページ読み込み時の処理
 document.addEventListener('DOMContentLoaded', () => {
@@ -60,9 +60,9 @@ function loadTeamDetails() {
 
 /**
  * 3. メンバー入力行を動的に追加
- * @param {Object} data - {name: string, number: string, pos: string}
+ * @param {Object} data - {name: string, number: string, pos: string, defaultOrder, string}
  */
-function addMemberRow(data = { name: '', number: '', pos: '' }) {
+function addMemberRow(data = { name: '', number: '', pos: '',defaultOrder: '' }) {
     const container = document.getElementById('member-list');
     const li = document.createElement('li');
     li.className = 'member-item';
@@ -108,32 +108,19 @@ async function saveTeam() {
     })).filter(m => m.name !== ""); // 名前が空の行は除外
 
     const payload = {
-        mode: 'saveTeamMaster',
-        teamId: teamId,
-        teamName: teamName,
-        members: JSON.stringify(members) // 配列を文字列として保存
-    };
+    mode: 'saveTeamMaster',
+    teamId: teamId,
+    teamName: teamName,
+    members: members // JSON.stringify(members) としていたのを「members」そのままにする
+};
 
-    try {
-        const response = await fetch(GAS_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-
-        if (result.status === "success") {
-            alert("チーム情報を保存しました");
-            // リストを再読み込みして最新の状態にする
-            await loadTeams();
-            // 保存したチームを選択状態にする（新規作成だった場合のため）
-            document.getElementById('team-select').value = result.teamId;
-        } else {
-            throw new Error("サーバーエラーが発生しました");
-        }
-    } catch (e) {
-        console.error("Save Error:", e);
-        alert("保存に失敗しました。通信環境を確認してください。");
-    } finally {
+try {
+    const result = await postToGAS(GAS_URL, payload);
+    alert("チーム情報を保存しました");
+    // ...
+} catch (e) {
+    alert("保存に失敗しました");
+} finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "チーム情報を保存";
     }

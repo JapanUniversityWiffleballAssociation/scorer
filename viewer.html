@@ -19,12 +19,6 @@
         .viewer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .live-tag { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
         
-        /* スコアボード */
-        table { width: 100%; border-collapse: collapse; background: #fff; color: #333; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background: #f8f9fa; font-size: 0.8rem; }
-        .active-cell { background: #e8f5e9; font-weight: bold; border: 2px solid var(--accent); }
-        
         /* カウント・ダイヤモンド */
         .status-container { display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; }
         .count-row { display: flex; align-items: center; margin-bottom: 8px; }
@@ -54,7 +48,7 @@
 <body>
 
     <div id="list-screen" class="container">
-        <h2 style="text-align: center; color: var(--accent);">🏆 進行中の試合</h2>
+        <h2 style="text-align: center; color: var(--accent);">🏆 試合一覧</h2>
         <div id="game-list-container">
             <p style="text-align: center; color: #888; padding: 40px;">試合データを読み込み中...</p>
         </div>
@@ -71,10 +65,27 @@
         <div id="sync-status" style="text-align: right; font-size: 0.7rem; color: #2ecc71; margin-bottom: 5px;">接続中...</div>
 
         <section class="score-board">
-            <table>
-                <div id="scoreboard-container" style="overflow-x: auto;">
-                </div>
+            <table id="scoreboard">
+                <thead id="scoreboard-head">
+                <tr id="header-row">
+                    <th>チーム</th>
+                    <th>R</th>
+                </tr>
+                </thead>
+                <tbody id="scoreboard-body">
+                <tr id="score-row-top">
+                    <td id="top-team-name" class="team-name-cell">先攻</td>
+                    <td class="total-cell" id="total-score-top">0</td>
+                </tr>
+                <tr id="score-row-bottom">
+                    <td id="bottom-team-name" class="team-name-cell">後攻</td>
+                    <td class="total-cell" id="total-score-bottom">0</td>
+                </tr>
+                </tbody>
             </table>
+            <button class="btn-log" onclick="openLogWindow()">
+                試合ログ（打席記録）を表示
+            </button>
         </section>
 
         <div class="status-container">
@@ -98,7 +109,7 @@
             <button id="pause-btn" class="btn-sm" onclick="togglePause()">自動更新: ON</button>
         </div>
     </div>
-
+    <script src="common.js"></script>
     <script src="viewer.js"></script>
 </body>
 </html>

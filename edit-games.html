@@ -10,38 +10,58 @@
 
     <div id="setup-screen" class="overlay">
         <div class="setup-box">
-          <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-sm"  onclick="location.href='index.html'">メニューに戻る</button>
-        </div>
+            <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            </div>
             <h2>試合設定 & 同期</h2>
+            
             <div class="input-group">
-            <label>参加する大会を選択</label>
-            <select id="select-league">
-                <option value="">リーグを読み込み中...</option>
-            </select>
+                <label>参加する大会を選択<br>（大会を選択すると追加の設定画面が表示されます。）</label>
+                <select id="select-league" onchange="handleLeagueSelect()">
+                    <option value="">リーグを読み込み中...</option>
+                </select>
             </div>
 
-            <div class="input-group">
-                <label>試合ID</label>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="input-game-id" placeholder="リーグを選択してください">
-                    <button type="button" id="gen-id-btn" class="btn-sm">自動発行</button>
+            <div id="mode-selection" class="hidden" style="margin-top: 20px;">
+                <label>操作モードを選択</label>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-sm" onclick="showNewGameForm()" style="flex:1; background:#2ecc71; color:white;">新規試合を作成</button>
+                    <button type="button" class="btn-sm" onclick="showExistingGameForm()" style="flex:1; background:#3498db; color:white;">既存試合を編集</button>
                 </div>
             </div>
 
-            <div class="input-group">
-                <label>先攻チーム名</label>
-                <input type="text" id="input-top-team" value="先攻">
-            </div>
-            <div class="input-group">
-                <label>後攻チーム名</label>
-                <input type="text" id="input-bottom-team" value="後攻">
-            </div>
-            <div class="input-group">
+            <div id="new-game-form" class="hidden" style="margin-top: 20px; border-top: 1px solid #555; padding-top: 15px;">
+                <div class="input-group">
+                    <label>試合ID</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="input-game-id" readonly placeholder="自動発行してください">
+                        <button type="button" id="gen-id-btn" class="btn-sm">自動発行</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>先攻チーム名</label>
+                    <input type="text" id="top-team-name" value="先攻">
+                </div>
+                <div class="input-group">
+                    <label>後攻チーム名</label>
+                    <input type="text" id="bottom-team-name" value="後攻">
+                </div>
+                <div class="input-group">
                 <label>イニング数</label>
                 <input type="number" id="input-innings" value="3" min="1" max="12">
+                </div>
+                <button type="button" id="start-btn" class="btn-save">この内容で試合開始</button>
             </div>
-            <button type="button" id="start-btn">試合開始</button>
+
+            <div id="existing-game-form" class="hidden" style="margin-top: 20px; border-top: 1px solid #555; padding-top: 15px;">
+                <div class="input-group">
+                    <label>編集する試合を選択</label>
+                    <select id="select-existing-game">
+                        <option value="">試合を読み込み中...</option>
+                    </select>
+                </div>
+                <button type="button" onclick="resumeGame()" class="btn-save" style="background:#3498db;">編集を再開する</button>
+            </div>
         </div>
     </div>
 
@@ -56,20 +76,27 @@
         </div>
 
         <section class="score-board">
-<table id="scoreboard">
-    <thead id="scoreboard-head">
-        </thead>
-    <tbody id="scoreboard-body">
-        <tr id="score-row-top">
-            <td id="top-team-name" class="team-name-cell">先攻</td>
-            <td class="total-cell" id="total-score-top">0</td>
-        </tr>
-        <tr id="score-row-bottom">
-            <td id="bottom-team-name" class="team-name-cell">後攻</td>
-            <td class="total-cell" id="total-score-bottom">0</td>
-        </tr>
-    </tbody>
-</table>
+        <table id="scoreboard">
+            <thead id="scoreboard-head">
+            <tr id="header-row">
+                <th>チーム</th>
+                <th>R</th>
+            </tr>
+            </thead>
+            <tbody id="scoreboard-body">
+            <tr id="score-row-top">
+                <td id="top-team-name" class="team-name-cell">先攻</td>
+                <td class="total-cell" id="total-score-top">0</td>
+            </tr>
+            <tr id="score-row-bottom">
+                <td id="bottom-team-name" class="team-name-cell">後攻</td>
+                <td class="total-cell" id="total-score-bottom">0</td>
+            </tr>
+            </tbody>
+        </table>
+        <button class="btn-log" onclick="openLogWindow()">
+            試合ログ（打席記録）を表示
+        </button>
         </section>
 
         <div class="status-container">
@@ -123,7 +150,7 @@
         </section>
     </div>
 
+    <script src="common.js"></script>
     <script src="edit-games.js"></script>
-  
 </body>
 </html>

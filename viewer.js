@@ -15,11 +15,17 @@ reproduced or used in any manner whatsoever.
 /**
  * 設定: GASウェブアプリURL
  */
-const FIXED_GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
+const GAS_URL = CONST_GAS_URL;
 
 // --- 状態管理 ---
 let autoUpdateTimer = null;
 let isPaused = false;
+let currentGameId = null;
+let totalScore = null;
+let currentInning = null;
+let isBottomInning = null;
+let totalInnings = null;
+let score = null;
 
 /**
  * 起動時の処理
@@ -27,7 +33,7 @@ let isPaused = false;
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const gameId = params.get('id');
-
+    currentGameId = gameId;
     if (gameId) {
         // A. 詳細画面モード
         showScreen('main-app');
@@ -66,7 +72,7 @@ async function fetchGameList() {
     if (!container) return;
 
     try {
-        const response = await fetch(`${FIXED_GAS_URL}?_=${Date.now()}`);
+        const response = await fetch(`${GAS_URL}?_=${Date.now()}`);
         const gameList = await response.json();
 
         if (!gameList || gameList.length === 0) {
@@ -95,7 +101,7 @@ async function fetchGameList() {
                     </div>
                     <div style="display:flex; justify-content:space-around; align-items:center;">
                         <div style="text-align:center; flex:1;"><strong>${g.topTeam}</strong></div>
-                        <div style="font-size:1.5rem; font-weight:bold; flex:1; text-align:center;">${g.score.top} - ${g.score.bottom}</div>
+                        <div style="font-size:1.5rem; font-weight:bold; flex:1; text-align:center;">${g.totalScore.top} - ${g.totalScore.bottom}</div>
                         <div style="text-align:center; flex:1;"><strong>${g.bottomTeam}</strong></div>
                     </div>
                     <div style="text-align:center; font-size:0.9rem; margin-top:5px; color:#2ecc71;">
@@ -121,7 +127,7 @@ async function fetchGameDetail(id) {
     if (statusEl) statusEl.textContent = "更新中...";
 
     try {
-        const response = await fetch(`${FIXED_GAS_URL}?gameId=${id}&_=${Date.now()}`);
+        const response = await fetch(`${GAS_URL}?gameId=${id}&_=${Date.now()}`);
         const state = await response.json();
 
         if (!state || state.error) {
@@ -130,10 +136,15 @@ async function fetchGameDetail(id) {
             return;
         }
 
-        // スコアボードの流し込み
-        // HTML側には tableHTML がそのまま入るので、thead/tbodyを分けずに scoreboard に直接入れる
-        document.getElementById('scoreboard-container').innerHTML = '<table>' + state.tableHTML + '</table>';
-
+        // スコアボードの更新
+        score = state.score;
+        totalScore = state.totalScore;
+        currentInning = state.currentInning;
+        isBottomInning = state.isBottomInning;
+        totalInnings = state.totalInnings;
+        
+        updateScoreboardUI();
+        
         // カウントの更新
         updateDots('ball', state.counts.ball);
         updateDots('strike', state.counts.strike);
@@ -197,4 +208,66 @@ function togglePause() {
 function syncPull() {
     const params = new URLSearchParams(window.location.search);
     fetchGameDetail(params.get('id'));
+}
+
+
+
+/**
+ * スコアボードUI更新
+ * @returns {void}
+ */
+function updateScoreboardUI() {
+    // 1. 要素を取得
+    const headerRow = document.getElementById('header-row');
+    const topRow = document.getElementById('score-row-top');
+    const bottomRow = document.getElementById('score-row-bottom');
+
+    // 2. ここでチェック！どれかが null ならエラーメッセージを出して中断する
+    if (!headerRow || !topRow || !bottomRow) {
+        console.error("エラー: スコアボードの行が見つかりません。", {headerRow, topRow, bottomRow});
+        return; 
+    }
+
+    // --- 以降、安全に実行される ---
+    const clearInningCells = (row) => {
+        // row が undefined でないことは上記で確認済みなので length は安全に読める
+        for (let i = row.cells.length - 2; i >= 1; i--) {
+            row.deleteCell(i);
+        }
+    };
+
+    clearInningCells(headerRow);
+    clearInningCells(topRow);
+    clearInningCells(bottomRow);
+
+    const displayInnings = Math.max(currentInning, totalInnings);
+
+    for (let i = 1; i <= displayInnings; i++) {
+        // ヘッダー挿入
+        const th = document.createElement('th');
+        th.textContent = i;
+        headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 1]);
+
+        // 先攻セル挿入
+        const tdTop = document.createElement('td');
+        tdTop.textContent = (score.top && score.top[i] !== undefined) ? score.top[i] : "-";
+        topRow.insertBefore(tdTop, topRow.cells[topRow.cells.length - 1]);
+
+        // 後攻セル挿入
+        const tdBottom = document.createElement('td');
+        tdBottom.textContent = (score.bottom && score.bottom[i] !== undefined) ? score.bottom[i] : "-";
+        bottomRow.insertBefore(tdBottom, bottomRow.cells[bottomRow.cells.length - 1]);
+
+        // アクティブ表示（点滅）
+        if (i === currentInning) {
+            if (!isBottomInning) tdTop.classList.add('active-cell');
+            else tdBottom.classList.add('active-cell');
+        }
+    }
+
+    // 合計点の書き換え
+    const topTotalEl = document.getElementById('total-score-top');
+    const bottomTotalEl = document.getElementById('total-score-bottom');
+    if (topTotalEl) topTotalEl.textContent = totalScore.top;
+    if (bottomTotalEl) bottomTotalEl.textContent = totalScore.bottom;
 }

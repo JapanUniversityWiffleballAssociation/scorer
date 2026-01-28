@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打席ログ参照 - v1.2.0</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .log-container { max-width: 600px; margin: 20px auto; }
+        .log-item {
+            background: #222;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .log-item.bottom { border-left-color: #e74c3c; }
+        .log-info { flex: 1; }
+        .log-inning { font-weight: bold; color: #aaa; font-size: 0.9rem; }
+        .log-action { font-size: 1.2rem; margin-top: 5px; }
+        .log-time { font-size: 0.7rem; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="log-container">
+        <h1>試合ログ</h1>
+        <div id="game-info" style="margin-bottom: 20px; color: #ddd;"></div>
+        <div id="log-list">
+            </div>
+        <button onclick="window.close()" style="width:100%; padding:10px; margin-top:20px;">閉じる</button>
+    </div>
+    <script src="common.js"></script>
+    <script>
+        const GAS_URL = CONST_GAS_URL;
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameId = urlParams.get('gameId');
+
+        window.onload = async () => {
+            if (!gameId) {
+                document.getElementById('log-list').innerHTML = "試合IDが指定されていません。";
+                return;
+            }
+            loadLogs();
+        };
+
+        async function loadLogs() {
+            try {
+                // GASにログ取得モードを追加する必要があります
+                const response = await fetch(`${GAS_URL}?mode=getGameLogs&gameId=${gameId}`);
+                const logs = await response.json();
+                
+                const list = document.getElementById('log-list');
+                list.innerHTML = '';
+
+                logs.forEach(log => {
+                    const isBottom = log.inning.includes("裏");
+                    const div = document.createElement('div');
+                    div.className = `log-item ${isBottom ? 'bottom' : ''}`;
+                    div.innerHTML = `
+                        <div class="log-info">
+                            <div class="log-inning">${log.inning} | ${log.team}</div>
+                            <div class="log-action">${log.action}</div>
+                        </div>
+                        <div class="log-time">${log.time}</div>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch (e) {
+                console.error(e);
+                document.getElementById('log-list').innerHTML = "ログの読み込みに失敗しました。";
+            }
+        }
+    </script>
+</body>
+</html>
