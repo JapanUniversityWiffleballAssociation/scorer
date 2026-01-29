@@ -78,6 +78,7 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
 .out { border-bottom: 4px solid #e74c3c; }
 .hit, .hr { border-bottom: 4px solid #2ecc71; }
 .undo { background: #e67e22; border-bottom: 4px solid #d35400; }
+.change-player { background: #1fa8d1; border-bottom: 4px solid #1f9dc4; }
 
 /* 閲覧用 */
 .game-card {
@@ -140,3 +141,140 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
     }
 }
 
+/* セレクトボックスの見た目 */
+
+select,
+::picker(select) {
+  appearance: base-select;
+}
+* {
+  box-sizing: border-box;
+}
+
+
+
+select {
+  flex: 1;
+}
+select {
+  border: 2px solid #ddd;
+  background: #606060;
+  padding: 10px;
+  transition: 0.4s;
+}
+
+select:hover,
+select:focus {
+  background: #a4a4a4;
+}
+select::picker-icon {
+  color: #999;
+  transition: 0.4s rotate;
+}
+select:open::picker-icon {
+  rotate: 180deg;
+}
+::picker(select) {
+  border: none;
+}
+option {
+  display: flex;
+  justify-content: flex-start;
+  gap: 20px;
+
+  border: 2px solid #ddd;
+  background: #eee;
+  padding: 10px;
+  transition: 0.4s;
+}
+option:first-of-type {
+  border-radius: 8px 8px 0 0;
+}
+
+option:last-of-type {
+  border-radius: 0 0 8px 8px;
+}
+
+option:not(option:last-of-type) {
+  border-bottom: none;
+}
+option:nth-of-type(odd) {
+  background: #fff;
+}
+
+option:hover,
+option:focus {
+  background: rgb(120, 248, 105);
+}
+option .icon {
+  font-size: 1.6rem;
+  text-box: trim-both cap alphabetic;
+}
+selectedcontent .icon {
+  display: none;
+}
+option:checked {
+  font-weight: bold;
+}
+
+::picker(select) {
+  opacity: 0;
+  transition: all 0.4s allow-discrete;
+}
+::picker(select):popover-open {
+  opacity: 1;
+}
+@starting-style {
+  ::picker(select):popover-open {
+    opacity: 0;
+  }
+}
+::picker(select) {
+  top: calc(anchor(bottom) + 1px);
+  left: anchor(10%);
+}
+
+/*投球数のスタイル*/
+/* 投球数表示のボックス */
+.pitch-counter-box {
+    background: #222;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 「投球数」のラベル部分 */
+.pitch-label {
+    font-size: 0.7rem;
+    color: #aaa;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+/* 数字部分（デジタル数字っぽく） */
+#pitching-count {
+    font-family: 'Courier New', Courier, monospace; /* 等幅フォント */
+    font-size: 2rem;
+    color: #2ecc71; /* 緑色、または黄色 (#f1c40f) が見やすい */
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* レスポンシブ調整：横幅が狭い場合 */
+@media (max-width: 480px) {
+    .status-container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .pitch-counter-box {
+        margin-right: 0;
+        padding: 5px;
+    }
+}

@@ -27,6 +27,7 @@ let isPushing = false;
 let syncTimer = null;
 let totalInnings = 9;
 let lastPushTime = 0;
+let pitchingCount = {top:[0],bottom:[0]};
 
 // --- 初期化処理 ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -57,15 +58,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bindBtn('strike-btn', () => addCount('strike'));
     bindBtn('ball-btn', () => addCount('ball'));
-    bindBtn('fly-out-btn', () => addCount('out'));
-    bindBtn('ground-out-btn', () => addCount('out'));
+    bindBtn('foul-btn', () => addCount('foul'));
+    bindBtn('out-btn', () => addCount('out'));
 
     bindBtn('single-hit-btn', () => recordPlay('シングルヒット'));
     bindBtn('double-hit-btn', () => recordPlay('ダブルヒット'));
     bindBtn('triple-hit-btn', () => recordPlay('トリプルヒット'));
     bindBtn('hr-btn', () => recordPlay('ホームラン'));
 
+    bindBtn('strike-btn',countPitching);
+    bindBtn('ball-btn', countPitching);
+    bindBtn('foul-btn', countPitching);
+    bindBtn('out-btn', countPitching);
+
+    bindBtn('single-hit-btn',countPitching);
+    bindBtn('double-hit-btn',countPitching);
+    bindBtn('triple-hit-btn',countPitching);
+    bindBtn('hr-btn',countPitching);
+
     bindBtn('undo-btn', undo);
+    bindBtn('change-pitcher-btn',changePitcher);
     bindBtn('end-game-btn', endGame);
 });
 
@@ -131,6 +143,7 @@ async function syncPush(actionName = null, logData = null) {
         totalScore: totalScore,
         counts: counts,
         runners: runners,
+        pitchingCount: pitchingCount,
         currentInning: currentInning,
         isBottomInning: isBottomInning,
         isGameEnded: isGameEnded,
@@ -226,6 +239,7 @@ function applyState(state) {
     currentInning = state.currentInning;
     isBottomInning = state.isBottomInning;
     isGameEnded = state.isGameEnded;
+    pitchingCount = state.pitchingCount || 1;
 
     // UI更新
     updateCountDisplay();
@@ -236,30 +250,36 @@ function applyState(state) {
 /**
  * カウント操作関数
  */
-async function addCount(type, isKnockout = false) {
+async function addCount(type) {
     if (isGameEnded || isPushing) return;
     saveHistory();
     if (type === 'strike') {
         counts.strike++;
-        if (counts.strike >= 3) { counts.strike = 0; counts.ball = 0; addCount('out',true); }
+        if (counts.strike >= 3) {
+            counts.out ++;
+            await recordPlay('三振');
+            if (counts.out >= 3) {
+                handleInningChange();
+            }
+        }
     } else if (type === 'ball') {
         counts.ball++;
         if (counts.ball >= 4) { recordPlay('四球'); return;}
+    } else if (type === 'foul') {
+        if(counts.strike <= 2) {
+            counts.strike ++;
+        }
     } else if (type === 'out') {
         counts.out++;
-        if(isKnockout){
-            await recordPlay('三振');
-        }else{
-            await recordPlay(counts.out+'アウト');
-        }
-        // アウトになっても score.top/bottom は増やさない（addScoreを呼ばない）
+        await recordPlay(counts.out+'アウト');
         if (counts.out >= 3) {
-            handleInningChange(); // ここで score はリセットされるはず
+            handleInningChange();
         }
         return;
     }
     updateCountDisplay();
     updateScoreboardUI();
+    syncPush();
 }
 
 /**
@@ -361,6 +381,7 @@ function handleInningChange() {
     updateDiamondDisplay();
     updateScoreboardUI();
     updateCountDisplay();
+    syncPush();
 }
 
 /**
@@ -411,7 +432,7 @@ function undo() {
     score = previousState.score;
     currentInning = previousState.currentInning;
     isBottomInning = previousState.isBottomInning;
-    
+    pitchingCount = previousState.pitchingCount;
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
@@ -420,7 +441,7 @@ function undo() {
 
 function saveHistory() {
     if (historyStack.length > 20) historyStack.shift();
-    historyStack.push(JSON.parse(JSON.stringify({ counts, runners, score, currentInning, isBottomInning })));
+    historyStack.push(JSON.parse(JSON.stringify({ counts, runners, score, currentInning, isBottomInning, pitchingCount })));
 }
 
 /**
@@ -434,6 +455,8 @@ function updateCountDisplay() {
     updateDots('ball', counts.ball);
     updateDots('strike', counts.strike);
     updateDots('out', counts.out);
+
+    document.getElementById('pitching-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
 }
 
 function updateDiamondDisplay() {
@@ -501,6 +524,7 @@ function updateScoreboardUI() {
     if (topTotalEl) topTotalEl.textContent = totalScore.top;
     if (bottomTotalEl) bottomTotalEl.textContent = totalScore.bottom;
 }
+
 async function endGame() {
     if (!confirm("試合を終了しますか？")) return;
 
@@ -659,4 +683,21 @@ function generateGameId(){
     const dateStr = new Date().toISOString().slice(2,10).replace(/-/g, '');
     const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
     document.getElementById('input-game-id').value = `${leagueId}-${dateStr}-${rand}`;
+}
+
+function changePitcher(){
+    if(isBottomInning) {
+        pitchingCount.bottom.push(0);
+    }else{
+        pitchingCount.top.push(0);
+    }
+    updateCountDisplay();
+}
+
+function countPitching(){
+    if(isBottomInning){
+        pitchingCount.bottom[pitchingCount.bottom.length-1] ++;
+    }else {
+        pitchingCount.top[pitchingCount.top.length-1] ++;
+    }
 }
