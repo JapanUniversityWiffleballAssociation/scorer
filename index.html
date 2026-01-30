@@ -50,6 +50,30 @@
             font-size: 0.8rem;
             color: #7f8c8d;
         }
+        .notice-card {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+        }
+        .notice-detail-card{ 
+            position: relative;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 1.0em 5%;
+            padding: 7px 10px;
+            min-width: 120px;
+            max-width: 100%;
+            color: #555;
+            font-size: 16px;
+            background: #e0edff;
+            border: #e0edff;
+        }
+
     </style>
 </head>
 <body>
@@ -59,9 +83,17 @@
             <p style="color: #bdc3c7;">Japan University Wiffleball Association</p>
             <h2 style="margin-top: 10px;">試合速報システム</h2>
         </header>
-
+        <div class="notice">
+            <h3>お知らせ</h3>
+            <div class="notice-card" onclick="document.getElementById('notice01').classList.toggle('hidden');">
+                β版リリースのお知らせ（2026/01/30）
+            </div>
+            <div class="notice-detail-card hidden" id="notice01">
+                日本ウィッフルボール学生連盟公式の試合速報システムのβ版をリリースしました。<br>
+                β版のため、正式版リリースに向けたメンテナンス等が発生する可能性がございます。あらかじめご了承ください。
+            </div>
+        </div>
         <div class="menu-container">
-
             <a href="league_manager.html" class="menu-card">
                 <span class="icon">🏆</span>
                 <h2>大会を作成する</h2>

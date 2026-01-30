@@ -39,12 +39,16 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>先攻チーム名</label>
-                    <input type="text" id="top-team-name" value="先攻">
+                    <label>先攻チーム</label>
+                    <select id="top-team-name">
+                        <option value="loading">チーム情報を読み込み中...</option>
+                    </select>
                 </div>
                 <div class="input-group">
-                    <label>後攻チーム名</label>
-                    <input type="text" id="bottom-team-name" value="後攻">
+                    <label>後攻チーム</label>
+                    <select id="bottom-team-name">
+                        <option value="loading">チーム情報を読み込み中...</option>
+                    </select>
                 </div>
                 <div class="input-group">
                 <label>イニング数</label>
@@ -85,20 +89,20 @@
             </thead>
             <tbody id="scoreboard-body">
             <tr id="score-row-top">
-                <td id="top-team-name" class="team-name-cell">先攻</td>
+                <td id="top-team-name-cell" class="team-name-cell">先攻</td>
                 <td class="total-cell" id="total-score-top">0</td>
             </tr>
             <tr id="score-row-bottom">
-                <td id="bottom-team-name" class="team-name-cell">後攻</td>
+                <td id="bottom-team-name-cell" class="team-name-cell">後攻</td>
                 <td class="total-cell" id="total-score-bottom">0</td>
             </tr>
             </tbody>
         </table>
-        <button class="btn-log" onclick="openLogWindow()">
-            試合ログ（打席記録）を表示
-        </button>
         </section>
-
+        <section class="pitch-counter-box">
+            <div class="pitch-label">投球数</div>
+            <div id="pitching-count">0</div>
+        </section>
         <div class="status-container">
             <section class="counts">
                 <div class="count-row">
@@ -118,7 +122,7 @@
                     <div class="dots">
                         <span class="dot out"></span><span class="dot out"></span>
                     </div>
-                </div>
+                </div>    
             </section>
 
             <section class="diamond">
@@ -132,8 +136,8 @@
 <div class="button-group">
     <button type="button" id="strike-btn" class="btn strike">ストライク</button>
     <button type="button" id="ball-btn" class="btn ball">ボール</button>
-    <button type="button" id="fly-out-btn" class="btn out">フライアウト</button>
-    <button type="button" id="ground-out-btn" class="btn out">ゴロアウト</button>
+    <button type="button" id="foul-btn" class="btn strike">ファウル</button>
+    <button type="button" id="out-btn" class="btn out">アウト</button>
 </div>
 <div class="button-group">
     <button type="button" id="single-hit-btn" class="btn hit">シングルヒット</button>
@@ -143,6 +147,9 @@
 </div>
             <div class="button-group full-width">
                 <button type="button" id="undo-btn" class="btn undo">1つ戻る（修正） </button>
+            </div>
+            <div class="button-group full-width">
+                <button type="button" id="change-pitcher-btn" class="btn change-player">投手交代</button>
             </div>
           <div class="button-group full-width" style="margin-top: 10px;">
     <button type="button" id="end-game-btn" class="btn" style="background: #c0392b; border-bottom: 4px solid #a93226;">試合を終了する</button>

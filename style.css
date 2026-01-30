@@ -78,6 +78,7 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
 .out { border-bottom: 4px solid #e74c3c; }
 .hit, .hr { border-bottom: 4px solid #2ecc71; }
 .undo { background: #e67e22; border-bottom: 4px solid #d35400; }
+.change-player { background: #1fa8d1; border-bottom: 4px solid #1f9dc4; }
 
 /* 閲覧用 */
 .game-card {
@@ -140,3 +141,98 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
     }
 }
 
+
+
+/*投球数のスタイル*/
+/* 投球数表示のボックス */
+.pitch-counter-box {
+    background: #222;
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 「投球数」のラベル部分 */
+.pitch-label {
+    font-size: 0.7rem;
+    color: #aaa;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+/* 数字部分（デジタル数字っぽく） */
+#pitching-count {
+    font-family: 'Courier New', Courier, monospace; /* 等幅フォント */
+    font-size: 2rem;
+    color: #2ecc71; /* 緑色、または黄色 (#f1c40f) が見やすい */
+    font-weight: bold;
+    line-height: 1;
+}
+
+/* レスポンシブ調整：横幅が狭い場合 */
+@media (max-width: 480px) {
+    .status-container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .pitch-counter-box {
+        margin-right: 0;
+        padding: 5px;
+    }
+}
+
+/*セレクトボックスのスタイル*/
+/* SELECTタグ全体のスタイル */
+select {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    color: #fff; /* 文字を白に */
+    background-color: #333; /* 背景をダークグレーに */
+    border: 2px solid #444; /* 境界線を少し明るく */
+    border-radius: 8px;
+    appearance: none; /* デフォルトの矢印を消す（モダンブラウザ用） */
+    -webkit-appearance: none; /* Safari用 */
+    -moz-appearance: none; /* Firefox用 */
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); /* 自作の矢印アイコン */
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 15px;
+}
+
+/* ホバー（マウスを乗せた時） */
+select:hover {
+    border-color: #2ecc71; /* チームカラーやアクセントカラーに合わせる */
+}
+
+/* フォーカス（選択中） */
+select:focus {
+    outline: none;
+    border-color: #2ecc71;
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+/* 選択肢（ドロップダウンの中身）のスタイル */
+select option {
+    background-color: #222;
+    color: #fff;
+    padding: 10px;
+}
+
+/* ラベルとの隙間など */
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #ccc;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
