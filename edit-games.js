@@ -196,14 +196,25 @@ async function fetchLeagues() {
         const leagues = await res.json();
         const select = document.getElementById('select-league');
         select.options[0].text = "--リーグを選択--";
+        let url = new URL(window.location.href);
+        let params = url.searchParams;
+
         leagues.forEach(l => {
             const opt = document.createElement('option');
             opt.value = l.id;
             opt.textContent = l.name;
+            if(l.id === params.get('leagueId')){
+                opt.selected = true;
+            }
             select.appendChild(opt);
         });
+
+
+        if(params.get('leagueId')){
+            handleLeagueSelect()
+        }
     } catch (e) {
-        console.error("League Fetch Error:", e);
+         console.error("League Fetch Error:", e);
     }
 }
 

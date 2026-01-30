@@ -23,9 +23,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>チーム・メンバー管理</h1>
-        <a href="index.html" style="color: #aaa; text-decoration: none;">← 戻る</a>
+        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+        </div>
+        <h2>チーム・メンバー管理</h2>
 
+        
         <div class="form-group">
             <label>編集するチームを選択</label>
             <select id="team-select" onchange="loadTeamDetails()">

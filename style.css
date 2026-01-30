@@ -236,3 +236,16 @@ select option {
     font-size: 0.9rem;
     font-weight: bold;
 }
+
+.viewer-header {
+    width: 95%;
+    max-width: 600px;
+    background: #8d8b8b;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1ff; color: rgb(255, 255, 255); cursor: pointer; font-weight: bold; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+.card { background: #2c3e50; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+              

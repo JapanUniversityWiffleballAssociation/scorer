@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作マニュアル - 速報視聴機能 | JUWA</title>
+    <style>
+        :root {
+            --primary-color: #2ecc71;
+            --viewer-bg: #1a1a1a;
+            --card-bg: #2c3e50;
+            --text-main: #333;
+            --text-light: #ecf0f1;
+            --accent: #3498db;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #fff;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        header {
+            border-bottom: 3px solid var(--primary-color);
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+        h1 { color: var(--card-bg); font-size: 1.8rem; }
+        h2 {
+            color: var(--card-bg);
+            border-left: 5px solid var(--primary-color);
+            padding-left: 15px;
+            margin-top: 40px;
+            font-size: 1.4rem;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .step-number {
+            background: var(--accent);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .live-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .ui-desc {
+            background: var(--viewer-bg);
+            color: var(--text-light);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .ui-desc ul { list-style: none; padding: 0; }
+        .ui-desc li { margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .ui-desc b { color: var(--primary-color); }
+        .important {
+            background: #e1f5fe;
+            border-left: 5px solid #03a9f4;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📱 操作マニュアル：速報を見る（Viewer）</h1>
+        <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況をリアルタイムで観戦する方法を説明します。</p>
+    </header>
+
+    <section>
+        <h2>1. 試合一覧から選択する</h2>
+        <p>メインメニューの「速報を見る」をクリックすると、現在開催中の試合リストが表示されます。</p>
+        
+        <div class="step">
+            <div class="step-number">1</div>
+            <div>
+                <strong>試合一覧の確認:</strong> 画面には各試合のカードが表示されます。
+                カードには「チーム名」「現在のスコア」「試合状況（○回裏など）」がリアルタイムで反映されます。
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">2</div>
+            <div>
+                <strong>詳細画面へ移動:</strong> 見たい試合のカードをタップ（クリック）すると、詳細な実況画面に切り替わります。
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>2. 観戦画面の見方</h2>
+        <p>観戦画面（メインアプリ）では、記録員が入力している最新データが自動的に表示されます。</p>
+
+        <div class="ui-desc">
+            <ul>
+                <li><b>スコアボード:</b> 各イニングの得点を表示します。現在進行中のイニングは点滅します。</li>
+                <li><b>カウント (B/S/O):</b> ボール、ストライク、アウトカウントがランプで表示されます。</li>
+                <li><b>ダイヤモンド:</b> 出塁しているランナーがオレンジ色に点灯します。</li>
+                <li><b>ライブタグ:</b> 試合が動いている間は <span class="live-badge">LIVE</span> アイコンが表示されます。</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>3. 更新設定と便利機能</h2>
+        <div class="important">
+            <strong>🔄 自動更新について:</strong><br>
+            詳細画面は <b>10秒おき</b>、一覧画面は <b>30秒おき</b> に自動で最新の状態に更新されます。
+        </div>
+
+        <div class="step">
+            <div class="step-number">3</div>
+            <div>
+                <strong>手動更新:</strong> 画面下部の <b>「今すぐ手動更新」</b> ボタンを押すと、即座に最新データを取得します。
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>
+                <strong>自動更新の停止:</strong> <b>「自動更新: ON」</b> ボタンを押すと、一時的に更新を止めて状況をじっくり確認できます。
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">5</div>
+            <div>
+                <strong>打席ログの確認:</strong> <b>「試合ログを表示」</b> ボタンをクリックすると、これまでの全打席の履歴（ヒット、アウトの種類など）を一覧で確認できます。
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 0.8rem;">
+            &copy; 2026 Japan University Wiffleball Association. All Rights Reserved.
+        </p>
+    </footer>
+</div>
+
+</body>
+</html>

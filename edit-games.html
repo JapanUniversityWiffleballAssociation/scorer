@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="setup-screen" class="overlay">
-        <div class="setup-box">
-            <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
-            </div>
+        <div class="container">
+        <div class="card">
+        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            <button type="button" class="btn-sm" onclick="location.href='manual/manual_edit'">操作マニュアル</button>
+        </div>
             <h2>試合設定 & 同期</h2>
-            
             <div class="input-group">
                 <label>参加する大会を選択<br>（大会を選択すると追加の設定画面が表示されます。）</label>
                 <select id="select-league" onchange="handleLeagueSelect()">
@@ -66,6 +66,7 @@
                 </div>
                 <button type="button" onclick="resumeGame()" class="btn-save" style="background:#3498db;">編集を再開する</button>
             </div>
+        </div>
         </div>
     </div>
 

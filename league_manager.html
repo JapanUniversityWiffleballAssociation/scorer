@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JUWA リーグ管理システム</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         :root { --primary: #2ecc71; --bg: #1a1a1a; --card: #2c3e50; --text: #ecf0f1; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         h1, h2 { color: var(--primary); text-align: center; }
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #bdc3c7; }
@@ -24,6 +24,10 @@
 <body>
 
 <div class="container">
+    <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+    </div>
     <h1>🏆 リーグ管理</h1>
 
     <section class="card">

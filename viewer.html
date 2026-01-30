@@ -39,9 +39,8 @@
 
         /* コントロール */
         .controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; background: #34495e; color: white; cursor: pointer; font-weight: bold; }
         button:active { opacity: 0.8; }
-        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
         .paused { background: #e67e22 !important; }
     </style>
 </head>
@@ -49,6 +48,10 @@
 
     <div id="list-screen" class="container">
         <h2 style="text-align: center; color: var(--accent);">🏆 試合一覧</h2>
+        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+        </div>
         <div id="game-list-container">
             <p style="text-align: center; color: #888; padding: 40px;">試合データを読み込み中...</p>
         </div>
