@@ -141,98 +141,7 @@ th, td { border: 1px solid #444; padding: 10px 2px; }
     }
 }
 
-/* セレクトボックスの見た目 */
 
-select,
-::picker(select) {
-  appearance: base-select;
-}
-* {
-  box-sizing: border-box;
-}
-
-
-
-select {
-  flex: 1;
-}
-select {
-  border: 2px solid #ddd;
-  background: #606060;
-  padding: 10px;
-  transition: 0.4s;
-}
-
-select:hover,
-select:focus {
-  background: #a4a4a4;
-}
-select::picker-icon {
-  color: #999;
-  transition: 0.4s rotate;
-}
-select:open::picker-icon {
-  rotate: 180deg;
-}
-::picker(select) {
-  border: none;
-}
-option {
-  display: flex;
-  justify-content: flex-start;
-  gap: 20px;
-
-  border: 2px solid #ddd;
-  background: #eee;
-  padding: 10px;
-  transition: 0.4s;
-}
-option:first-of-type {
-  border-radius: 8px 8px 0 0;
-}
-
-option:last-of-type {
-  border-radius: 0 0 8px 8px;
-}
-
-option:not(option:last-of-type) {
-  border-bottom: none;
-}
-option:nth-of-type(odd) {
-  background: #fff;
-}
-
-option:hover,
-option:focus {
-  background: rgb(120, 248, 105);
-}
-option .icon {
-  font-size: 1.6rem;
-  text-box: trim-both cap alphabetic;
-}
-selectedcontent .icon {
-  display: none;
-}
-option:checked {
-  font-weight: bold;
-}
-
-::picker(select) {
-  opacity: 0;
-  transition: all 0.4s allow-discrete;
-}
-::picker(select):popover-open {
-  opacity: 1;
-}
-@starting-style {
-  ::picker(select):popover-open {
-    opacity: 0;
-  }
-}
-::picker(select) {
-  top: calc(anchor(bottom) + 1px);
-  left: anchor(10%);
-}
 
 /*投球数のスタイル*/
 /* 投球数表示のボックス */
@@ -277,4 +186,53 @@ option:checked {
         margin-right: 0;
         padding: 5px;
     }
+}
+
+/*セレクトボックスのスタイル*/
+/* SELECTタグ全体のスタイル */
+select {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    color: #fff; /* 文字を白に */
+    background-color: #333; /* 背景をダークグレーに */
+    border: 2px solid #444; /* 境界線を少し明るく */
+    border-radius: 8px;
+    appearance: none; /* デフォルトの矢印を消す（モダンブラウザ用） */
+    -webkit-appearance: none; /* Safari用 */
+    -moz-appearance: none; /* Firefox用 */
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); /* 自作の矢印アイコン */
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 15px;
+}
+
+/* ホバー（マウスを乗せた時） */
+select:hover {
+    border-color: #2ecc71; /* チームカラーやアクセントカラーに合わせる */
+}
+
+/* フォーカス（選択中） */
+select:focus {
+    outline: none;
+    border-color: #2ecc71;
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+
+/* 選択肢（ドロップダウンの中身）のスタイル */
+select option {
+    background-color: #222;
+    color: #fff;
+    padding: 10px;
+}
+
+/* ラベルとの隙間など */
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #ccc;
+    font-size: 0.9rem;
+    font-weight: bold;
 }

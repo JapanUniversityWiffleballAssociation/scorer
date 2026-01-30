@@ -28,6 +28,8 @@ let syncTimer = null;
 let totalInnings = 9;
 let lastPushTime = 0;
 let pitchingCount = {top:[0],bottom:[0]};
+let topTeamName = null;
+let bottomTeamName = null;
 
 // --- 初期化処理 ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -56,25 +58,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) btn.addEventListener('click', fn);
     };
 
-    bindBtn('strike-btn', () => addCount('strike'));
-    bindBtn('ball-btn', () => addCount('ball'));
-    bindBtn('foul-btn', () => addCount('foul'));
-    bindBtn('out-btn', () => addCount('out'));
 
-    bindBtn('single-hit-btn', () => recordPlay('シングルヒット'));
-    bindBtn('double-hit-btn', () => recordPlay('ダブルヒット'));
-    bindBtn('triple-hit-btn', () => recordPlay('トリプルヒット'));
-    bindBtn('hr-btn', () => recordPlay('ホームラン'));
+    bindBtn('strike-btn', () => {countPitching();addCount('strike');});
+    bindBtn('ball-btn', () => {countPitching();addCount('ball');});
+    bindBtn('foul-btn', () => {countPitching();addCount('foul');});
+    bindBtn('out-btn', () => {countPitching();addCount('out');});
 
-    bindBtn('strike-btn',countPitching);
-    bindBtn('ball-btn', countPitching);
-    bindBtn('foul-btn', countPitching);
-    bindBtn('out-btn', countPitching);
-
-    bindBtn('single-hit-btn',countPitching);
-    bindBtn('double-hit-btn',countPitching);
-    bindBtn('triple-hit-btn',countPitching);
-    bindBtn('hr-btn',countPitching);
+    bindBtn('single-hit-btn', () => {countPitching();recordPlay('シングルヒット');});
+    bindBtn('double-hit-btn', () => {countPitching();recordPlay('ダブルヒット');});
+    bindBtn('triple-hit-btn', () => {countPitching();recordPlay('トリプルヒット');});
+    bindBtn('hr-btn', () => {countPitching();recordPlay('ホームラン');});
 
     bindBtn('undo-btn', undo);
     bindBtn('change-pitcher-btn',changePitcher);
@@ -91,16 +84,25 @@ async function handleStartGame(e) {
     
     gameId = idInput.value.trim();
     const leagueId = leagueSelect.value;
-    const topName = document.getElementById('top-team-name').value || "先攻";
-    const bottomName = document.getElementById('bottom-team-name').value || "後攻";
+    topTeamName = document.getElementById('top-team-name').value;
+    bottomTeamName = document.getElementById('bottom-team-name').value;
 
     if (!leagueId || !gameId) {
         alert("リーグを選択し、試合IDを入力してください。");
         return;
     }
+    if(!topTeamName || !bottomTeamName) {
+        alert("チームを選択してください。");
+        return;
+    }
+    if(topTeamName === bottomTeamName){
+        if(!confirm('先攻と後攻のチームが同じです。試合を開始してよろしいですか？')){
+            return;
+        }
+    }
 
     totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
-    initScoreboard(topName, bottomName, totalInnings);
+    initScoreboard(topTeamName, bottomTeamName, totalInnings);
 
     document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
     document.getElementById('setup-screen').classList.add('hidden');
@@ -108,19 +110,36 @@ async function handleStartGame(e) {
 
     showStatus("試合を登録中...");
     isPushing = true;
+    const state = {
+        gameId: gameId,
+        leagueName: document.getElementById('select-league').selectedOptions[0].text,
+        topTeamName: topTeamName,
+        bottomTeamName: bottomTeamName,
+        totalInnings: totalInnings,
+        score: score,
+        totalScore: totalScore,
+        counts: counts,
+        runners: runners,
+        pitchingCount: pitchingCount,
+        currentInning: currentInning,
+        isBottomInning: isBottomInning,
+        isGameEnded: isGameEnded,
+        updatedAt: new Date().toISOString()
+    };
+
+    const payload = {
+        gameId: gameId,
+        state: state, // オブジェクトのまま
+        action: null,
+        logData: null // 文字列化不要
+    };
+
     try {
-        await syncPush(null, {
-            inning: 1, 
-            isBottom: false, 
-            team: topName,
-            leagueName: leagueSelect.selectedOptions[0].text
-        });
+        await postToGAS(GAS_URL, payload);
         showStatus("同期完了");
-        if (syncTimer) clearInterval(syncTimer);
-        syncTimer = setInterval(syncPull, 10000);
-    } catch (err) {
-        console.error(err);
-        showStatus("登録エラー（再試行してください）");
+        lastPushTime = Date.now();
+    } catch (e) {
+        showStatus("同期失敗");
     } finally {
         isPushing = false;
     }
@@ -240,7 +259,8 @@ function applyState(state) {
     isBottomInning = state.isBottomInning;
     isGameEnded = state.isGameEnded;
     pitchingCount = state.pitchingCount || 1;
-
+    topTeamName = state.topTeamName;
+    bottomTeamName = state.bottomTeamName;
     // UI更新
     updateCountDisplay();
     updateDiamondDisplay();
@@ -481,6 +501,7 @@ function updateScoreboardUI() {
         return; 
     }
 
+    
     // --- 以降、安全に実行される ---
     const clearInningCells = (row) => {
         // row が undefined でないことは上記で確認済みなので length は安全に読める
@@ -492,6 +513,11 @@ function updateScoreboardUI() {
     clearInningCells(headerRow);
     clearInningCells(topRow);
     clearInningCells(bottomRow);
+    
+    //チーム名の設定
+    document.getElementById('top-team-name-cell').textContent = topTeamName;
+    document.getElementById('bottom-team-name-cell').textContent = bottomTeamName;
+    
 
     const displayInnings = Math.max(currentInning, totalInnings);
 
@@ -611,11 +637,32 @@ async function fetchExistingGames(leagueId) {
     }
 }
 
-function showNewGameForm() {
+async function showNewGameForm() {
     document.getElementById('new-game-form').classList.remove('hidden');
     document.getElementById('existing-game-form').classList.add('hidden');
     // 新規作成用にIDを自動生成しておく
     generateGameId(); 
+    //チーム情報を取得
+    try{
+        const response = await fetch(`${GAS_URL}?mode=getTeamMaster`);
+        const teams = await response.json();
+        const topSelect = document.getElementById('top-team-name');
+        const bottomSelect = document.getElementById('bottom-team-name');
+        topSelect.innerHTML = '<option value="">-- チームを選択 --</option>';
+        teams.forEach(team => {
+            const option = document.createElement('option');
+            option.value = team.name;
+            option.textContent = team.name;
+            // チームの全データをデータ属性に保持させておくと展開が楽
+            option.dataset.members = JSON.stringify(team.members);
+            topSelect.appendChild(option);
+        });
+        bottomSelect.innerHTML = topSelect.innerHTML;
+
+    }catch{
+        topSelect.innerHTML = '<option value="">チーム取得時にエラーが発生しました。</option>';
+        bottomSelect.innerHTML = '<option value="">チーム取得時にエラーが発生しました。</option>';
+    }
 }
 
 function showExistingGameForm() {
@@ -635,7 +682,7 @@ async function resumeGame() {
 
     try {
         // GASから現在の試合状態(state)を取得
-        const response = await fetch(`${GAS_URL}?mode=getGameDetail&gameId=${selectedId}`);
+        const response = await fetch(`${GAS_URL}?mode=getGameDetail`);
         const gameData = await response.json();
 
         if (!gameData || !gameData.state) {
@@ -695,9 +742,18 @@ function changePitcher(){
 }
 
 function countPitching(){
-    if(isBottomInning){
-        pitchingCount.bottom[pitchingCount.bottom.length-1] ++;
-    }else {
-        pitchingCount.top[pitchingCount.top.length-1] ++;
+    // 配列が空、またはundefinedの場合の初期化（保険）
+    if (!pitchingCount.bottom) pitchingCount.bottom = [0];
+    if (!pitchingCount.top) pitchingCount.top = [0];
+
+    if (isBottomInning) {
+        // 配列の最後（現在の投手）をインクリメント
+        let idx = pitchingCount.bottom.length - 1;
+        pitchingCount.bottom[idx] = (pitchingCount.bottom[idx] || 0) + 1;
+    } else {
+        let idx = pitchingCount.top.length - 1;
+        pitchingCount.top[idx] = (pitchingCount.top[idx] || 0) + 1;
     }
+    // ここでUIを更新（表示に即座に反映させる）
+    document.getElementById('pitching-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
 }

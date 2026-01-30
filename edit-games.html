@@ -39,12 +39,16 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>先攻チーム名</label>
-                    <input type="text" id="top-team-name" value="先攻">
+                    <label>先攻チーム</label>
+                    <select id="top-team-name">
+                        <option value="loading">チーム情報を読み込み中...</option>
+                    </select>
                 </div>
                 <div class="input-group">
-                    <label>後攻チーム名</label>
-                    <input type="text" id="bottom-team-name" value="後攻">
+                    <label>後攻チーム</label>
+                    <select id="bottom-team-name">
+                        <option value="loading">チーム情報を読み込み中...</option>
+                    </select>
                 </div>
                 <div class="input-group">
                 <label>イニング数</label>
@@ -85,11 +89,11 @@
             </thead>
             <tbody id="scoreboard-body">
             <tr id="score-row-top">
-                <td id="top-team-name" class="team-name-cell">先攻</td>
+                <td id="top-team-name-cell" class="team-name-cell">先攻</td>
                 <td class="total-cell" id="total-score-top">0</td>
             </tr>
             <tr id="score-row-bottom">
-                <td id="bottom-team-name" class="team-name-cell">後攻</td>
+                <td id="bottom-team-name-cell" class="team-name-cell">後攻</td>
                 <td class="total-cell" id="total-score-bottom">0</td>
             </tr>
             </tbody>
