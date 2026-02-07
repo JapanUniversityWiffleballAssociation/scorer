@@ -34,25 +34,31 @@
                 <div class="input-group">
                     <label>試合ID</label>
                     <div style="display: flex; gap: 5px;">
-                        <input type="text" id="input-game-id" readonly placeholder="自動発行してください">
+                        <input type="text" id="input-game-id" readonly placeholder="自動発行してください" style="width: 60%;">
                         <button type="button" id="gen-id-btn" class="btn-sm">自動発行</button>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>先攻チーム</label>
-                    <select id="top-team-name">
+                    <div style="display: flex; gap: 5px;">
+                    <select id="top-team-name" style="width: 60%;">
                         <option value="loading">チーム情報を読み込み中...</option>
                     </select>
+                    <button type="button" class="hidden" id="edit-top-member">メンバー編集</button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>後攻チーム</label>
-                    <select id="bottom-team-name">
+                    <div style="display: flex; gap: 5px;">
+                    <select id="bottom-team-name" style="width: 60%;">
                         <option value="loading">チーム情報を読み込み中...</option>
                     </select>
+                    <button type="button" class="hidden" id="edit-bottom-member">メンバー編集</button>
+                    </div>
                 </div>
                 <div class="input-group">
                 <label>イニング数</label>
-                <input type="number" id="input-innings" value="3" min="1" max="12">
+                <input type="number" id="input-innings" value="3" min="1" max="12" style="width: 30%;">
                 </div>
                 <button type="button" id="start-btn" class="btn-save">この内容で試合開始</button>
             </div>

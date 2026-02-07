@@ -155,8 +155,8 @@ async function syncPush(actionName = null, logData = null) {
     const state = {
         gameId: gameId,
         leagueName: document.getElementById('select-league').selectedOptions[0].text,
-        topTeamName: document.getElementById('top-team-name').textContent,
-        bottomTeamName: document.getElementById('bottom-team-name').textContent,
+        topTeamName: document.getElementById('top-team-name-cell').textContent,
+        bottomTeamName: document.getElementById('bottom-team-name-cell').textContent,
         totalInnings: totalInnings,
         score: score,
         totalScore: totalScore,
@@ -637,6 +637,9 @@ async function fetchExistingGames(leagueId) {
         }
 
         games.forEach(game => {
+            if(game.isGameEnded) {
+                return;
+            }
             const option = document.createElement('option');
             option.value = game.id;
             option.textContent = `${game.name} (${game.id})`;
@@ -693,7 +696,7 @@ async function resumeGame() {
 
     try {
         // GASから現在の試合状態(state)を取得
-        const response = await fetch(`${GAS_URL}?mode=getGameDetail`);
+        const response = await fetch(`${GAS_URL}?mode=getGameDetail&gameId=${selectedId}`);
         const gameData = await response.json();
 
         if (!gameData || !gameData.state) {
