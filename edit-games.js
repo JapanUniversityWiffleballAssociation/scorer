@@ -18,7 +18,7 @@ let gameId = "";
 let counts = { ball: 0, strike: 0, out: 0 };
 let runners = { base1: false, base2: false, base3: false };
 let score = { top: {}, bottom: {} };// 各イニングの得点を保持するオブジェクト
-let totalScore = {top:0, bottom:0};
+let totalScore = {top: 0, bottom: 0};
 let currentInning = 1;
 let isBottomInning = false;
 let isGameEnded = false;
@@ -30,6 +30,9 @@ let lastPushTime = 0;
 let pitchingCount = {top:[0],bottom:[0]};
 let topTeamName = null;
 let bottomTeamName = null;
+let topPlayers = {pitcher:[],batter:[]};
+let bottomPlayers = {pitcher:[],batter:[]};
+let battingCount = {top: 0,bottom: 0};
 
 // --- 初期化処理 ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -100,7 +103,11 @@ async function handleStartGame(e) {
             return;
         }
     }
-
+    if(topPlayers.pitcher.length + bottomPlayers.pitcher.length <= 1){
+        if(!confirm('ピッチャーが登録されていません。試合を開始してよろしいですか？')){
+            return;
+        }
+    }
     totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
     initScoreboard(topTeamName, bottomTeamName, totalInnings);
 
@@ -110,39 +117,11 @@ async function handleStartGame(e) {
 
     showStatus("試合を登録中...");
     isPushing = true;
-    const state = {
-        gameId: gameId,
-        leagueName: document.getElementById('select-league').selectedOptions[0].text,
-        topTeamName: topTeamName,
-        bottomTeamName: bottomTeamName,
-        totalInnings: totalInnings,
-        score: score,
-        totalScore: totalScore,
-        counts: counts,
-        runners: runners,
-        pitchingCount: pitchingCount,
-        currentInning: currentInning,
-        isBottomInning: isBottomInning,
-        isGameEnded: isGameEnded,
-        updatedAt: new Date().toISOString()
-    };
-
-    const payload = {
-        gameId: gameId,
-        state: state, // オブジェクトのまま
-        action: null,
-        logData: null // 文字列化不要
-    };
-
-    try {
-        await postToGAS(GAS_URL, payload);
-        showStatus("同期完了");
-        lastPushTime = Date.now();
-    } catch (e) {
-        showStatus("同期失敗");
-    } finally {
-        isPushing = false;
-    }
+    await syncPush();
+    await syncPull();
+    updateCountDisplay();
+    updateDiamondDisplay();
+    updateScoreboardUI();
 }
 
 
@@ -166,7 +145,10 @@ async function syncPush(actionName = null, logData = null) {
         currentInning: currentInning,
         isBottomInning: isBottomInning,
         isGameEnded: isGameEnded,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        topPlayers : topPlayers,
+        bottomPlayers: bottomPlayers,
+        battingCount : battingCount
     };
 
     const payload = {
@@ -263,15 +245,20 @@ async function syncPull() {
  * 受信したデータを画面に反映
  */
 function applyState(state) {
-    counts = state.counts;
-    runners = state.runners;
-    score = state.score;
-    currentInning = state.currentInning;
-    isBottomInning = state.isBottomInning;
-    isGameEnded = state.isGameEnded;
-    pitchingCount = state.pitchingCount || 1;
-    topTeamName = state.topTeamName;
-    bottomTeamName = state.bottomTeamName;
+    counts = state.counts || { ball: 0, strike: 0, out: 0 };
+    runners = state.runners || { base1: false, base2: false, base3: false };
+    score = state.score || { top: 0, bottom: 0 };
+    totalScore = state.totalScore || { top: 0, bottom: 0 };
+    currentInning = state.currentInning || 1;
+    isBottomInning = state.isBottomInning || false;
+    isGameEnded = state.isGameEnded || false;
+    battingCount = state.battingCount;
+    topPlayers = state.topPlayers;
+    bottomPlayers = state.bottomPlayers;
+    topTeamName = state.topTeamName || "先攻";
+    bottomTeamName = state.bottomTeamName || "後攻";
+    pitchingCount = state.pitchingCount || {top:[],bottom:[]};
+
     // UI更新
     updateCountDisplay();
     updateDiamondDisplay();
@@ -319,7 +306,13 @@ async function addCount(type) {
  */
 async function recordPlay(actionName) {
     if (isGameEnded || isPushing) return;
-
+    
+    if(isBottomInning) {
+        battingCount.bottom ++;
+    }else {
+        battingCount.top ++;
+    }
+    
     setControlsDisabled(true);
     historyStack = [];
     try{
@@ -442,12 +435,22 @@ function addScore(runs) {
  * ログ記録用の現在のスナップショットを作成
  */
 function getLogSnapshot() {
+    let batter = "バッター"
+    if((isBottomInning && bottomPlayers.batter.length>0) || (!isBottomInning && topPlayers.batter.length>0)){
+        batter = isBottomInning ?
+            bottomPlayers.batter[battingCount.bottom % bottomPlayers.batter.length].name :
+            topPlayers.batter[battingCount.top % topPlayers.batter.length].name
+    }
     return {
         inning: currentInning,
         isBottom: isBottomInning,
         team: isBottomInning ? 
-            document.getElementById('bottom-team-name').textContent : 
-            document.getElementById('top-team-name').textContent
+            bottomTeamName : 
+            topTeamName,
+        pitcher: isBottomInning ?
+            topPlayers.pitcher.at(-1) || "ピッチャー":
+            bottomPlayers.pitcher.at(-1)|| "ピッチャー",
+        batter: batter
     };
 }
 
@@ -464,6 +467,9 @@ function undo() {
     currentInning = previousState.currentInning;
     isBottomInning = previousState.isBottomInning;
     pitchingCount = previousState.pitchingCount;
+    battingCount = previousState.battingCount;
+    topPlayers = previousState.topPlayers;
+    bottomPlayers = previousState.bottomPlayers;
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
@@ -472,7 +478,7 @@ function undo() {
 
 function saveHistory() {
     if (historyStack.length > 20) historyStack.shift();
-    historyStack.push(JSON.parse(JSON.stringify({ counts, runners, score, currentInning, isBottomInning, pitchingCount })));
+    historyStack.push(JSON.parse(JSON.stringify({ counts, runners, score, currentInning, isBottomInning, pitchingCount, battingCount, topPlayers, bottomPlayers})));
 }
 
 /**
@@ -487,7 +493,13 @@ function updateCountDisplay() {
     updateDots('strike', counts.strike);
     updateDots('out', counts.out);
 
-    document.getElementById('pitching-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
+    document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
+    document.getElementById('display-pitcher-name').textContent = isBottomInning ? topPlayers.pitcher.at(-1)||"ピッチャー" : bottomPlayers.pitcher.at(-1)||"ピッチャー";
+    if((isBottomInning&&bottomPlayers.batter.length>0) || (!isBottomInning && topPlayers.batter.length>0)){
+        document.getElementById('display-batter-name').textContent = isBottomInning ? bottomPlayers.batter[battingCount.bottom % bottomPlayers.batter.length].name: topPlayers.batter[battingCount.top % topPlayers.batter.length].name;
+    }else{
+        document.getElementById('display-batter-name').textContent = "バッター"
+    }
 }
 
 function updateDiamondDisplay() {
@@ -705,32 +717,17 @@ async function resumeGame() {
 
         // --- 状態の復元 (重要!) ---
         const state = (typeof gameData.state === 'string') ? JSON.parse(gameData.state) : gameData.state;
-        
         gameId = selectedId;
-        counts = state.counts || { ball: 0, strike: 0, out: 0 };
-        runners = state.runners || { base1: false, base2: false, base3: false };
-        score = state.score || { top: 0, bottom: 0 };
-        totalScore = state.totalScore || { top: 0, bottom: 0 };
-        currentInning = state.currentInning || 1;
-        isBottomInning = state.isBottomInning || false;
-        isGameEnded = state.isGameEnded || false;
-        totalInnings = state.totalInnings || 9;
-
-        // チーム名なども復元
+        // 試合IDを復元復元
         document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
-        topTeamName = state.topTeamName || "先攻";
-        bottomTeamName = state.bottomTeamName || "後攻";
-
-        // UIの更新
-        updateCountDisplay();
-        updateDiamondDisplay();
-        updateScoreboardUI();
-
+        totalInnings = state.totalInnings || 9;
+        
+        applyState(state);
+        
         // アプリ画面へ
         document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
         document.getElementById('setup-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
-        syncPull();
         alert("データを復元しました。編集を再開します。");
 
     } catch (e) {
@@ -769,5 +766,117 @@ function countPitching(){
         pitchingCount.top[idx] = (pitchingCount.top[idx] || 0) + 1;
     }
     // ここでUIを更新（表示に即座に反映させる）
-    document.getElementById('pitching-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
+    document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
+}
+
+function setMemberData(isBottom) {
+
+    const target = isBottom ? 'bottom-team-name' : 'top-team-name';
+    
+    const selectedTeam = document.getElementById(target);
+    
+    if(!selectedTeam.value) {
+        alert('チームを選択してください。');
+        return;
+    }
+
+    const teamName = selectedTeam.options[selectedTeam.selectedIndex].textContent;
+    let teamMember = JSON.parse(selectedTeam.options[selectedTeam.selectedIndex].dataset.members);
+    
+    //隠しフィールドに、先後を保持する。
+    document.getElementById('isBottom').value = isBottom ? "bottom" : "top" ;
+
+    document.getElementById("setting-team-name").textContent = teamName;
+
+    //投手設定用のプルダウンを作成
+    const pitcherSelect = document.getElementById('pitcher-name');
+    const setPitcherName = isBottom ? bottomPlayers.pitcher[0] : topPlayers.pitcher[0];
+    pitcherSelect.innerHTML = '<option value="">-- ピッチャーを選択 --</option>';
+    teamMember.forEach((member) => {
+        let pitcherOption = document.createElement('option');
+        pitcherOption.value = member.name;
+        pitcherOption.textContent = member.name;
+        if(setPitcherName===member.name){
+            pitcherOption.selected = true;
+        }
+        pitcherSelect.appendChild(pitcherOption);
+
+    })
+
+    //打順設定用のテーブルを作成
+    let orderTable =document.getElementById('batting-order');
+    orderTable.innerHTML = 
+    '<tr> <th style="width: 25%;">打順</th> <th style="width: 50%;">メンバー</th> <th style="width: 25%;">背番号</th></tr>';
+    let setMemberData = isBottom ? bottomPlayers.batter : topPlayers.batter;
+    teamMember.forEach((member) => {
+        let memberRow = document.createElement('tr');
+        let orderCell = document.createElement('td');
+        let nameCell = document.createElement('td');
+        let numberCell = document.createElement('td');
+        let orderInput = document.createElement('input');
+        orderInput.type = "number";
+        orderInput.max = teamMember.length;
+        orderInput.min = "1";
+
+        let setOrder = setMemberData.findIndex(data => data.name === member.name) + 1;
+        orderInput.value = setOrder > 0 ? setOrder : member.order;
+        orderCell.appendChild(orderInput);
+        nameCell.textContent = member.name;
+        numberCell.textContent = member.number;
+            
+        memberRow.appendChild(orderCell);
+        memberRow.appendChild(nameCell);
+        memberRow.appendChild(numberCell);
+
+        orderTable.appendChild(memberRow);
+    });
+    
+    document.getElementById('new-game-form').classList.add("hidden");
+    document.getElementById('member-data-form').classList.remove("hidden");
+}
+
+function submitMemberData() {
+    const pitcherName = document.getElementById('pitcher-name').value;
+    if(!pitcherName){
+        alert("ピッチャーを選択してください。");
+        return;
+    }
+    let memberList = [];
+    const orderTable = document.getElementById('batting-order');
+    const orderRow = orderTable.querySelectorAll('tr');
+    //ヘッダーを抜いてtr分ループする。
+    for(let i = 1; i < orderRow.length; i++){
+        let cells = orderRow[i].querySelectorAll('td');
+        let battingOrder = cells[0].firstElementChild.value;
+        if(!battingOrder) {
+            continue;
+        }
+        if(memberList[battingOrder-1]!=null){
+            alert('打順が重複しています。');
+            return;
+        }
+        let member = {
+            name: cells[1].textContent,
+            number: cells[2].textContent
+        }
+        memberList[battingOrder-1] = member;
+        
+    }
+
+    const index = memberList.findIndex(x => x == null);
+
+    if(index >= 0){
+        alert('打順に抜けがあります。打順を確認してください。');
+        return;
+    }
+
+    if(document.getElementById('isBottom').value === "bottom"){
+        bottomPlayers.pitcher = [pitcherName];
+        bottomPlayers.batter = memberList.slice();
+    }else{
+        topPlayers.pitcher = [pitcherName];
+        topPlayers.batter = memberList.slice();
+    }
+    document.getElementById('new-game-form').classList.remove("hidden");
+    document.getElementById('member-data-form').classList.add("hidden");    
 }

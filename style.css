@@ -248,4 +248,57 @@ select option {
 button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1ff; color: rgb(255, 255, 255); cursor: pointer; font-weight: bold; }
 .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
 .card { background: #2c3e50; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-              
+ 
+
+/* インジケーター全体のコンテナ */
+.match-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1a202c; /* ダークネイビー */
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+  font-family: 'sans-serif';
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 各要素の共通スタイル */
+.status-item {
+  display: flex;
+  flex-direction: column; /* 上下にラベルと値を配置 */
+  align-items: center;
+  flex: 1; /* 均等な幅に広がる */
+}
+
+/* ラベル部分（P, PITCHES, B） */
+.status-item .label {
+  font-size: 10px;
+  color: #a0aec0; /* グレー */
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+/* 値の部分（選手名、数字） */
+.status-item .value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* 名前が長すぎる場合に「...」にする */
+  max-width: 100px;
+}
+
+/* 投球数（中央）だけ色を変えて目立たせる */
+.pitch-count .value {
+  color: #ed8936; /* オレンジ */
+  font-size: 18px;
+}
+
+/* 境界線（仕切り）の追加 */
+.status-item:not(:last-child) {
+  border-right: 1px solid #4a5568;
+}

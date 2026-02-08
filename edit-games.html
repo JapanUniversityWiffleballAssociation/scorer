@@ -44,7 +44,7 @@
                     <select id="top-team-name" style="width: 60%;">
                         <option value="loading">チーム情報を読み込み中...</option>
                     </select>
-                    <button type="button" class="hidden" id="edit-top-member">メンバー編集</button>
+                    <button type="button" id="edit-top-member" onclick="setMemberData(false)">メンバー編集</button>
                     </div>
                 </div>
                 <div class="input-group">
@@ -53,7 +53,7 @@
                     <select id="bottom-team-name" style="width: 60%;">
                         <option value="loading">チーム情報を読み込み中...</option>
                     </select>
-                    <button type="button" class="hidden" id="edit-bottom-member">メンバー編集</button>
+                    <button type="button" id="edit-bottom-member" onclick="setMemberData(true)">メンバー編集</button>
                     </div>
                 </div>
                 <div class="input-group">
@@ -71,6 +71,30 @@
                     </select>
                 </div>
                 <button type="button" onclick="resumeGame()" class="btn-save" style="background:#3498db;">編集を再開する</button>
+            </div>
+
+            <div id="member-data-form" class="hidden" style="margin-top: 20px; border-top: 1px solid #555; padding-top: 15px;">
+                <div class="input-group">
+                    <h3 id="setting-team-name">チーム名</h3>
+                    <input type="hidden" value="" id="isBottom">
+                    <label>投手</label>
+                    <div style="display: flex; gap: 5px;">
+                    <select id="pitcher-name" style="width: 60%;">
+                        <option value="loading">チーム情報を読み込み中...</option>
+                    </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>打順</label>
+                    <table id="batting-order">
+                    <tr>
+                        <th style="width: 25%;">打順</th>
+                        <th style="width: 50%;">メンバー</th>
+                        <th style="width: 25%;">背番号</th>
+                    </tr>
+                    </table>
+                </div>
+                <button type="button" id="submit-member" onclick="submitMemberData()" class="btn-save">この内容で確定</button>
             </div>
         </div>
         </div>
@@ -107,8 +131,22 @@
         </table>
         </section>
         <section class="pitch-counter-box">
-            <div class="pitch-label">投球数</div>
-            <div id="pitching-count">0</div>
+            <div class="match-status-bar">
+                <div class="status-item current-pitcher">
+                    <span class="label">P</span>
+                    <span id="display-pitcher-name" class="value">読み込み中...</span>
+                </div>
+
+                <div class="status-item pitch-count">
+                    <span class="label">PITCHES</span>
+                    <span id="display-pitch-count" class="value">0</span>
+                </div>
+
+                <div class="status-item current-batter">
+                    <span class="label">B</span>
+                    <span id="display-batter-name" class="value">読み込み中...</span>
+                </div>
+            </div>
         </section>
         <div class="status-container">
             <section class="counts">
