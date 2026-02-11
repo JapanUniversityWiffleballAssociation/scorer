@@ -26,6 +26,9 @@ body {
     background: rgba(0,0,0,0.9);
     display: flex; justify-content: center; align-items: center;
     z-index: 100;
+    align-items: flex-start;
+    /* スクロールを許可する設定 */
+    overflow-y: auto;
 }
 .setup-box {
     background: #444; padding: 30px; border-radius: 10px; width: 85%; max-width: 400px;
