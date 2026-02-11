@@ -1,5 +1,6 @@
 body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
+    overflow-y: auto;
     background-color: #222;
     color: white;
     margin: 0;
