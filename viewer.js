@@ -137,14 +137,16 @@ async function fetchGameDetail(id) {
         }
 
         // スコアボードの更新
+        document.getElementById('top-team-name').textContent = state.topTeamName;
+        document.getElementById('bottom-team-name').textContent = state.bottomTeamName;
+        
         score = state.score;
         totalScore = state.totalScore;
         currentInning = state.currentInning;
         isBottomInning = state.isBottomInning;
         totalInnings = state.totalInnings;
-        
         updateScoreboardUI();
-        
+
         // カウントの更新
         updateDots('ball', state.counts.ball);
         updateDots('strike', state.counts.strike);
@@ -154,7 +156,18 @@ async function fetchGameDetail(id) {
         document.getElementById('base1').classList.toggle('runner', state.runners.base1);
         document.getElementById('base2').classList.toggle('runner', state.runners.base2);
         document.getElementById('base3').classList.toggle('runner', state.runners.base3);
+        
+        //ピッチャー、バッターの表示更新
+        document.getElementById('display-pitch-count').textContent = state.isBottomInning ? state.pitchingCount.bottom.at(-1) : state.pitchingCount.top.at(-1);
+        document.getElementById('display-pitcher-name').textContent = state.isBottomInning ? state.topPlayers.pitcher.at(-1)||"ピッチャー" : state.bottomPlayers.pitcher.at(-1)||"ピッチャー";
+        
+        if((state.isBottomInning&&state.bottomPlayers.batter.length>0) || (!state.isBottomInning && state.topPlayers.batter.length>0)){
+            document.getElementById('display-batter-name').textContent = state.isBottomInning ? state.bottomPlayers.batter[state.battingCount.bottom % state.bottomPlayers.batter.length].name: state.topPlayers.batter[state.battingCount.top % state.topPlayers.batter.length].name;
+        }else{
+            document.getElementById('display-batter-name').textContent = "バッター"
+        }
 
+        
         if (statusEl) statusEl.textContent = "同期済み";
         
         if (state.isGameEnded) {

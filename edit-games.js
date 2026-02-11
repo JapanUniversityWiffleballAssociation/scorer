@@ -289,7 +289,7 @@ async function addCount(type) {
         }
     } else if (type === 'out') {
         counts.out++;
-        await recordPlay(counts.out+'アウト');
+        await recordPlay('アウト');
         if (counts.out >= 3) {
             handleInningChange();
         }
@@ -306,15 +306,8 @@ async function addCount(type) {
  */
 async function recordPlay(actionName) {
     if (isGameEnded || isPushing) return;
-    
-    if(isBottomInning) {
-        battingCount.bottom ++;
-    }else {
-        battingCount.top ++;
-    }
-    
+     
     setControlsDisabled(true);
-    historyStack = [];
     try{
     if (actionName === "ホームラン") {
         let runs = 1;
@@ -365,15 +358,24 @@ async function recordPlay(actionName) {
     counts.strike = 0;
     counts.ball = 0;
     
+    await syncPush(actionName, getLogSnapshot());
+    if(isBottomInning) {
+        battingCount.bottom ++;
+    }else {
+        battingCount.top ++;
+    }     
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
-    
-    await syncPush(actionName, getLogSnapshot());
-    }   catch(error) {
+    historyStack = [];
+
+    }   
+    catch(error) {
         console.error("送信エラー:", error);
         alert("データの送信に失敗しました。通信環境を確認してください。");
+        undo();
     }finally {
+
         setControlsDisabled(false);
     }
 }

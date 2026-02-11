@@ -13,6 +13,7 @@ const CONST_GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxA
  */
 async function postToGAS(url, payload) {
     try {
+        payload.authKey = "JUWA-Auth-Key";
         const response = await fetch(url, {
             method: 'POST',
             // GASのdoPostで確実にパースさせるための設定

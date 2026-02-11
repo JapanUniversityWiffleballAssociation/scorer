@@ -275,6 +275,8 @@ button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1
 /* ラベル部分（P, PITCHES, B） */
 .status-item .label {
   font-size: 10px;
+  text-align: center;
+  width: auto;
   color: #a0aec0; /* グレー */
   font-weight: bold;
   letter-spacing: 0.05em;

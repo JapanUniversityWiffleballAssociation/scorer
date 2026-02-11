@@ -48,7 +48,7 @@
 
         async function loadLogs() {
             try {
-                // GASにログ取得モードを追加する必要があります
+                
                 const response = await fetch(`${GAS_URL}?mode=getGameLogs&gameId=${gameId}`);
                 const logs = await response.json();
                 
@@ -62,7 +62,7 @@
                     div.innerHTML = `
                         <div class="log-info">
                             <div class="log-inning">${log.inning} | ${log.team}</div>
-                            <div class="log-action">${log.action}</div>
+                            <div class="log-action">${log.batter} | ${log.action}</div>
                         </div>
                         <div class="log-time">${log.time}</div>
                     `;
