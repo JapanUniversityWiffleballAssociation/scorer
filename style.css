@@ -308,3 +308,9 @@ button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1
 .status-item:not(:last-child) {
   border-right: 1px solid #4a5568;
 }
+
+.notice {
+    border: 2px solid #969595;
+    border-radius: 8px;
+    padding: 10px;
+}
