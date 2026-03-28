@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameId = getQueryParam('gameId');
     if(gameId) {
         resumeGame(gameId);
+        startAutoSync();
     }
 });
 
@@ -130,7 +131,6 @@ async function handleStartGame(e) {
     document.getElementById('main-app').classList.remove('hidden');
 
     showStatus("試合を登録中...");
-    isPushing = true;
     await syncPush();
     await syncPull();
     updateCountDisplay();
@@ -274,6 +274,7 @@ async function syncPull() {
             // 実際には updatedAt を比較するロジックが望ましい
             applyState(state);
             showStatus("同期済み");
+            startAutoSync();
         }
     } catch (e) {
         console.error("Pull Error:", e);
