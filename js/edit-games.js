@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) btn.addEventListener('click', fn);
     };
 
-
     bindBtn('strike-btn', () => {countPitching();addCount('strike');});
     bindBtn('ball-btn', () => {countPitching();addCount('ball');});
     bindBtn('foul-btn', () => {countPitching();addCount('foul');});
@@ -75,7 +74,22 @@ document.addEventListener('DOMContentLoaded', () => {
     bindBtn('undo-btn', undo);
     bindBtn('change-pitcher-btn',changePitcher);
     bindBtn('end-game-btn', endGame);
+
+    const gameId = getQueryParam('gameId');
+    if(gameId) {
+        resumeGame(gameId);
+    }
 });
+
+/**
+ * URLパラメータを取得する
+ */
+function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+
 
 /**
  * 試合開始ボタンの本体処理
@@ -122,6 +136,32 @@ async function handleStartGame(e) {
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
+    updateShareLinkDisplay()
+    startAutoPull();
+}
+
+function startAutoPull() {
+    // すでに動いている場合は一度クリア
+    if (syncTimer) clearInterval(syncTimer);
+    
+    // 30秒ごとに syncPull を実行（時間は運営規模に合わせて調整してください）
+    syncTimer = setInterval(() => {
+        // 自分が入力中（isPushing）は同期しないようにガード
+        if (!isPushing) {
+            console.log("Auto-syncing data...");
+            syncPull(); 
+        }
+    }, 30000); 
+}
+
+/**
+ * 自動同期を停止する（試合終了時などに使用）
+ */
+function stopAutoSync() {
+    if (syncTimer) {
+        clearInterval(syncTimer);
+        syncTimer = null;
+    }
 }
 
 
@@ -263,6 +303,7 @@ function applyState(state) {
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
+    updateShareLinkDisplay()
 }
 
 /**
@@ -367,6 +408,7 @@ async function recordPlay(actionName) {
     updateCountDisplay();
     updateDiamondDisplay();
     updateScoreboardUI();
+    updateShareLinkDisplay()
     historyStack = [];
 
     }   
@@ -382,7 +424,7 @@ async function recordPlay(actionName) {
 /**
  * イニング交代処理
  */
-function handleInningChange() {
+async function handleInningChange() {
     // イニング交代時に「その回の得点」をリセットする
     counts = { ball: 0, strike: 0, out: 0 };
     runners = { base1: false, base2: false, base3: false };
@@ -391,9 +433,18 @@ function handleInningChange() {
             score.bottom[currentInning] = 0
         }
         if (currentInning >= totalInnings) {
-            isGameEnded = true;
-            syncPush("試合終了", getLogSnapshot());
-            alert("試合終了です。");
+            const isTiebreak = await showTiebreakDialogue();
+            if (isTiebreak) {
+                console.log("タイブレーク処理を開始します");
+                totalInnings ++;
+                runners = {base1:true, base2: true, base3: false};
+                currentInning++;
+                isBottomInning = false;
+            }else {
+                syncPush("試合終了", getLogSnapshot());
+                alert("試合終了です。");
+                stopAutoSync();
+            }
         } else {
             currentInning++;
             isBottomInning = false;
@@ -495,7 +546,7 @@ function updateCountDisplay() {
     updateDots('strike', counts.strike);
     updateDots('out', counts.out);
 
-    document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
+    document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.top.at(-1) : pitchingCount.bottom.at(-1);
     document.getElementById('display-pitcher-name').textContent = isBottomInning ? topPlayers.pitcher.at(-1)||"ピッチャー" : bottomPlayers.pitcher.at(-1)||"ピッチャー";
     if((isBottomInning&&bottomPlayers.batter.length>0) || (!isBottomInning && topPlayers.batter.length>0)){
         document.getElementById('display-batter-name').textContent = isBottomInning ? bottomPlayers.batter[battingCount.bottom % bottomPlayers.batter.length].name: topPlayers.batter[battingCount.top % topPlayers.batter.length].name;
@@ -574,6 +625,19 @@ function updateScoreboardUI() {
     const bottomTotalEl = document.getElementById('total-score-bottom');
     if (topTotalEl) topTotalEl.textContent = totalScore.top;
     if (bottomTotalEl) bottomTotalEl.textContent = totalScore.bottom;
+}
+
+/**
+ * 共有リンクを表示用に更新する
+ */
+function updateShareLinkDisplay() {
+    if (!gameId) return;
+    
+    // 現在のページのURL（?以降を除く）を取得し、gameIdを付与
+    const baseUrl = window.location.origin + window.location.pathname;
+    const shareUrl = `${baseUrl}?gameId=${gameId}`;
+    
+    document.getElementById('share-link').textContent = shareUrl;
 }
 
 async function endGame() {
@@ -701,14 +765,21 @@ function showExistingGameForm() {
 /**
  * 既存の試合データを読み込んでアプリを起動
  */
-async function resumeGame() {
-    const selectedId = document.getElementById('select-existing-game').value;
+async function resumeGame(selectedId = null) {
+    if(!selectedId){
+        selectedId = document.getElementById('select-existing-game').value;
+    }
     if (!selectedId) {
         alert("編集する試合を選択してください");
         return;
     }
 
     try {
+        // アプリ画面へ
+        document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        
         // GASから現在の試合状態(state)を取得
         const response = await fetch(`${GAS_URL}?mode=getGameDetail&gameId=${selectedId}`);
         const gameData = await response.json();
@@ -725,12 +796,6 @@ async function resumeGame() {
         totalInnings = state.totalInnings || 9;
         
         applyState(state);
-        
-        // アプリ画面へ
-        document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
-        document.getElementById('setup-screen').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        alert("データを復元しました。編集を再開します。");
 
     } catch (e) {
         console.error("再開エラー:", e);
@@ -745,30 +810,58 @@ function generateGameId(){
     document.getElementById('input-game-id').value = `${leagueId}-${dateStr}-${rand}`;
 }
 
-function changePitcher(){
+async function changePitcher(){
+    let teamMember = isBottomInning ? topPlayers.batter : bottomPlayers.batter;
+    
+    //投手設定用のプルダウンを作成
+    const pitcherSelect = document.getElementById('next-pitcher');
+    const setPitcherName = isBottomInning ? topPlayers.pitcher.slice(-1)[0] : bottomPlayers.pitcher.slice(-1)[0];
+    pitcherSelect.innerHTML = '<option value="">-- ピッチャーを選択 --</option>';
+    teamMember.forEach((member) => {
+        let pitcherOption = document.createElement('option');
+        pitcherOption.value = member.name;
+        pitcherOption.textContent = member.name;
+        if(setPitcherName===member.name){
+            pitcherOption.selected = true;
+        }
+        pitcherSelect.appendChild(pitcherOption);
+
+    })
+
+    const nextPitcher = await showPlayerChangeDialogue();
+    
+    if(!nextPitcher || nextPitcher === setPitcherName){
+        return;
+    }
     if(isBottomInning) {
-        pitchingCount.bottom.push(0);
-    }else{
         pitchingCount.top.push(0);
+        topPlayers.pitcher.push(nextPitcher)
+    }else{
+        pitchingCount.bottom.push(0);
+        bottomPlayers.pitcher.push(nextPitcher)
     }
     updateCountDisplay();
+    await syncPush();
 }
 
 function countPitching(){
+    if(isGameEnded){
+        return;
+    }
     // 配列が空、またはundefinedの場合の初期化（保険）
     if (!pitchingCount.bottom) pitchingCount.bottom = [0];
     if (!pitchingCount.top) pitchingCount.top = [0];
 
     if (isBottomInning) {
         // 配列の最後（現在の投手）をインクリメント
-        let idx = pitchingCount.bottom.length - 1;
-        pitchingCount.bottom[idx] = (pitchingCount.bottom[idx] || 0) + 1;
-    } else {
         let idx = pitchingCount.top.length - 1;
         pitchingCount.top[idx] = (pitchingCount.top[idx] || 0) + 1;
+    } else {
+        let idx = pitchingCount.bottom.length - 1;
+        pitchingCount.bottom[idx] = (pitchingCount.bottom[idx] || 0) + 1;
     }
     // ここでUIを更新（表示に即座に反映させる）
-    document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.bottom.at(-1) : pitchingCount.top.at(-1);
+    document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.top.at(-1) : pitchingCount.bottom.at(-1);
 }
 
 function setMemberData(isBottom) {
@@ -792,17 +885,12 @@ function setMemberData(isBottom) {
 
     //投手設定用のプルダウンを作成
     const pitcherSelect = document.getElementById('pitcher-name');
-    const setPitcherName = isBottom ? bottomPlayers.pitcher[0] : topPlayers.pitcher[0];
     pitcherSelect.innerHTML = '<option value="">-- ピッチャーを選択 --</option>';
     teamMember.forEach((member) => {
         let pitcherOption = document.createElement('option');
         pitcherOption.value = member.name;
         pitcherOption.textContent = member.name;
-        if(setPitcherName===member.name){
-            pitcherOption.selected = true;
-        }
         pitcherSelect.appendChild(pitcherOption);
-
     })
 
     //打順設定用のテーブルを作成
@@ -881,4 +969,53 @@ function submitMemberData() {
     }
     document.getElementById('new-game-form').classList.remove("hidden");
     document.getElementById('member-data-form').classList.add("hidden");    
+}
+
+function showTiebreakDialogue() {
+    return new Promise((resolve) => {
+        document.getElementById('tiebreak-dialog-overlay').style.display = 'flex';
+
+        const select = (result) => {
+            document.getElementById('tiebreak-dialog-overlay').style.display = 'none';
+            resolve(result);
+        }
+        //はいを押したとき
+        document.getElementById('btn-tiebreak-yes').onclick = () => select(true);
+
+        // いいえを押したとき
+        document.getElementById('btn-tiebreak-no').onclick = () => select(false);
+    })
+    
+}
+
+function showPlayerChangeDialogue() {
+    return new Promise((resolve) => {
+        document.getElementById('player-change-dialog-overlay').style.display = 'flex';
+
+        const select = (result) => {
+            document.getElementById('player-change-dialog-overlay').style.display = 'none';
+            resolve(result);
+        }
+        //はいを押したとき
+        document.getElementById('btn-player-change-yes').onclick = () => select(document.getElementById('next-pitcher').value);
+
+        // いいえを押したとき
+        document.getElementById('btn-player-change-no').onclick = () => select(null);
+    })
+    
+}
+
+/**
+ * id="share-link" のテキストをクリップボードにコピーする
+ */
+async function copyShareLink() {
+    const linkText = document.getElementById('share-link').textContent;
+    
+    try {
+        await navigator.clipboard.writeText(linkText);
+        alert("URLをクリップボードにコピーしました！\nそのままLINE等に貼り付けて共有できます。");
+    } catch (err) {
+        console.error('コピーに失敗しました: ', err);
+        alert("コピーに失敗しました。お使いのブラウザの設定を確認してください。");
+    }
 }

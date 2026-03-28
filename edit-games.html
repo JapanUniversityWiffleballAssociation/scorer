@@ -109,7 +109,16 @@
             <div id="display-game-id">ID: ----</div>
             <div id="sync-status">同期オフライン</div>
         </div>
-
+        <div class="share-section" style="margin-top: 20px; padding: 10px; background: #a1a1a1; border-radius: 5px;">
+            <label style="font-size: 12px; color: #000000;">この試合の編集用URL:</label>
+            <div id="share-link" style="word-break: break-all; font-family: monospace; font-size: 12px; margin-bottom: 10px; color: #333;">
+             (URL生成中...)
+            </div>
+            <button type="button" onclick="copyShareLink()" class="btn-sm" style="background: #3498db; color: white; width: 100%;">
+                URLをコピーする
+            </button>
+        </div>
+        <br>
         <section class="score-board">
         <table id="scoreboard">
             <thead id="scoreboard-head">
@@ -200,6 +209,40 @@
     <button type="button" id="end-game-btn" class="btn" style="background: #c0392b; border-bottom: 4px solid #a93226;">試合を終了する</button>
 </div>
         </section>
+
+        <div id="tiebreak-dialog-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="icon">⚠</span>
+                    <h2>試合続行の確認</h2>
+                </div>
+                <div class="modal-body">
+                    <p>規定イニングで決着がつきませんでした。</p>
+                    <p class="highlight-text">タイブレーク（無死一二塁）に進みますか？</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-tiebreak-no" class="btn-secondary">いいえ（引き分け）</button>
+                    <button id="btn-tiebreak-yes" class="btn-primary">はい（タイブレーク開始）</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="player-change-dialog-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="icon">⚠</span>
+                    <h2>投手交代</h2>
+                </div>
+                <div class="modal-body">
+                    <p>次のピッチャーを選択してください。</p>
+                    <select id="next-pitcher"> <option>--メンバーを読み込み中--</option></select>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-player-change-yes" class="btn-primary">確定</button>
+                    <button id="btn-player-change-no" class="btn-secondary">キャンセル</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="js/common.js"></script>
