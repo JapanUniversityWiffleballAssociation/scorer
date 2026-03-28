@@ -497,9 +497,12 @@ function getLogSnapshot() {
     return {
         inning: currentInning,
         isBottom: isBottomInning,
-        team: isBottomInning ? 
+        offenceTeam: isBottomInning ? 
             bottomTeamName : 
             topTeamName,
+        defenseTeam: isBottomInning ?
+            topTeamName :
+            bottomTeamName,
         pitcher: isBottomInning ?
             topPlayers.pitcher.at(-1) || "ピッチャー":
             bottomPlayers.pitcher.at(-1)|| "ピッチャー",
@@ -779,7 +782,7 @@ async function resumeGame(selectedId = null) {
         document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
         document.getElementById('setup-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
-        
+
         // GASから現在の試合状態(state)を取得
         const response = await fetch(`${GAS_URL}?mode=getGameDetail&gameId=${selectedId}`);
         const gameData = await response.json();
