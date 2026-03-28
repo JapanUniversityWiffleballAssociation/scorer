@@ -497,7 +497,7 @@ function getLogSnapshot() {
     return {
         inning: currentInning,
         isBottom: isBottomInning,
-        offenceTeam: isBottomInning ? 
+        offenseTeam: isBottomInning ? 
             bottomTeamName : 
             topTeamName,
         defenseTeam: isBottomInning ?
