@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JUWA 試合速報システム（プロトタイプ） - メインメニュー</title>
     <link rel="stylesheet" href="style.css">
-
     <style>
         .menu-container {
             display: flex;
@@ -84,6 +83,7 @@
             <p style="color: #bdc3c7;">Japan University Wiffleball Association</p>
             <h2 style="margin-top: 10px;">試合速報システム</h2>
         </header>
+        <button id="logoutBtn" onclick="AuthService.logout()">ログアウト</button>
         <h3>お知らせ</h3>
         <div class="notice">
             <div class="notice-card" onclick="document.getElementById('notice01').classList.toggle('hidden');">
@@ -102,63 +102,42 @@
             </div>
         </div>
 
-    <div id="login-container">
-        <h2>ログイン</h2>
-        <div class="form-group">
-            <label>ユーザーID</label>
-            <input type="text" id="userId" placeholder="Enter ID">
-        </div>
-        <div class="form-group">
-            <label>パスワード</label>
-            <input type="password" id="password" placeholder="Enter Password">
-        </div>
-        <button id="loginBtn">ログイン</button>
-        <p id="errorMessage" style="color: red;"></p>
+    <div class="menu-container">
+         <a href="league_manager.html" class="menu-card">
+            <span class="icon">🏆</span>
+            <h2>大会を作成する</h2>
+            <p>大会情報を入力・保存します。</p>
+        </a>
 
-        <button id="guestBtn">ゲストでログイン</button>
-        <button id="signUpBtn">アカウント作成</button>
-        
-    </div>
+        <a href="edit-games.html" class="menu-card">
+            <span class="icon">📝</span>
+            <h2>記録をつける</h2>
+            <p>試合のスコア、カウント、打席結果をリアルタイムで入力・保存します。</p>
+        </a>
+
+        <a href="viewer.html" rel="noopener noreferrer" class="menu-card">
+            <span class="icon">📱</span>
+            <h2>速報を見る</h2>
+            <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況を観戦します。</p>
+        </a>
+
+        <a href="teams.html" style="display: none;" rel="noopener noreferrer" class="menu-card">
+            <span class="icon">👥</span>
+            <h2>チーム・メンバー管理</h2>
+            <p>チーム・メンバー情報を管理します。</p>
+        </a>
+        </div>
 
         <footer class="footer-simple">
             <p>&copy; 2026 Japan University Wiffleball Association. All Rights Reserved.</p>
         </footer>
     </div>
-<script>
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-    const userId = document.getElementById('userId').value;
-    const pass = document.getElementById('password').value;
-    const errorEl = document.getElementById('errorMessage');
-
-    // ローディング表示（SE的なUX配慮）
-    errorEl.textContent = '認証中...';
-    
-    const result = await AuthService.login(userId, pass);
-
-    if (result.success) {
-      alert('ログインに成功しました！管理画面へ移動します。');
-      window.location.href = 'menu.html'; // 遷移先
-    } else {
-      errorEl.textContent = result.message;
-    }
-  });
-
-  document.getElementById('guestBtn').addEventListener('click', async () => {
-    const userId = 'guest';
-    const pass = 'guest';
-    const errorEl = document.getElementById('errorMessage');
-
-    // ローディング表示（SE的なUX配慮）
-    errorEl.textContent = '読み込み中...';
-    
-    const result = await AuthService.login(userId, pass);
-    if (result.success) {
-      window.location.href = 'menu.html'; // 遷移先
-    } else {
-      errorEl.textContent = '通信エラーです。再度実行してください。';
-    }
-  });
-</script>
-<script src="js/common.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        if (!AuthService.isLoggedIn()) {
+            alert('セッションが切れました。ログインし直してください。');
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
 </html>

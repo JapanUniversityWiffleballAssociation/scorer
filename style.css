@@ -411,3 +411,85 @@ button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1
 .btn-secondary:hover {
   background-color: #dee2e6;
 }
+
+
+
+/* ログインコンテナの装飾 */
+#login-container {
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 40px;
+  background: #bab8b8;
+  border-radius: 12px;
+  border:#00ff6a;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  text-align: center;
+}
+
+#login-container h2 {
+  margin-bottom: 30px;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* 入力グループの調整 */
+.form-group {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 600;
+}
+
+/* 無骨なinputをモダンに */
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box; /* paddingによる幅崩れ防止 */
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* ボタンの装飾 */
+#loginBtn {
+  width: 100%;
+  padding: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+#loginBtn:hover {
+  background-color: #0056b3;
+}
+
+#loginBtn:active {
+  transform: scale(0.98);
+}
+
+/* エラーメッセージ */
+#errorMessage {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  min-height: 1.2em;
+}
