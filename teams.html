@@ -23,9 +23,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>チーム・メンバー管理</h1>
-        <a href="index.html" style="color: #aaa; text-decoration: none;">← 戻る</a>
+        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+        </div>
+        <h2>チーム・メンバー管理</h2>
 
+        
         <div class="form-group">
             <label>編集するチームを選択</label>
             <select id="team-select" onchange="loadTeamDetails()">
@@ -51,7 +55,7 @@
         </div>
         <button id="save-team-btn" class="btn-save" onclick="saveTeam()">チーム情報を保存</button>
     </div>
-    <script src="common.js"></script>
-    <script src="teams.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/teams.js"></script>
 </body>
 </html>

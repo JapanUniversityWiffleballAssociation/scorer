@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="setup-screen" class="overlay">
-        <div class="setup-box">
-            <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
-            </div>
+        <div class="container">
+        <div class="card">
+        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            <button type="button" class="btn-sm" onclick="location.href='manual/manual_edit'">操作マニュアル</button>
+        </div>
             <h2>試合設定 & 同期</h2>
-            
             <div class="input-group">
                 <label>参加する大会を選択<br>（大会を選択すると追加の設定画面が表示されます。）</label>
                 <select id="select-league" onchange="handleLeagueSelect()">
@@ -34,25 +34,31 @@
                 <div class="input-group">
                     <label>試合ID</label>
                     <div style="display: flex; gap: 5px;">
-                        <input type="text" id="input-game-id" readonly placeholder="自動発行してください">
+                        <input type="text" id="input-game-id" readonly placeholder="自動発行してください" style="width: 60%;">
                         <button type="button" id="gen-id-btn" class="btn-sm">自動発行</button>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>先攻チーム</label>
-                    <select id="top-team-name">
+                    <div style="display: flex; gap: 5px;">
+                    <select id="top-team-name" style="width: 60%;">
                         <option value="loading">チーム情報を読み込み中...</option>
                     </select>
+                    <button type="button" id="edit-top-member" onclick="setMemberData(false)">メンバー編集</button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>後攻チーム</label>
-                    <select id="bottom-team-name">
+                    <div style="display: flex; gap: 5px;">
+                    <select id="bottom-team-name" style="width: 60%;">
                         <option value="loading">チーム情報を読み込み中...</option>
                     </select>
+                    <button type="button" id="edit-bottom-member" onclick="setMemberData(true)">メンバー編集</button>
+                    </div>
                 </div>
                 <div class="input-group">
                 <label>イニング数</label>
-                <input type="number" id="input-innings" value="3" min="1" max="12">
+                <input type="number" id="input-innings" value="3" min="1" max="12" style="width: 30%;">
                 </div>
                 <button type="button" id="start-btn" class="btn-save">この内容で試合開始</button>
             </div>
@@ -66,6 +72,31 @@
                 </div>
                 <button type="button" onclick="resumeGame()" class="btn-save" style="background:#3498db;">編集を再開する</button>
             </div>
+
+            <div id="member-data-form" class="hidden" style="margin-top: 20px; border-top: 1px solid #555; padding-top: 15px;">
+                <div class="input-group">
+                    <h3 id="setting-team-name">チーム名</h3>
+                    <input type="hidden" value="" id="isBottom">
+                    <label>投手</label>
+                    <div style="display: flex; gap: 5px;">
+                    <select id="pitcher-name" style="width: 60%;">
+                        <option value="loading">チーム情報を読み込み中...</option>
+                    </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>打順</label>
+                    <table id="batting-order">
+                    <tr>
+                        <th style="width: 25%;">打順</th>
+                        <th style="width: 50%;">メンバー</th>
+                        <th style="width: 25%;">背番号</th>
+                    </tr>
+                    </table>
+                </div>
+                <button type="button" id="submit-member" onclick="submitMemberData()" class="btn-save">この内容で確定</button>
+            </div>
+        </div>
         </div>
     </div>
 
@@ -78,7 +109,16 @@
             <div id="display-game-id">ID: ----</div>
             <div id="sync-status">同期オフライン</div>
         </div>
-
+        <div class="share-section" style="margin-top: 20px; padding: 10px; background: #a1a1a1; border-radius: 5px;">
+            <label style="font-size: 12px; color: #000000;">この試合の編集用URL:</label>
+            <div id="share-link" style="word-break: break-all; font-family: monospace; font-size: 12px; margin-bottom: 10px; color: #333;">
+             (URL生成中...)
+            </div>
+            <button type="button" onclick="copyShareLink()" class="btn-sm" style="background: #3498db; color: white; width: 100%;">
+                URLをコピーする
+            </button>
+        </div>
+        <br>
         <section class="score-board">
         <table id="scoreboard">
             <thead id="scoreboard-head">
@@ -100,8 +140,22 @@
         </table>
         </section>
         <section class="pitch-counter-box">
-            <div class="pitch-label">投球数</div>
-            <div id="pitching-count">0</div>
+            <div class="match-status-bar">
+                <div class="status-item current-pitcher">
+                    <span class="label">ピッチャー</span>
+                    <span id="display-pitcher-name" class="value">読み込み中...</span>
+                </div>
+
+                <div class="status-item pitch-count">
+                    <span class="label">PITCHES</span>
+                    <span id="display-pitch-count" class="value">0</span>
+                </div>
+
+                <div class="status-item current-batter">
+                    <span class="label">バッター</span>
+                    <span id="display-batter-name" class="value">読み込み中...</span>
+                </div>
+            </div>
         </section>
         <div class="status-container">
             <section class="counts">
@@ -155,9 +209,43 @@
     <button type="button" id="end-game-btn" class="btn" style="background: #c0392b; border-bottom: 4px solid #a93226;">試合を終了する</button>
 </div>
         </section>
+
+        <div id="tiebreak-dialog-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="icon">⚠</span>
+                    <h2>試合続行の確認</h2>
+                </div>
+                <div class="modal-body">
+                    <p>規定イニングで決着がつきませんでした。</p>
+                    <p class="highlight-text">タイブレーク（無死一二塁）に進みますか？</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-tiebreak-no" class="btn-secondary">いいえ（引き分け）</button>
+                    <button id="btn-tiebreak-yes" class="btn-primary">はい（タイブレーク開始）</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="player-change-dialog-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="icon">⚠</span>
+                    <h2>投手交代</h2>
+                </div>
+                <div class="modal-body">
+                    <p>次のピッチャーを選択してください。</p>
+                    <select id="next-pitcher"> <option>--メンバーを読み込み中--</option></select>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-player-change-yes" class="btn-primary">確定</button>
+                    <button id="btn-player-change-no" class="btn-secondary">キャンセル</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="common.js"></script>
-    <script src="edit-games.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/edit-games.js"></script>
 </body>
 </html>

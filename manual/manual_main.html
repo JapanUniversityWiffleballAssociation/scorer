@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA 試合速報システム - 総合操作マニュアル</title>
+    <style>
+        :root {
+            --primary-color: #2ecc71;
+            --secondary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 12px;
+        }
+        header {
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+        h1 { color: var(--secondary-color); margin-bottom: 10px; }
+        .system-overview {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 6px solid var(--secondary-color);
+            margin-bottom: 40px;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .menu-item {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            padding: 20px;
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .menu-item h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+        }
+        .menu-item p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .chapter-number {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .admin-section {
+            background: #fff5f5;
+            border: 1px dashed #feb2b2;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        .admin-section h2 {
+            color: #c53030;
+            margin-top: 0;
+            font-size: 1.3rem;
+        }
+        .admin-section ul {
+            margin-bottom: 0;
+        }
+        .badge-upcoming {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🏆 JUWA 試合速報システム</h1>
+        <p>総合操作マニュアル</p>
+    </header>
+
+    <section class="system-overview">
+        <h2>システム概要</h2>
+        <p>
+            本システムは、大学ウィッフルボール（JUWA）の試合経過をリアルタイムで記録・共有するためのプラットフォームです。
+            リーグの開設から、試合現場での直感的なスコア入力、そして全国のファンが閲覧できる速報ビューワー機能を備えています。
+        </p>
+    </section>
+
+    <section>
+        <h2 style="text-align: center; margin-bottom: 25px;">目次</h2>
+        <div class="menu-grid">
+            <a href="manual_league.html" class="menu-item">
+                <span class="chapter-number">第1章</span>
+                <h2>大会作成機能</h2>
+                <p>新規リーグの登録、開催期間の設定、大会IDの発行手順について解説します。</p>
+            </a>
+
+            <a href="manual_edit.html" class="menu-item">
+                <span class="chapter-number">第2章</span>
+                <h2>試合記録機能</h2>
+                <p>カウント更新、進塁処理、スコア入力、リアルタイム同期の方法を解説します。</p>
+            </a>
+
+            <a href="manual_viewer.html" class="menu-item">
+                <span class="chapter-number">第3章</span>
+                <h2>試合閲覧機能</h2>
+                <p>速報画面の見方、ライブ状況の確認、自動更新の切り替えについて解説します。</p>
+            </a>
+        </div>
+    </section>
+
+    <section class="admin-section">
+        <h2>🔧 システム外対応（管理者への作業依頼）</h2>
+        <p>以下の操作は現在、ユーザー画面からは行えません。必要な場合はシステム管理者まで直接ご連絡ください。</p>
+        <ul>
+            <li><strong>大会（リーグ）の削除・編集：</strong> 一度登録した大会名やIDの変更・削除。</li>
+            <li><strong>試合データの削除：</strong> 誤って作成した試合データの完全消去。</li>
+            <li><strong>試合データの訂正：</strong> 終了した試合のスコアや記録の修正。
+                <span class="badge-upcoming">今後実装予定</span>
+            </li>
+        </ul>
+        <p style="margin-top: 15px; font-size: 0.85rem; color: #718096;">
+            ※データの整合性を保つため、DB（Googleスプレッドシート）を直接操作して対応いたします。
+        </p>
+    </section>
+
+    <footer style="margin-top: 50px; text-align: center; color: #999; font-size: 0.8rem;">
+        &copy; 2026 Japan University Wiffleball Association. All Rights Reserved.
+    </footer>
+</div>
+
+</body>
+</html>

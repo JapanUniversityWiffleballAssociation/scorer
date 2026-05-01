@@ -83,14 +83,21 @@
             <p style="color: #bdc3c7;">Japan University Wiffleball Association</p>
             <h2 style="margin-top: 10px;">試合速報システム</h2>
         </header>
+        <h3>お知らせ</h3>
         <div class="notice">
-            <h3>お知らせ</h3>
             <div class="notice-card" onclick="document.getElementById('notice01').classList.toggle('hidden');">
                 β版リリースのお知らせ（2026/01/30）
             </div>
             <div class="notice-detail-card hidden" id="notice01">
                 日本ウィッフルボール学生連盟公式の試合速報システムのβ版をリリースしました。<br>
-                β版のため、正式版リリースに向けたメンテナンス等が発生する可能性がございます。あらかじめご了承ください。
+                β版のため、正式版リリースに向けたメンテナンス等によりアプリが使用できない可能性がございます。あらかじめご了承ください。
+            </div>
+            <br>
+            <div class="notice-card" onclick="document.getElementById('notice02').classList.toggle('hidden');">
+                β版操作マニュアル（2026/01/30）
+            </div>
+            <div class="notice-detail-card hidden" id="notice02">
+                操作マニュアルは、<a href="manual/manual_main.html">こちら</a>からご参照いただけます。
             </div>
         </div>
         <div class="menu-container">
@@ -106,9 +113,9 @@
                 <p>試合のスコア、カウント、打席結果をリアルタイムで入力・保存します。</p>
             </a>
 
-            <a href="viewer.html" target="_blank" rel="noopener noreferrer" class="menu-card">
+            <a href="viewer.html" rel="noopener noreferrer" class="menu-card">
                 <span class="icon">📱</span>
-                <h2>速報を見る（新規タブ）</h2>
+                <h2>速報を見る</h2>
                 <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況を観戦します。</p>
             </a>
 

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作マニュアル - 大会作成機能 | JUWA</title>
+    <style>
+        :root {
+            --primary-color: #2ecc71;
+            --secondary-color: #2c3e50;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --accent-color: #e74c3c;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        header {
+            border-bottom: 3px solid var(--primary-color);
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+        h1 { color: var(--secondary-color); font-size: 1.8rem; }
+        h2 {
+            color: var(--secondary-color);
+            border-left: 5px solid var(--primary-color);
+            padding-left: 15px;
+            margin-top: 40px;
+            font-size: 1.4rem;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .important {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--secondary-color);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        table th { background: #f2f2f2; }
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🏆 操作マニュアル：大会作成（リーグ管理）</h1>
+        <p>JUWA 試合速報システムにおいて、新しい大会（リーグ）を開設し、管理する手順を説明します。</p>
+    </header>
+
+    <section>
+        <h2>1. リーグ管理画面へのアクセス</h2>
+        <div class="step">
+            <div class="step-number">1</div>
+            <div>
+                メインメニューから <strong>「大会を作成する」</strong> カードをクリックします。
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>2. 新規リーグの登録</h2>
+        <p>「新規リーグ登録」セクションの各項目を入力します。</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>項目名</th>
+                    <th>説明・入力例</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>大会略称 (ID用)</strong></td>
+                    <td>システム内で識別するためのIDです。例: <code>JUWA2026S</code><br>
+                    <small style="color: var(--accent-color);">※半角ハイフン（-）は使用できません。</small></td>
+                </tr>
+                <tr>
+                    <td><strong>正式名称</strong></td>
+                    <td>画面に表示される大会名です。例: <code>2026年度 春季リーグ</code></td>
+                </tr>
+                <tr>
+                    <td><strong>開始日 / 終了日</strong></td>
+                    <td>大会の開催期間を選択します。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="step">
+            <div class="step-number">2</div>
+            <div>
+                入力が完了したら <strong>「リーグを開設する」</strong> ボタンをクリックします。
+                <p><small>※「送信中...」と表示されている間は画面を閉じずにお待ちください。</small></p>
+            </div>
+        </div>
+
+        <div class="important">
+            <strong>⚠️ 注意事項</strong><br>
+            リーグIDに半角ハイフン <code>-</code> を含めるとエラーになります。英数字での入力を推奨します。
+        </div>
+    </section>
+
+    <section>
+        <h2>3. 登録済みリーグの確認と試合記録への遷移</h2>
+        <p>登録されたリーグは「登録済みリーグ一覧」に表示されます。</p>
+
+        <div class="step">
+            <div class="step-number">3</div>
+            <div>
+                一覧から該当するリーグを探します。最新のリーグが一番上に表示されます。
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>
+                <strong>「このリーグの試合を記録する」</strong> ボタンをクリックすると、そのリーグに紐付いた試合記録画面へ移動します。
+            </div>
+        </div>
+    </section>
+
+    <hr>
+    
+    <footer>
+        <p style="text-align: center; color: #7f8c8d;">
+            &copy; 2026 Japan University Wiffleball Association
+        </p>
+    </footer>
+</div>
+
+</body>
+</html>

@@ -39,9 +39,8 @@
 
         /* コントロール */
         .controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; background: #34495e; color: white; cursor: pointer; font-weight: bold; }
         button:active { opacity: 0.8; }
-        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
         .paused { background: #e67e22 !important; }
     </style>
 </head>
@@ -49,6 +48,10 @@
 
     <div id="list-screen" class="container">
         <h2 style="text-align: center; color: var(--accent);">🏆 試合一覧</h2>
+        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+            <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+        </div>
         <div id="game-list-container">
             <p style="text-align: center; color: #888; padding: 40px;">試合データを読み込み中...</p>
         </div>
@@ -61,7 +64,10 @@
             <span class="live-tag">LIVE</span>
             <span id="display-game-id" style="font-family: monospace; color: #aaa;">ID: ----</span>
         </div>
-        
+        <div class="controls">
+            <button id="refresh-btn" class="btn-sm" onclick="syncPull()">今すぐ手動更新</button>
+            <button id="pause-btn" class="btn-sm" onclick="togglePause()">自動更新: ON</button>
+        </div>
         <div id="sync-status" style="text-align: right; font-size: 0.7rem; color: #2ecc71; margin-bottom: 5px;">接続中...</div>
 
         <section class="score-board">
@@ -83,9 +89,25 @@
                 </tr>
                 </tbody>
             </table>
-            <button class="btn-log" onclick="openLogWindow()">
-                試合ログ（打席記録）を表示
-            </button>
+
+        </section>
+        <section class="pitch-counter-box">
+            <div class="match-status-bar">
+                <div class="status-item current-pitcher">
+                    <span class="label">ピッチャー</span>
+                    <span id="display-pitcher-name" class="value">読み込み中...</span>
+                </div>
+
+                <div class="status-item pitch-count">
+                    <span class="label">PITCHES</span>
+                    <span id="display-pitch-count" class="value">0</span>
+                </div>
+
+                <div class="status-item current-batter">
+                    <span class="label">バッター</span>
+                    <span id="display-batter-name" class="value">読み込み中...</span>
+                </div>
+            </div>
         </section>
 
         <div class="status-container">
@@ -103,13 +125,12 @@
                 </div>
             </section>
         </div>
+                    <button class="btn-log" onclick="openLogWindow()">
+                試合ログ（打席記録）を表示
+            </button>
 
-        <div class="controls">
-            <button id="refresh-btn" class="btn-sm" onclick="syncPull()">今すぐ手動更新</button>
-            <button id="pause-btn" class="btn-sm" onclick="togglePause()">自動更新: ON</button>
-        </div>
     </div>
-    <script src="common.js"></script>
-    <script src="viewer.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/viewer.js"></script>
 </body>
 </html>
