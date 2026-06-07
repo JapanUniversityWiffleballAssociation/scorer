@@ -77,13 +77,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <header style="text-align: center; margin-bottom: 40px;">
-            <h1 style="color: #2ecc71; letter-spacing: 2px;">JUWA</h1>
-            <p style="color: #bdc3c7;">Japan University Wiffleball Association</p>
-            <h2 style="margin-top: 10px;">試合速報システム</h2>
-        </header>
-        <button id="logoutBtn" onclick="AuthService.logout()">ログアウト</button>
+    <div id = container class="container">
         <h3>お知らせ</h3>
         <div class="notice">
             <div class="notice-card" onclick="document.getElementById('notice01').classList.toggle('hidden');">
@@ -102,14 +96,14 @@
             </div>
         </div>
 
-    <div class="menu-container">
-         <a href="league_manager.html" class="menu-card">
+        <div class="menu-container">
+         <a href="league_manager.html" id="manage_league" class="menu-card">
             <span class="icon">🏆</span>
             <h2>大会を作成する</h2>
             <p>大会情報を入力・保存します。</p>
         </a>
 
-        <a href="edit-games.html" class="menu-card">
+        <a href="edit-games.html" id="manage_game_score" class="menu-card admin user">
             <span class="icon">📝</span>
             <h2>記録をつける</h2>
             <p>試合のスコア、カウント、打席結果をリアルタイムで入力・保存します。</p>
@@ -137,6 +131,12 @@
         if (!AuthService.isLoggedIn()) {
             alert('セッションが切れました。ログインし直してください。');
             window.location.href = 'index.html';
+        }
+        const globalRole = AuthService.getUserInfo().globalRole;
+
+        if ( globalRole === 'guest' || !globalRole){
+            document.getElementById('manage_league').style.display = 'none';
+            document.getElementById('manage_game_score').style.display = 'none';
         }
     </script>
 </body>

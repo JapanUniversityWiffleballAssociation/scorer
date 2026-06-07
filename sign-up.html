@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新規ユーザー登録 - JUWA Scorer</title>
+  <style>
+    /* ログイン画面と統一感を持たせたベーススタイル */
+    body {
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    #signup-container {
+      max-width: 450px;
+      margin: 60px auto;
+      padding: 40px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      box-sizing: border-box;
+    }
+
+    #signup-container h2 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* 入力グループ */
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: #495057;
+      font-weight: 600;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input[type="text"]:focus,
+    .form-group input[type="password"]:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+    }
+
+    /* 利用規約チェックボックス */
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      margin-top: 3px;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      font-size: 0.85rem;
+      color: #495057;
+      line-height: 1.4;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-group a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .checkbox-group a:hover {
+      text-decoration: underline;
+    }
+
+    /* 登録ボタン */
+    #registerBtn {
+      width: 100%;
+      padding: 14px;
+      background-color: #28a745; /* ログインの青と対比させ、新規作成はポジティブな緑に */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    #registerBtn:hover {
+      background-color: #218838;
+    }
+
+    #registerBtn:active {
+      transform: scale(0.99);
+    }
+
+    /* エラー・ガイダンスメッセージ領域 */
+    #errorMessage {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 1.5em;
+      font-weight: 500;
+    }
+
+    /* ログイン画面への誘導リンク */
+    .login-link {
+      margin-top: 25px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #666;
+      border-top: 1px solid #dee2e6;
+      padding-top: 20px;
+    }
+
+    .login-link a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="signup-container">
+    <h2>JUWA Scorer アカウント作成</h2>
+    <div class="subtitle">連盟・チーム管理を行うためのユーザー登録を行います</div>
+
+    <div class="form-group">
+      <label for="email">メールアドレス (ユーザーID)</label>
+      <input type="text" id="email" placeholder="example@juwa.com" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label for="displayName">表示名 (氏名またはニックネーム)</label>
+      <input type="text" id="displayName" placeholder="TARO">
+    </div>
+
+    <div class="form-group">
+      <label for="password">パスワード</label>
+      <input type="password" id="password" placeholder="8文字以上の英数字">
+    </div>
+
+    <div class="form-group">
+      <label for="confirmPassword">パスワード (確認用)</label>
+      <input type="password" id="confirmPassword" placeholder="もう一度入力してください">
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="agreeTerms">
+      <label for="agreeTerms">
+        <a href="terms.html" target="_blank">利用規約</a> と 
+        <a href="privacy.html" target="_blank">プライバシーポリシー</a> に同意します
+      </label>
+    </div>
+
+    <button id="registerBtn">規約に同意してアカウント登録</button>
+
+    <div id="errorMessage"></div>
+
+    <div class="login-link">
+      すでにアカウントをお持ちですか？ <a href="index.html">ログインはこちら</a>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    document.getElementById('registerBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const displayName = document.getElementById('displayName').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const agreeTerms = document.getElementById('agreeTerms').checked;
+      const errorEl = document.getElementById('errorMessage');
+
+      // 1. 規約同意チェック
+      if (!agreeTerms) {
+        errorEl.textContent = '利用規約およびプライバシーポリシーへの同意が必要です。';
+        errorEl.style.color = 'red';
+        return;
+      }
+
+      // 2. 必須入力チェック
+      if (!email || !displayName || !password || !confirmPassword) {
+        errorEl.textContent = 'すべての項目を入力してください。';
+        errorEl.style.color = 'red';
+        return;
+      }
+
+      // 3. メールアドレス形式チェック
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        errorEl.textContent = '正しいメールアドレスの形式で入力してください。';
+        errorEl.style.color = 'red';
+        return;
+      }
+      
+      // 4. パスワード一致チェック
+      if (password !== confirmPassword) {
+        errorEl.textContent = 'パスワードと確認用パスワードが一致しません。';
+        errorEl.style.color = 'red';
+        return;
+      }
+
+      //5. パスワードの長さ、文字種チェック
+      const passwordHasBoth = (password) => /[a-zA-Z]/.test(password) && /\d/.test(password);
+      if(!passwordHasBoth(password) && password.length < 8){
+        errorEl.textContent = 'パスワードは数字とアルファベットの両方を含む8文字以上である必要があります。';
+        errorEl.style.color = 'red';
+        return;
+      }
+      // 送信処理
+      errorEl.textContent = '登録処理中...';
+      errorEl.style.color = '#007bff';
+
+      const result = await AuthService.register(email, displayName, password);
+
+      if (result.success) {
+        alert('ユーザー登録が完了しました！チームに参加する場合はチーム管理メニューから操作してください。');
+        window.location.href = 'menu.html';
+      } else {
+        errorEl.textContent = result.message;
+        errorEl.style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>

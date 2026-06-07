@@ -493,3 +493,67 @@ button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1
   font-size: 0.9rem;
   min-height: 1.2em;
 }
+
+
+/* ヘッダーのスタイル*/
+.main-header {
+  display: flex;
+  flex-direction: column; /* 子要素を上から下に縦並びにする */
+  width: 100%;
+  background-color: #343a40;
+  color: #ffffff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+/* 1段目：トップのスタイル */
+.header-top-row {
+  
+  padding: 6px 24px;
+  font-size: 12px;
+  text-align: center; /* メッセージを中央寄せ */
+  border-bottom: 1px solid #495057;
+}
+
+/* 2段目：ミドルのスタイル（ここを横並び・左右振り分けにする） */
+.header-middle-row {
+  display: flex;
+  justify-content: space-between; /* 左右に振り分け */
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid #495057;
+}
+
+/* 2段目の左側（ロゴとユーザー名） */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* 3段目：ボトムのスタイル */
+.header-bottom-row {
+  background-color: #0056b3; /* 明るい色にしてコンテンツとのつなぎ目にする */
+  color: #ffffff;            /* 文字はダークに */
+  padding: 8px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ボタンやリンクのスタイル（既存踏襲） */
+.logout-button {
+  background-color: #dc3545;
+  color: #ffffff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.logout-button:hover { background-color: #c82333; }
+.user-name { cursor: pointer; text-decoration: underline dotted; }
