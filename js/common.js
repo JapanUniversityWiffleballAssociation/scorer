@@ -144,6 +144,9 @@ const AuthService = {
   isLoggedIn() {
     return localStorage.getItem('juwa_api_key') !== null;
   },
+  getApiKey(){
+    return localStorage.getItem('juwa_api_key');
+  },
 
   /**
    * ログアウト処理
@@ -157,6 +160,7 @@ const AuthService = {
     const userJson = localStorage.getItem('juwa_user');
     return userJson ? JSON.parse(userJson) : null;
   },
+  
   async register(email, displayName, password) {
     const payload = {
       mode: 'registerUser',
@@ -185,5 +189,60 @@ const AuthService = {
     } catch (error) {
       return { success: false, message: '通信エラーが発生しました。バックエンドを確認してください。' };
     }
+  },
+  /**
+   * 新規チーム作成リクエストをGASに送信する
+   * @param {Object} payload チーム名とメンバーリストを含むオブジェクト
+   */
+  async createTeam(payload) {
+    try {
+      const response = await fetch(CONST_GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      
+      // GASからのレスポンスをパース
+      const result = await response.json();
+      return result;
+      
+    } catch (error) {
+      console.error('チーム作成通信エラー:', error);
+      return { 
+        status: 'error', 
+        message: 'サーバーとの通信に失敗しました。ネットワーク環境を確認してください。' 
+      };
+    }
   }
 };
+
+
+//ポップアップによるボタン表示のための処理
+document.addEventListener('DOMContentLoaded', () => {
+  const teamMgmtBtn = document.getElementById('teamMgmtBtn');
+  const teamModal = document.getElementById('teamModal');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+
+  // 「チーム管理」ボタンを押したらモーダルを表示
+  if (teamMgmtBtn && teamModal) {
+    teamMgmtBtn.addEventListener('click', () => {
+      teamModal.style.display = 'flex'; // 縦横中央揃えのために flex で表示
+    });
+  }
+
+  // 「×」ボタンを押したらモーダルを非表示
+  if (closeModalBtn && teamModal) {
+    closeModalBtn.addEventListener('click', () => {
+      teamModal.style.display = 'none';
+    });
+  }
+
+  // モーダルの外側（黒い背景部分）をクリックしても閉じるようにする親切設計
+  if (teamModal) {
+    teamModal.addEventListener('click', (e) => {
+      if (e.target === teamModal) {
+        teamModal.style.display = 'none';
+      }
+    });
+  }
+  
+});

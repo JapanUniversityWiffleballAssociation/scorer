@@ -115,12 +115,41 @@
             <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況を観戦します。</p>
         </a>
 
-        <a href="teams.html" style="display: none;" rel="noopener noreferrer" class="menu-card">
+        <a id="teamMgmtBtn" rel="noopener noreferrer" class="menu-card">
             <span class="icon">👥</span>
             <h2>チーム・メンバー管理</h2>
             <p>チーム・メンバー情報を管理します。</p>
         </a>
         </div>
+
+<div id="teamModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>チーム管理メニュー</h3>
+      <button id="closeModalBtn" class="close-button">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">実行したい手続きを選択してください。</p>
+      
+      <div class="modal-btn-group">
+        <button onclick="location.href='team-create.html'" class="modal-action-btn create-btn">
+          <span class="icon">➕</span>
+          <span class="label">チーム作成</span>
+        </button>
+        
+        <button onclick="location.href='team-join.html'" class="modal-action-btn join-btn">
+          <span class="icon">🙋‍♂️</span>
+          <span class="label">チーム加入申請</span>
+        </button>
+        
+        <button onclick="location.href='team-edit.html'" class="modal-action-btn edit-btn">
+          <span class="icon">⚙️</span>
+          <span class="label">チーム情報編集<br><small>(加入処理)</small></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
         <footer class="footer-simple">
             <p>&copy; 2026 Japan University Wiffleball Association. All Rights Reserved.</p>
@@ -137,6 +166,7 @@
         if ( globalRole === 'guest' || !globalRole){
             document.getElementById('manage_league').style.display = 'none';
             document.getElementById('manage_game_score').style.display = 'none';
+            document.getElementById('teamMgmtBtn').style.display = 'none';
         }
     </script>
 </body>

@@ -557,3 +557,126 @@ button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1
 }
 .logout-button:hover { background-color: #c82333; }
 .user-name { cursor: pointer; text-decoration: underline dotted; }
+
+
+/* --- モーダル全体のオーバーレイ（初期状態は非表示） --- */
+.modal-overlay {
+  display: none; /* JSで flex に切り替えます */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* 背景を50%薄暗く */
+  z-index: 1000; /* ヘッダーより前面に表示 */
+  justify-content: center;
+  align-items: center;
+}
+
+/* --- モーダルの白いカード部分 --- */
+.modal-content {
+  background-color: #ccc8c8;
+  width: 90%;
+  max-width: 900px;
+  border-radius: 12px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease; /* パッと開くアニメーション */
+  overflow: hidden;
+}
+
+/* 開くときのアニメーション効果 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- モーダルのヘッダー領域 --- */
+.modal-header {
+  background-color: #343a40; /* 3段ヘッダーのミドルと同じ色で統一感 */
+  color: #ffffff;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 1.8rem;
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.close-button:hover { opacity: 1; }
+
+/* --- モーダルのボディ領域 --- */
+.modal-body {
+  padding: 30px 24px;
+}
+
+.modal-desc {
+  color: #666666;
+  font-size: 0.9rem;
+  margin-top: 0;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* --- 3つのボタンを横並びにするFlexbox --- */
+.modal-btn-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+/* 各種ボタンの共通スタイル */
+.modal-action-btn {
+  flex: 1; /* 3つのボタンの幅を完全に均等にするプロパティ */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-action-btn .icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.modal-action-btn .label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333333;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ホバー時の個別カラー戦略 */
+.create-btn:hover { background-color: #e2f0d9; border-color: #28a745; }
+.join-btn:hover { background-color: #e8f4fd; border-color: #007bff; }
+.edit-btn:hover { background-color: #fff3cd; border-color: #ffc107; }
+
+/* 元のメニュー画面のボタン用スタイル（参考） */
+.btn-primary {
+  padding: 12px 24px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
