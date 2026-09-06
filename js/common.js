@@ -11,7 +11,10 @@ const NO_HEADER = ["index.html","sign-up.html"];
 async function injectHeader() {
   // 基準となるコンテナを取得
  const containers = document.querySelectorAll('.container');
-  
+  if(!AuthService.isLoggedIn()) {
+    location.href = "index.html";
+  } 
+
   // もしコンテナ自体が見つからない場合のフォールバック（保険）
   if (!containers) {
     console.log("コンテナが見つかりません。")
@@ -54,6 +57,14 @@ const fileName = window.location.pathname.split('/').pop();
 if(!NO_HEADER.includes(fileName)){
   window.addEventListener('DOMContentLoaded', injectHeader);
 }
+
+  // メッセージ表示用のヘルパー関数
+  function showMessage(text, color) {
+    const messageArea = document.getElementById('guidance-message');
+    messageArea.textContent = text;
+    messageArea.style.color = color;
+  }
+
 
 /**
  * GASへデータを送信する共通関数
@@ -105,7 +116,7 @@ function openLogWindow() {
 const AuthService = {
   // システム全体の認証キー（既存の規約に合わせる）
   AUTH_KEY: 'JUWA-Auth-Key',
-
+  API_URL: CONST_GAS_URL, // GASのエンドポイントURL
   /**
    * ログインを実行し、セッションを保存する
    */
@@ -214,6 +225,93 @@ const AuthService = {
     }
   }
 };
+
+
+const CustomDialog = {
+  /**
+   * dialog.html を非同期で読み込み、body の末尾に注入する
+   */
+  init: async function() {
+    if (document.getElementById('custom-dialog-overlay')) return; // 既に注入済みならスキップ
+    try {
+      const response = await fetch('dialog.html');
+      const html = await response.text();
+      document.body.insertAdjacentHTML('beforeend', html);
+    } catch (error) {
+      console.error('ダイアログの読み込みに失敗しました:', error);
+    }
+  },
+
+  /**
+   * Alert (OKボタンのみ)
+   * @param {string} message 
+   * @param {string} title 
+   * @returns {Promise<boolean>}
+   */
+  alert: function(message, title = 'お知らせ') {
+    return new Promise((resolve) => {
+      this._show(title, message, false, resolve);
+    });
+  },
+
+  /**
+   * Confirm (OK / キャンセルボタン)
+   * @param {string} message 
+   * @param {string} title 
+   * @returns {Promise<boolean>} OKならtrue、キャンセルならfalse
+   */
+  confirm: function(message, title = '確認') {
+    return new Promise((resolve) => {
+      this._show(title, message, true, resolve);
+    });
+  },
+
+  /**
+   * ダイアログの内部制御処理
+   */
+  _show: function(title, message, isConfirm, resolve) {
+    const overlay = document.getElementById('custom-dialog-overlay');
+    if (!overlay) {
+      console.error('ダイアログが初期化されていません。');
+      return resolve(false);
+    }
+
+    // テキストの設定
+    document.getElementById('custom-dialog-title').textContent = title;
+    document.getElementById('custom-dialog-message').textContent = message;
+
+    const okBtn = document.getElementById('custom-dialog-ok');
+    const cancelBtn = document.getElementById('custom-dialog-cancel');
+
+    // Confirm の時だけキャンセルボタンを表示
+    cancelBtn.style.display = isConfirm ? 'inline-block' : 'none';
+
+    // 以前のイベントリスナーを削除するために要素をクローン（重複発火防止の定石）
+    const newOkBtn = okBtn.cloneNode(true);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    // 新しいイベントを設定
+    newOkBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+      resolve(true); // Promiseをtrueで解決
+    });
+
+    newCancelBtn.addEventListener('click', () => {
+      overlay.style.display = 'none';
+      resolve(false); // Promiseをfalseで解決
+    });
+
+    // ダイアログを表示
+    overlay.style.display = 'flex';
+  }
+};
+
+// ページ読み込み時に自動でダイアログを準備する
+document.addEventListener('DOMContentLoaded', () => {
+  CustomDialog.init();
+});
 
 
 //ポップアップによるボタン表示のための処理

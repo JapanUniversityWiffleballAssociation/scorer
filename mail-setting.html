@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メール配信設定 - JUWA Scorer</title>
+  <style>
+    /* （CSSは前回の change-mail.html と同じでOKです） */
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+    .card { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
+    .status { font-size: 1.2rem; font-weight: bold; margin: 20px 0; color: #333; }
+    .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 6px; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>メール配信設定</h2>
+    <div id="resultMsg" class="status">設定を変更しています...</div>
+    <a href="menu.html" class="btn">メニューへ戻る</a>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const resultMsg = document.getElementById('resultMsg');
+      
+      // ログイン状態の確認
+      const authKey = AuthService.getApiKey();
+      if (!authKey) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // APIを叩いてフラグを切り替える (POSTリクエスト)
+      try {
+        const payload = {
+          mode: 'toggleMail',
+          authKey: authKey
+        };
+
+        const response = await fetch(AuthService.API_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          resultMsg.textContent = result.message;
+          resultMsg.style.color = result.isSubscribe ? "#28a745" : "#dc3545";
+        } else {
+          resultMsg.textContent = result.message || "エラーが発生しました。";
+          resultMsg.style.color = "red";
+        }
+      } catch (error) {
+        resultMsg.textContent = "通信エラーが発生しました。";
+        resultMsg.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>

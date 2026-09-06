@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>チーム加入申請 - JUWA Scorer</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* 追加: メッセージ表示用のスタイル */
+    #guidance-message {
+      margin-top: 10px;
+      font-size: 14px;
+      color: red; /* デフォルトの色を赤に設定 */
+    }
+    /* 追加: フォームのスタイル */
+    .form-group { 
+      margin-bottom: 15px; 
+    }
+    .form-group label { 
+      display: block; 
+      margin-bottom: 5px;
+      color: #c0c0c0
+    }
+    .form-control { 
+      width: 100%; 
+      padding: 8px; 
+      box-sizing: border-box; 
+    }
+    .btn-submit { 
+      padding: 10px 20px; 
+      background-color: #007BFF; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+    }
+    .btn-submit:hover { 
+      background-color: #0056b3; 
+    }
+    .teamSelect { 
+      width: 100%; 
+      padding: 8px; 
+      box-sizing: border-box; 
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="join-team-container">
+      <h2>チーム加入申請</h2>
+      <from class="subtitle">既存のチームを選択し、管理者に加入リクエストを送ります</div>
+      <!-- チーム選択プルダウン -->
+      <div class="form-group">
+        <label for="teamSelect">加入希望チーム <span style="color:red;">*</span></label>
+        <select id="teamSelect" class="form-control">
+          <option value="" disabled selected>チーム情報を読み込み中...</option>
+        </select>
+      </div>
+      <!-- 追加: 利き手 -->
+      <div class="form-group">
+        <label for="handedness">投打の利き手 <span style="color:red;">*</span></label>
+        <select id="handedness" class="form-control">
+          <option value="右投右打">右投右打</option>
+          <option value="右投左打">右投左打</option>
+          <option value="左投左打">左投左打</option>
+          <option value="左投右打">左投右打</option>
+        </select>
+      </div>
+      
+          <!-- 希望する背番号 -->
+      <div class="form-group">
+        <label for="requestedNumber">希望する背番号 (任意)</label>
+        <input type="number" id="requestedNumber" class="form-control" placeholder="例: 18" min="0" max="999">
+      </div>
+
+    <button id="submitJoinBtn" class="btn-submit">加入リクエストを送信</button>
+    </form>
+  </div>
+
+  <!-- 共通ロジックと、今回の専用ロジックを読み込み -->
+  <script src="js/common.js"></script>
+  <script src="js/team-join.js"></script>
+</body>
+</html>

@@ -104,6 +104,7 @@
 
     <div id="login-container">
         <h2>ログイン</h2>
+    <form id="loginForm">    
         <div class="form-group">
             <label>ユーザーID</label>
             <input type="text" id="userId" placeholder="Enter ID">
@@ -112,7 +113,8 @@
             <label>パスワード</label>
             <input type="password" id="password" placeholder="Enter Password">
         </div>
-        <button id="loginBtn">ログイン</button>
+        <button type="submit" id="loginBtn">ログイン</button>
+    </form>
         <p id="errorMessage" style="color: red;"></p>
 
         <button id="guestBtn">ゲストでログイン</button>
@@ -125,7 +127,8 @@
         </footer>
     </div>
 <script>
-    document.getElementById('loginBtn').addEventListener('click', async () => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
     const userId = document.getElementById('userId').value;
     const pass = document.getElementById('password').value;
     const errorEl = document.getElementById('errorMessage');
@@ -136,11 +139,20 @@
     const result = await AuthService.login(userId, pass);
 
     if (result.success) {
-      alert('ログインに成功しました！管理画面へ移動します。');
-      window.location.href = 'menu.html'; // 遷移先
+
+        // URLパラメータを確認して遷移先を決定
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectTarget = urlParams.get('redirect');
+        if (redirectTarget === 'mail-setting') {
+            window.location.href = 'mail-setting.html'; // 設定画面へ
+        } else {
+            window.location.href = 'menu.html'; // 通常のメニュー画面へ
+        }
     } else {
       errorEl.textContent = result.message;
     }
+
+
   });
 
   document.getElementById('guestBtn').addEventListener('click', async () => {
