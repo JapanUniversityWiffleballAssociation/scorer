@@ -51,11 +51,32 @@
       <h2>チーム加入申請</h2>
       <from class="subtitle">既存のチームを選択し、管理者に加入リクエストを送ります</div>
       <!-- チーム選択プルダウン -->
+      <!-- 変更前: <select id="teamId">... の部分を以下に差し替え -->
+      
       <div class="form-group">
-        <label for="teamSelect">加入希望チーム <span style="color:red;">*</span></label>
-        <select id="teamSelect" class="form-control">
-          <option value="" disabled selected>チーム情報を読み込み中...</option>
-        </select>
+        <label>参加するチームを検索</label>
+        <input type="text" id="teamSearchInput" class="form-control" placeholder="チーム名 または ID を入力...">
+      </div>
+
+      <div class="table-responsive" style="max-height: 250px; overflow-y: auto; border: 1px solid #555; border-radius: 6px; margin-bottom: 20px;">
+        <table>
+          <thead>
+            <tr>
+              <th>チームID</th>
+              <th>チーム名</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="teamSearchTableBody">
+            <tr><td colspan="3" class="empty-message">チームを読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 選択されたチームIDを保持する隠しフィールド -->
+      <input type="hidden" id="selectedTeamId" value="">
+      <div id="selectedTeamDisplay" style="margin-bottom: 20px; font-weight: bold; color: var(--success);">
+        
       </div>
       <!-- 追加: 利き手 -->
       <div class="form-group">

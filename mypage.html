@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JUWA 簡易スコアシステム - マイページ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* マイページ固有の追加スタイル */
+    .section-card {
+      background: #2c3e50;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .section-card h3 {
+      color: #2ecc71;
+      border-bottom: 1px solid #34495e;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .status-pending { background: #f1c40f; color: #333; }
+    .status-approved { background: #2ecc71; color: white; }
+    .status-rejected { background: #e74c3c; color: white; }
+    .btn-toggle { background-color: #3498db; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+      <span style="font-weight: bold; color: white;">マイページ</span>
+    </div>
+
+    <!-- 1. ユーザー情報の編集 -->
+    <div class="section-card">
+      <h3>ユーザー情報の編集</h3>
+      <div class="input-group">
+        <label>表示名</label>
+        <input type="text" id="profile-name" placeholder="新しい表示名を入力">
+      </div>
+      <div class="input-group">
+        <label>パスワード変更</label>
+        <input type="password" id="profile-password" placeholder="変更する場合のみ入力">
+      </div>
+      <button type="button" class="btn" onclick="updateProfile()">情報を更新する</button>
+    </div>
+
+    <!-- 2. メール配信の切り替え -->
+    <div class="section-card">
+      <h3>メール通知設定</h3>
+      <p style="font-size: 0.9rem; color: #bdc3c7;">チーム申請の結果などの通知メールを受け取るか設定します。</p>
+      <button type="button" class="btn btn-toggle" id="btn-toggle-mail" onclick="toggleMail()">メール配信を切り替える</button>
+    </div>
+
+    <!-- 3. 申請状況の確認 -->
+    <div class="section-card">
+      <h3>チーム加入申請の状況</h3>
+      <div id="join-request-list" style="font-size: 0.9rem;">
+        <p style="color: #888;">読み込み中...</p>
+      </div>
+    </div>
+
+    <!-- 4. システム管理者への問い合わせ -->
+    <div class="section-card">
+      <h3>システム管理者へ問い合わせ</h3>
+      <div class="input-group">
+        <label>件名</label>
+        <input type="text" id="inquiry-subject" placeholder="件名を入力">
+      </div>
+      <div class="input-group">
+        <label>問い合わせ内容</label>
+        <textarea id="inquiry-message" rows="5" style="width: 100%; padding: 12px; border-radius: 5px; background: #34495e; color: white; border: none; box-sizing: border-box;" placeholder="具体的な内容をご記入ください"></textarea>
+      </div>
+      <button type="button" class="btn" style="background-color: #e67e22;" onclick="sendInquiry()">問い合わせを送信する</button>
+    </div>
+
+  </div>
+
+  <script src="js/common.js"></script>
+  <script src="js/mypage.js"></script>
+</body>
+</html>

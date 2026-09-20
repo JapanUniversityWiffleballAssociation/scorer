@@ -1,529 +1,76 @@
+@charset "UTF-8";
+
+/* =========================================
+   1. 変数定義 (CSS Variables)
+========================================= */
+:root {
+  --primary: #007bff;
+  --primary-hover: #0056b3;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --warning: #f1c40f;
+  --info: #3498db;
+  --dark: #222222;
+  --dark-light: #333333;
+  --dark-lighter: #444444;
+  --text-main: #ffffff;
+  --text-muted: #cccccc;
+  --border-color: #555555;
+}
+
+/* =========================================
+   2. ベーススタイル
+========================================= */
 body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    overflow-y: auto;
-    background-color: #222;
-    color: white;
-    margin: 0;
-    display: flex;
-    justify-content: center;
-    padding: 20px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  overflow-y: auto;
+  background-color: var(--dark);
+  color: var(--text-main);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
 }
 
 .container {
-    width: 100%;
-    max-width: 600px;
-    background: #333;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.hidden { display: none !important; }
-
-/* オーバーレイ設定画面 */
-.overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 100;
-    align-items: flex-start;
-    /* スクロールを許可する設定 */
-    overflow-y: auto;
-}
-.setup-box {
-    background: #444; padding: 30px; border-radius: 10px; width: 85%; max-width: 400px;
-}
-.input-group { margin-bottom: 15px; }
-.input-group label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #ccc; }
-.input-group input {
-    width: 100%; padding: 10px; background: #222; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box;
-}
-
-/* スコアボード */
-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #111; text-align: center; font-size: 0.8rem; }
-th, td { border: 1px solid #444; padding: 10px 2px; }
-.total { background: #444; color: #f1c40f; font-weight: bold; }
-
-/* 点滅制御 */
-@keyframes blink-score {
-    0% { background-color: transparent; }
-    50% { background-color: rgba(46, 204, 113, 0.4); }
-    100% { background-color: transparent; }
-}
-.active-cell {
-    color: #2ecc71 !important;
-    animation: blink-score 1.5s infinite;
-    border: 2px solid #2ecc71 !important;
-}
-.attacking-team-name { color: #2ecc71; font-weight: bold; }
-
-/* カウント・ダイヤモンド */
-.status-container { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; background: #222; padding: 15px; border-radius: 8px; }
-.header-status { display: flex; justify-content: space-between; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
-.dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #444; margin-left: 5px; }
-.ball.active { background: #3498db; }
-.strike.active { background: #f1c40f; }
-.out.active { background: #e74c3c; }
-
-.diamond { position: relative; width: 70px; height: 70px; transform: rotate(45deg); border: 2px solid #444; }
-.base { position: absolute; width: 16px; height: 16px; background: #555; }
-#base1 { right: -8px; top: -8px; }
-#base2 { left: -8px; top: -8px; }
-#base3 { left: -8px; bottom: -8px; }
-.base.runner { background: #f1c40f; box-shadow: 0 0 8px #f1c40f; }
-
-/* ボタン */
-.controls { display: grid; gap: 10px; }
-.button-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.full-width { grid-template-columns: 1fr; }
-.btn { padding: 15px; border: none; border-radius: 5px; font-weight: bold; color: white; background: #555; cursor: pointer; }
-.strike { border-bottom: 4px solid #f1c40f; }
-.ball { border-bottom: 4px solid #3498db; }
-.out { border-bottom: 4px solid #e74c3c; }
-.hit, .hr { border-bottom: 4px solid #2ecc71; }
-.undo { background: #e67e22; border-bottom: 4px solid #d35400; }
-.change-player { background: #1fa8d1; border-bottom: 4px solid #1f9dc4; }
-
-/* 閲覧用 */
-.game-card {
-    background: #2c3e50;
-    border-left: 5px solid #3498db;
-    margin-bottom: 15px;
-    padding: 12px;
-    transition: transform 0.2s;
-}
-.game-card:active { transform: scale(0.98); }
-.game-card[data-finished="true"] { border-left-color: #95a5a6; }
-
-/*コピーライト用*/
-.footer-bottom {
-    text-align: center;
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid #2c3e50;
-    font-size: 0.8rem;
-    color: #7f8c8d;
-}
-
-/* リーグごとのグループ化用スタイル */
-.league-group {
-    margin-bottom: 40px;
-}
-
-.league-title {
-    font-size: 1.2rem;
-    color: #2ecc71;
-    border-left: 5px solid #2ecc71;
-    padding-left: 15px;
-    margin-bottom: 15px;
-    background: rgba(46, 204, 113, 0.1);
-    padding-top: 8px;
-    padding-bottom: 8px;
-    border-radius: 0 4px 4px 0;
-}
-
-/* 試合終了時のカードを少し暗くする */
-.game-card.finished {
-    opacity: 0.8;
-    border-left: 4px solid #95a5a6;
-}
-
-.game-card.finished .status-badge {
-    background: #7f8c8d;
-}
-
-/* スマホでのカードの並びを調整 */
-.league-games {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
-}
-
-@media (min-width: 768px) {
-    .league-games {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-
-
-/*投球数のスタイル*/
-/* 投球数表示のボックス */
-.pitch-counter-box {
-    background: #222;
-    border: 2px solid #444;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-    min-width: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-/* 「投球数」のラベル部分 */
-.pitch-label {
-    font-size: 0.7rem;
-    color: #aaa;
-    font-weight: bold;
-    letter-spacing: 1px;
-    margin-bottom: 2px;
-}
-
-/* 数字部分（デジタル数字っぽく） */
-#pitching-count {
-    font-family: 'Courier New', Courier, monospace; /* 等幅フォント */
-    font-size: 2rem;
-    color: #2ecc71; /* 緑色、または黄色 (#f1c40f) が見やすい */
-    font-weight: bold;
-    line-height: 1;
-}
-
-/* レスポンシブ調整：横幅が狭い場合 */
-@media (max-width: 480px) {
-    .status-container {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-    }
-    .pitch-counter-box {
-        margin-right: 0;
-        padding: 5px;
-    }
-}
-
-/*セレクトボックスのスタイル*/
-/* SELECTタグ全体のスタイル */
-select {
-    width: 100%;
-    padding: 12px 15px;
-    font-size: 1rem;
-    color: #fff; /* 文字を白に */
-    background-color: #333; /* 背景をダークグレーに */
-    border: 2px solid #444; /* 境界線を少し明るく */
-    border-radius: 8px;
-    appearance: none; /* デフォルトの矢印を消す（モダンブラウザ用） */
-    -webkit-appearance: none; /* Safari用 */
-    -moz-appearance: none; /* Firefox用 */
-    cursor: pointer;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); /* 自作の矢印アイコン */
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    background-size: 15px;
-}
-
-/* ホバー（マウスを乗せた時） */
-select:hover {
-    border-color: #2ecc71; /* チームカラーやアクセントカラーに合わせる */
-}
-
-/* フォーカス（選択中） */
-select:focus {
-    outline: none;
-    border-color: #2ecc71;
-    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
-}
-
-/* 選択肢（ドロップダウンの中身）のスタイル */
-select option {
-    background-color: #222;
-    color: #fff;
-    padding: 10px;
-}
-
-/* ラベルとの隙間など */
-.input-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #ccc;
-    font-size: 0.9rem;
-    font-weight: bold;
-}
-
-.viewer-header {
-    width: 95%;
-    max-width: 600px;
-    background: #8d8b8b;
-    padding: 10px;
-    border-radius: 8px;
-}
-
-button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1ff; color: rgb(255, 255, 255); cursor: pointer; font-weight: bold; }
-.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
-.card { background: #2c3e50; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
- 
-
-/* インジケーター全体のコンテナ */
-.match-status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #1a202c; /* ダークネイビー */
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 10px 0;
-  font-family: 'sans-serif';
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* 各要素の共通スタイル */
-.status-item {
-  display: flex;
-  flex-direction: column; /* 上下にラベルと値を配置 */
-  align-items: center;
-  flex: 1; /* 均等な幅に広がる */
-}
-
-/* ラベル部分（P, PITCHES, B） */
-.status-item .label {
-  font-size: 10px;
-  text-align: center;
-  width: auto;
-  color: #a0aec0; /* グレー */
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-/* 値の部分（選手名、数字） */
-.status-item .value {
-  font-size: 16px;
-  font-weight: 700;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* 名前が長すぎる場合に「...」にする */
-  max-width: 100px;
-}
-
-/* 投球数（中央）だけ色を変えて目立たせる */
-.pitch-count .value {
-  color: #ed8936; /* オレンジ */
-  font-size: 18px;
-}
-
-/* 境界線（仕切り）の追加 */
-.status-item:not(:last-child) {
-  border-right: 1px solid #4a5568;
-}
-
-.notice {
-    border: 2px solid #969595;
-    border-radius: 8px;
-    padding: 10px;
-}
-
-
-/* ダイアログ用のCSS*/
-
-/* モーダル全体の背景（暗転） */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: none; /* JavaScriptで表示・非表示を切り替える際は none に変更 */
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px); /* 背景を少しぼかすとおしゃれです */
+  max-width: 600px;
+  background: var(--dark-light);
+  padding: 20px;
+  border-radius: 10px;
 }
 
-/* ダイアログ本体 */
-.modal-content {
-  background-color: #fff;
-  width: 90%;
-  max-width: 400px;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  animation: modal-fade-in 0.3s ease-out;
+.hidden {
+  display: none !important;
 }
 
-@keyframes modal-fade-in {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-header {
-  background-color: #f8f9fa;
-  padding: 15px;
-  text-align: center;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.2rem;
-  color: #333;
-}
-
-.modal-body {
-  padding: 25px;
-  text-align: center;
-  line-height: 1.6;
-}
-
-.highlight-text {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: #007bff;
-  margin-top: 10px;
-}
-
-.modal-footer {
-  display: flex;
-  padding: 15px;
-  gap: 10px;
-  border-top: 1px solid #eee;
-}
-
-/* ボタン共通設定 */
-.modal-footer button {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.btn-secondary {
-  background-color: #e9ecef;
-  color: #495057;
-}
-
-.btn-secondary:hover {
-  background-color: #dee2e6;
-}
-
-
-
-/* ログインコンテナの装飾 */
-#login-container {
-  max-width: 400px;
-  margin: 100px auto;
-  padding: 40px;
-  background: #bab8b8;
-  border-radius: 12px;
-  border:#00ff6a;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  text-align: center;
-}
-
-#login-container h2 {
-  margin-bottom: 30px;
-  color: #333;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-/* 入力グループの調整 */
-.form-group {
-  margin-bottom: 20px;
-  text-align: left;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 0.85rem;
-  color: #666;
-  font-weight: 600;
-}
-
-/* 無骨なinputをモダンに */
-.form-group input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
-  box-sizing: border-box; /* paddingによる幅崩れ防止 */
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-/* ボタンの装飾 */
-#loginBtn {
-  width: 100%;
-  padding: 14px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.1s;
-}
-
-#loginBtn:hover {
-  background-color: #0056b3;
-}
-
-#loginBtn:active {
-  transform: scale(0.98);
-}
-
-/* エラーメッセージ */
-#errorMessage {
-  margin-top: 15px;
-  font-size: 0.9rem;
-  min-height: 1.2em;
-}
-
-
-/* ヘッダーのスタイル*/
+/* =========================================
+   3. ヘッダー (.main-header)
+========================================= */
 .main-header {
   display: flex;
-  flex-direction: column; /* 子要素を上から下に縦並びにする */
+  flex-direction: column;
   width: 100%;
   background-color: #343a40;
-  color: #ffffff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  color: var(--text-main);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
-/* 1段目：トップのスタイル */
 .header-top-row {
-  
   padding: 6px 24px;
   font-size: 12px;
-  text-align: center; /* メッセージを中央寄せ */
+  text-align: center;
   border-bottom: 1px solid #495057;
 }
 
-/* 2段目：ミドルのスタイル（ここを横並び・左右振り分けにする） */
 .header-middle-row {
   display: flex;
-  justify-content: space-between; /* 左右に振り分け */
+  justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
   border-bottom: 1px solid #495057;
 }
 
-/* 2段目の左側（ロゴとユーザー名） */
 .header-left {
   display: flex;
   align-items: center;
@@ -537,146 +84,269 @@ button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1
   margin: 0;
 }
 
-/* 3段目：ボトムのスタイル */
 .header-bottom-row {
-  background-color: #0056b3; /* 明るい色にしてコンテンツとのつなぎ目にする */
-  color: #ffffff;            /* 文字はダークに */
+  background-color: var(--primary-hover);
+  color: var(--text-main);
   padding: 8px 24px;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
-/* ボタンやリンクのスタイル（既存踏襲） */
-.logout-button {
-  background-color: #dc3545;
-  color: #ffffff;
-  border: none;
-  padding: 6px 16px;
-  border-radius: 4px;
+.user-name {
   cursor: pointer;
+  text-decoration: underline dotted;
 }
+
+/* =========================================
+   4. ボタン共通
+========================================= */
+button, .btn {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+button:active, .btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary { background-color: var(--primary); color: white; }
+.btn-primary:hover { background-color: var(--primary-hover); }
+.btn-secondary { background-color: #e9ecef; color: #495057; }
+.btn-secondary:hover { background-color: #dee2e6; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+.logout-button { background-color: #dc3545; color: white; padding: 6px 16px; border-radius: 4px; }
 .logout-button:hover { background-color: #c82333; }
-.user-name { cursor: pointer; text-decoration: underline dotted; }
 
+/* =========================================
+   5. フォーム要素
+========================================= */
+.form-group { margin-bottom: 20px; text-align: left; }
+.form-group label, .input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
 
-/* --- モーダル全体のオーバーレイ（初期状態は非表示） --- */
-.modal-overlay {
-  display: none; /* JSで flex に切り替えます */
-  position: fixed;
-  top: 0;
-  left: 0;
+.form-group input, .input-group input {
   width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* 背景を50%薄暗く */
-  z-index: 1000; /* ヘッダーより前面に表示 */
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.input-group input { background: var(--dark); border-color: var(--border-color); color: white; }
+.form-group input:focus, .input-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+select {
+  width: 100%;
+  padding: 12px 15px;
+  font-size: 1rem;
+  color: white;
+  background-color: var(--dark-light);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 15px;
+}
+select:hover { border-color: var(--success); }
+select:focus {
+  outline: none;
+  border-color: var(--success);
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+}
+select option { background-color: var(--dark); color: white; padding: 10px; }
+
+/* =========================================
+   6. モーダル・ダイアログ・オーバーレイ
+========================================= */
+.modal-overlay, .overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
   justify-content: center;
   align-items: center;
+  backdrop-filter: blur(4px);
+  overflow-y: auto;
 }
 
-/* --- モーダルの白いカード部分 --- */
-.modal-content {
-  background-color: #ccc8c8;
+/* edit-games.html の初期設定画面（#setup-screen）は非表示にせず表示させる */
+#setup-screen.overlay {
+  display: flex;
+}
+
+
+
+/* 統合されたモーダルコンテンツ */
+.modal-content, .setup-box {
+  background-color: #ffffff;
+  color: #333;
   width: 90%;
-  max-width: 900px;
+  max-width: 400px;
   border-radius: 12px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.3s ease; /* パッと開くアニメーション */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  animation: fadeIn 0.3s ease-out;
 }
+/* ダーク背景用のモーダルバリエーション */
+.setup-box { background: var(--dark-lighter); color: white; }
+.modal-content.large { max-width: 900px; background-color: #f8f9fa; }
 
-/* 開くときのアニメーション効果 */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- モーダルのヘッダー領域 --- */
 .modal-header {
-  background-color: #343a40; /* 3段ヘッダーのミドルと同じ色で統一感 */
-  color: #ffffff;
+  background-color: #343a40;
+  color: white;
   padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid #eee;
 }
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
+.modal-header h2, .modal-header h3 { margin: 0; font-size: 1.2rem; }
 
 .close-button {
-  background: none;
-  border: none;
-  color: #ffffff;
-  font-size: 1.8rem;
-  cursor: pointer;
-  line-height: 1;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+  background: none; border: none; color: white; font-size: 1.8rem;
+  cursor: pointer; line-height: 1; opacity: 0.7; padding: 0;
 }
 .close-button:hover { opacity: 1; }
 
-/* --- モーダルのボディ領域 --- */
-.modal-body {
-  padding: 30px 24px;
-}
+.modal-body { padding: 25px; text-align: center; line-height: 1.6; }
+.modal-desc { color: #666; font-size: 0.9rem; margin: 0 0 24px 0; }
+.highlight-text { font-weight: bold; font-size: 1.1rem; color: var(--primary); margin-top: 10px; }
 
-.modal-desc {
-  color: #666666;
-  font-size: 0.9rem;
-  margin-top: 0;
-  margin-bottom: 24px;
-  text-align: center;
-}
+.modal-footer { display: flex; padding: 15px; gap: 10px; border-top: 1px solid #eee; }
+.modal-footer button { flex: 1; padding: 12px; font-size: 1rem; }
 
-/* --- 3つのボタンを横並びにするFlexbox --- */
-.modal-btn-group {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
-}
-
-/* 各種ボタンの共通スタイル */
+/* メニュー用アクションボタン群 */
+.modal-btn-group { display: flex; justify-content: space-between; gap: 15px; }
 .modal-action-btn {
-  flex: 1; /* 3つのボタンの幅を完全に均等にするプロパティ */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 12px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px 12px; border: 1px solid #dee2e6; border-radius: 8px;
+  background-color: #f8f9fa; cursor: pointer; transition: all 0.2s ease;
 }
-
-.modal-action-btn .icon {
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
-
-.modal-action-btn .label {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #333333;
-  text-align: center;
-  line-height: 1.3;
-}
-
-/* ホバー時の個別カラー戦略 */
+.modal-action-btn .icon { font-size: 2rem; margin-bottom: 10px; }
+.modal-action-btn .label { font-size: 0.95rem; font-weight: 600; color: #333; text-align: center; line-height: 1.3; }
 .create-btn:hover { background-color: #e2f0d9; border-color: #28a745; }
-.join-btn:hover { background-color: #e8f4fd; border-color: #007bff; }
+.join-btn:hover { background-color: #e8f4fd; border-color: var(--primary); }
 .edit-btn:hover { background-color: #fff3cd; border-color: #ffc107; }
 
-/* 元のメニュー画面のボタン用スタイル（参考） */
-.btn-primary {
-  padding: 12px 24px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: bold;
-  cursor: pointer;
+/* =========================================
+   7. ログイン・汎用カード
+========================================= */
+#login-container {
+  max-width: 400px; margin: 100px auto; padding: 40px;
+  background: #bab8b8; border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); text-align: center;
+}
+#login-container h2 { margin-bottom: 30px; color: #333; font-size: 1.5rem; }
+#loginBtn { background-color: var(--primary); color: white; width: 100%; padding: 14px; font-size: 1rem; }
+#loginBtn:hover { background-color: var(--primary-hover); }
+#errorMessage { margin-top: 15px; font-size: 0.9rem; min-height: 1.2em; color: var(--danger); }
+
+.card { background: #2c3e50; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+/* =========================================
+   8. 野球スコアボード・インジケーター関連
+========================================= */
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #111; text-align: center; font-size: 0.8rem; }
+th, td { border: 1px solid var(--border-color); padding: 10px 2px; }
+.total { background: var(--dark-lighter); color: var(--warning); font-weight: bold; }
+
+@keyframes blink-score {
+  0% { background-color: transparent; }
+  50% { background-color: rgba(46, 204, 113, 0.4); }
+  100% { background-color: transparent; }
+}
+.active-cell { color: var(--success) !important; animation: blink-score 1.5s infinite; border: 2px solid var(--success) !important; }
+.attacking-team-name { color: var(--success); font-weight: bold; }
+
+.status-container { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; background: var(--dark); padding: 15px; border-radius: 8px; }
+.header-status { display: flex; justify-content: space-between; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+
+/* カウント・ベース */
+.dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: var(--dark-lighter); margin-left: 5px; }
+.ball.active { background: var(--info); }
+.strike.active { background: var(--warning); }
+.out.active { background: var(--danger); }
+
+.diamond { position: relative; width: 70px; height: 70px; transform: rotate(45deg); border: 2px solid var(--dark-lighter); }
+.base { position: absolute; width: 16px; height: 16px; background: var(--border-color); }
+#base1 { right: -8px; top: -8px; }
+#base2 { left: -8px; top: -8px; }
+#base3 { left: -8px; bottom: -8px; }
+.base.runner { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+
+/* 試合・リーグ関連表示 */
+.game-card { background: #2c3e50; border-left: 5px solid var(--info); margin-bottom: 15px; padding: 12px; transition: transform 0.2s; }
+.game-card:active { transform: scale(0.98); }
+.game-card[data-finished="true"], .game-card.finished { border-left-color: #95a5a6; opacity: 0.8; }
+.game-card.finished .status-badge { background: #7f8c8d; }
+
+.league-group { margin-bottom: 40px; }
+.league-title { font-size: 1.2rem; color: var(--success); border-left: 5px solid var(--success); padding: 8px 0 8px 15px; margin-bottom: 15px; background: rgba(46, 204, 113, 0.1); border-radius: 0 4px 4px 0; }
+.league-games { display: grid; grid-template-columns: 1fr; gap: 15px; }
+
+/* 入力ボタン群 */
+.controls { display: grid; gap: 10px; }
+.button-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.full-width { grid-template-columns: 1fr; }
+.controls .btn { background: var(--border-color); color: white; }
+.controls .strike { border-bottom: 4px solid var(--warning); }
+.controls .ball { border-bottom: 4px solid var(--info); }
+.controls .out { border-bottom: 4px solid var(--danger); }
+.controls .hit, .controls .hr { border-bottom: 4px solid var(--success); }
+.controls .undo { background: #e67e22; border-bottom: 4px solid #d35400; }
+.controls .change-player { background: #1fa8d1; border-bottom: 4px solid #1f9dc4; }
+
+/* 投球数・ステータスバー */
+.pitch-counter-box { background: var(--dark); border: 2px solid var(--dark-lighter); border-radius: 8px; padding: 10px; text-align: center; min-width: 80px; display: flex; flex-direction: column; justify-content: center; }
+.pitch-label { font-size: 0.7rem; color: #aaa; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
+#pitching-count { font-family: 'Courier New', Courier, monospace; font-size: 2rem; color: var(--success); font-weight: bold; line-height: 1; }
+
+.match-status-bar { display: flex; justify-content: space-between; align-items: center; background-color: #1a202c; color: white; padding: 8px 12px; border-radius: 6px; margin: 10px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.status-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.status-item:not(:last-child) { border-right: 1px solid #4a5568; }
+.status-item .label { font-size: 10px; color: #a0aec0; font-weight: bold; letter-spacing: 0.05em; margin-bottom: 2px; }
+.status-item .value { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+.pitch-count .value { color: #ed8936; font-size: 18px; }
+
+.viewer-header { width: 95%; max-width: 600px; background: #8d8b8b; padding: 10px; border-radius: 8px; }
+.notice { border: 2px solid #969595; border-radius: 8px; padding: 10px; }
+
+.footer-bottom { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #2c3e50; font-size: 0.8rem; color: #7f8c8d; }
+
+/* =========================================
+   9. レスポンシブ対応
+========================================= */
+@media (min-width: 768px) {
+  .league-games { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .status-container { flex-direction: row; flex-wrap: wrap; }
+  .pitch-counter-box { margin-right: 0; padding: 5px; }
 }

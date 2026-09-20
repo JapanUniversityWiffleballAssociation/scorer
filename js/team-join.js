@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const teamSelect = document.getElementById('teamSelect');
   const submitBtn = document.getElementById('submitJoinBtn');
-  
+  let allJoinableTeams = [];
+  let selectedTeamId = null;
   
   // ログイン状態の確認
   const currentUser = AuthService.getUserInfo();
@@ -11,12 +11,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // チーム検索・選択テーブルの描画関数
+  const renderTeamTable = (teams) => {
+    const tbody = document.getElementById('teamSearchTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (teams.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-message">該当するチームがありません。</td></tr>';
+      return;
+    }
+
+    teams.forEach(team => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-family: monospace; font-size: 0.85rem;">${team.teamId}</td>
+        <td>${team.teamName}</td>
+        <td><button type="button" class="btn btn-sm btn-primary select-team-btn" data-id="${team.teamId}" data-name="${team.teamName}">選択</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // 「選択」ボタンのイベント
+    document.querySelectorAll('.select-team-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        selectedTeamId = e.target.dataset.id;
+        const tName = e.target.dataset.name;
+        
+        const display = document.getElementById('selectedTeamDisplay');
+        if (display) {
+          display.textContent = `選択中: ${tName} (${selectedTeamId})`;
+        }
+        
+        // 選択行のハイライト
+        document.querySelectorAll('#teamSearchTableBody tr').forEach(row => row.style.backgroundColor = '');
+        e.target.closest('tr').style.backgroundColor = 'rgba(46, 204, 113, 0.2)';
+      });
+    });
+  };
+
   // ==========================================
-  // 1. 画面読み込み時: チーム一覧を取得する処理
+  // 1. 画面読み込み時: 参加可能なチーム一覧を取得する処理
   // ==========================================
   try {
-    // URLの末尾にパラメータ（クエリ文字列）を付与してGETリクエストを送る
-    const fetchUrl = `${AuthService.API_URL}?mode=getTeams`;
+    const authKey = AuthService.getApiKey();
+    const fetchUrl = `${AuthService.API_URL}?mode=getJoinableTeams&authKey=${encodeURIComponent(authKey)}`;
     const response = await fetch(fetchUrl, {
       method: 'GET'
     });
@@ -24,16 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const result = await response.json();
     
     if (result.status === 'success' && result.teams) {
-      // プルダウンの中身をリセット
-      teamSelect.innerHTML = '<option value="" disabled selected>チームを選択してください</option>';
-      
-      // 取得したチーム一覧をプルダウンに追加
-      result.teams.forEach(team => {
-        const option = document.createElement('option');
-        option.value = team.team_id;
-        option.textContent = team.team_name;
-        teamSelect.appendChild(option);
-      });
+      allJoinableTeams = result.teams;
+      renderTeamTable(allJoinableTeams);
       
       // 読み込みが完了したらボタンを有効化
       submitBtn.disabled = false;
@@ -42,25 +73,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } catch (error) {
     console.error('チーム一覧取得エラー:', error);
-    teamSelect.innerHTML = '<option value="" disabled selected>チームの読み込みに失敗しました</option>';
-    showMessage('チーム情報の取得に失敗しました。', 'red');
+    const tbody = document.getElementById('teamSearchTableBody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-message">チームの読み込みに失敗しました</td></tr>';
+    }
+    if (typeof showMessage === 'function') {
+      showMessage('チーム情報の取得に失敗しました。', 'red');
+    }
+  }
+
+  // 検索ボックスのリアルタイム絞り込みイベント
+  const searchInput = document.getElementById('teamSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase();
+      
+      const filteredTeams = allJoinableTeams.filter(team => 
+        team.teamName.toLowerCase().includes(keyword) || 
+        team.teamId.toLowerCase().includes(keyword)
+      );
+      
+      renderTeamTable(filteredTeams);
+    });
   }
 
   // ==========================================
   // 2. 申請ボタン押下時: 加入申請を送信する処理
   // ==========================================
   submitBtn.addEventListener('click', async () => {
-    const selectedTeamId = teamSelect.value;
     const requestedNumber = document.getElementById('requestedNumber').value.trim();
     const handedness = document.getElementById('handedness').value;
 
     if (!selectedTeamId || !handedness) {
-      showMessage('加入希望のチームおよび利き手を選択してください。', 'red');
+      if (typeof showMessage === 'function') {
+        showMessage('加入希望のチームおよび利き手を選択してください。', 'red');
+      } else {
+        alert('加入希望のチームおよび利き手を選択してください。');
+      }
       return;
     }
     
     submitBtn.disabled = true;
-    showMessage('申請を送信中...', '#007bff');
+    if (typeof showMessage === 'function') {
+      showMessage('申請を送信中...', '#007bff');
+    }
 
     const payload = {
       mode: 'requestJoinTeam',
@@ -79,19 +135,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       const result = await response.json();
 
       if (result.status === 'success') {
-        showMessage('申請が完了しました！管理者の承認をお待ちください。', 'green');
+        if (typeof showMessage === 'function') {
+          showMessage('申請が完了しました！管理者の承認をお待ちください。', 'green');
+        }
         await CustomDialog.alert('申請が完了しました！\n管理者の承認をお待ちください。\n申請状況は「マイページ」およびメール通知にて確認できます。');
         window.location.href = 'menu.html';
       } else {
-        showMessage(result.message, 'red');
+        if (typeof showMessage === 'function') {
+          showMessage(result.message, 'red');
+        } else {
+          alert(result.message);
+        }
         submitBtn.disabled = false;
       }
     } catch (error) {
       console.error('加入申請エラー:', error);
-      showMessage('通信エラーが発生しました。', 'red');
+      if (typeof showMessage === 'function') {
+        showMessage('通信エラーが発生しました。', 'red');
+      } else {
+        alert('通信エラーが発生しました。');
+      }
       submitBtn.disabled = false;
     }
   });
-
-
 });

@@ -9,15 +9,21 @@ const NO_HEADER = ["index.html","sign-up.html"];
  */
 
 async function injectHeader() {
-  // 基準となるコンテナを取得
- const containers = document.querySelectorAll('.container');
-  if(!AuthService.isLoggedIn()) {
-    location.href = "index.html";
-  } 
+  // ログイン画面（index.html）の場合は何もしない（無限ループ防止）
+  const fileName = window.location.pathname.split('/').pop();
+  if (fileName === "index.html" || fileName === "sign-up.html") {
+    return;
+  }
 
-  // もしコンテナ自体が見つからない場合のフォールバック（保険）
-  if (!containers) {
-    console.log("コンテナが見つかりません。")
+  // ログインしていなければログイン画面へ強制送還
+  if (!AuthService.isLoggedIn()) {
+    location.href = "index.html";
+    return; // 処理をストップ
+  }
+
+  const containers = document.querySelectorAll('.container');
+  if (!containers || containers.length === 0) {
+    console.log("コンテナが見つかりません。");
     return;
   }
 
@@ -25,14 +31,10 @@ async function injectHeader() {
     const response = await fetch('header.html');
     const html = await response.text();
     
-    // 指定した要素の「開始タグの直後（最初の子要素として）」に挿入
-    // これにより、既存のコードよりも前に配置されます
-
     containers.forEach(container => {
       container.insertAdjacentHTML('afterbegin', html);
     }); 
     
-    // --- 注入後の動的セットアップ（前述と同様） ---
     setupHeaderElements();
     
   } catch (error) {
