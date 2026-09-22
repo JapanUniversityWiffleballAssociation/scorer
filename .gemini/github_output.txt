@@ -1,0 +1,3607 @@
+├── README.md
+├── src/ (300 tokens)
+    ├── common.js
+    ├── viewer.js
+    └── edit-games.js
+├── refer-performance.html
+├── js/ (11700 tokens)
+    ├── refer-performance.js
+    ├── common.js (400 tokens)
+    ├── teams.js (1000 tokens)
+    ├── viewer.js (2300 tokens)
+    └── edit-games.js (7900 tokens)
+├── teams.html (600 tokens)
+├── logs.html (700 tokens)
+├── index.html (1100 tokens)
+├── manual/ (5500 tokens)
+    ├── manual_main.html (1300 tokens)
+    ├── manual_viewer.html (1300 tokens)
+    ├── manual_league.html (1300 tokens)
+    └── manual_edit.html (1600 tokens)
+├── league_manager.html (1300 tokens)
+├── viewer.html (1600 tokens)
+├── style.css (2500 tokens)
+└── edit-games.html (2700 tokens)
+
+
+/README.md:
+--------------------------------------------------------------------------------
+1 | # scorer
+
+
+--------------------------------------------------------------------------------
+/src/common.js:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/JapanUniversityWiffleballAssociation/scorer/HEAD/src/common.js
+
+
+--------------------------------------------------------------------------------
+/src/viewer.js:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/JapanUniversityWiffleballAssociation/scorer/HEAD/src/viewer.js
+
+
+--------------------------------------------------------------------------------
+/src/edit-games.js:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/JapanUniversityWiffleballAssociation/scorer/HEAD/src/edit-games.js
+
+
+--------------------------------------------------------------------------------
+/refer-performance.html:
+--------------------------------------------------------------------------------
+https://raw.githubusercontent.com/JapanUniversityWiffleballAssociation/scorer/HEAD/refer-performance.html
+
+
+--------------------------------------------------------------------------------
+/js/refer-performance.js:
+--------------------------------------------------------------------------------
+ 1 | document.addEventListener('DOMContentLoaded', () => {
+ 2 |     onLoad();
+ 3 | });
+ 4 | 
+ 5 | function onLoad() {
+ 6 | 
+ 7 | }
+ 8 | 
+ 9 | async function getLeagues(){
+10 |     const res = await fetch(`${GAS_URL}?mode=getLeagues`);
+11 |     const leagues = await res.json();
+12 |     
+13 | }
+
+
+--------------------------------------------------------------------------------
+/js/common.js:
+--------------------------------------------------------------------------------
+ 1 | 
+ 2 | //共通変数・定数
+ 3 | //GASAPIのURL
+ 4 | const CONST_GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
+ 5 | 
+ 6 | 
+ 7 | 
+ 8 | /**
+ 9 |  * GASへデータを送信する共通関数
+10 |  * @param {string} url - 送信先のGAS URL
+11 |  * @param {Object} payload - 送信したいデータオブジェクト
+12 |  * @returns {Promise<Object>} サーバーからのレスポンスJSON
+13 |  */
+14 | async function postToGAS(url, payload) {
+15 |     try {
+16 |         payload.authKey = "JUWA-Auth-Key";
+17 |         const response = await fetch(url, {
+18 |             method: 'POST',
+19 |             // GASのdoPostで確実にパースさせるための設定
+20 |             headers: {
+21 |                 'Content-Type': 'text/plain'
+22 |             },
+23 |             // ここで一括してJSON文字列に変換
+24 |             body: JSON.stringify(payload)
+25 |         });
+26 | 
+27 |         if (!response.ok) {
+28 |             throw new Error(`HTTP error! status: ${response.status}`);
+29 |         }
+30 | 
+31 |         const result = await response.json();
+32 |         
+33 |         if (result.status === "error") {
+34 |             throw new Error(result.message || "GAS実行エラー");
+35 |         }
+36 | 
+37 |         return result;
+38 |     } catch (e) {
+39 |         console.error("GAS送信失敗:", e);
+40 |         throw e; // 呼び出し元で個別のエラー表示を行うために再スロー
+41 |     }
+42 | }
+43 | 
+44 | //ログ画面表示
+45 | function openLogWindow() {
+46 |     if (!currentGameId) {
+47 |         alert("試合データが読み込まれていません。");
+48 |         return;
+49 |     }
+50 |     // logs.html を新しいウィンドウで開く
+51 |     window.open(`logs.html?gameId=${currentGameId}`, '_blank', 'width=500,height=800');
+52 | }
+
+
+--------------------------------------------------------------------------------
+/teams.html:
+--------------------------------------------------------------------------------
+ 1 | <!DOCTYPE html>
+ 2 | <html lang="ja">
+ 3 | <head>
+ 4 |     <meta charset="UTF-8">
+ 5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 6 |     <title>チーム・メンバー編集 - v1.2.0</title>
+ 7 |     <link rel="stylesheet" href="style.css">
+ 8 |     <style>
+ 9 |         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+10 |         .form-group { margin-bottom: 20px; background: #222; padding: 20px; border-radius: 8px; }
+11 |         .member-list { list-style: none; padding: 0; }
+12 |         .member-item { 
+13 |             display: flex; 
+14 |             gap: 10px; 
+15 |             margin-bottom: 10px; 
+16 |             align-items: center;
+17 |         }
+18 |         .member-item input { flex: 1; }
+19 |         .btn-add { background-color: #2ecc71; color: white; }
+20 |         .btn-save { background-color: #3498db; color: white; width: 100%; font-size: 1.2rem; padding: 15px; }
+21 |         .btn-remove { background-color: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; }
+22 |     </style>
+23 | </head>
+24 | <body>
+25 |     <div class="container">
+26 |         <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+27 |             <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+28 |             <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+29 |         </div>
+30 |         <h2>チーム・メンバー管理</h2>
+31 | 
+32 |         
+33 |         <div class="form-group">
+34 |             <label>編集するチームを選択</label>
+35 |             <select id="team-select" onchange="loadTeamDetails()">
+36 |                 <option value="NEW">-- 新規チーム作成 --</option>
+37 |                 </select>
+38 |             <hr style="border: 0.5px solid #444; margin: 20px 0;">
+39 |             <label>チーム名</label>
+40 |             <input type="text" id="team-name" placeholder="例：東京パイレーツ">
+41 |         </div>
+42 | 
+43 |     <div class="form-group">
+44 |         <h3>メンバーリスト</h3>
+45 |         <div style="display: flex; gap: 10px; margin-bottom: 10px; color: #888; font-size: 0.8rem; padding-left: 5px;">
+46 |             <span style="flex: 2;">名前</span>
+47 |             <span style="flex: 1;">背番号</span>
+48 |             <span style="flex: 1;">ポジション</span>
+49 |             <span style="flex: 1;">打順（デフォルト設定値）</span>
+50 |             <span style="width: 40px;"></span>
+51 |         </div>
+52 |         <ul id="member-list" class="member-list">
+53 |         </ul>
+54 |         <button type="button" class="btn-add" onclick="addMemberRow()">+ メンバーを追加</button>
+55 |         </div>
+56 |         <button id="save-team-btn" class="btn-save" onclick="saveTeam()">チーム情報を保存</button>
+57 |     </div>
+58 |     <script src="js/common.js"></script>
+59 |     <script src="js/teams.js"></script>
+60 | </body>
+61 | </html>
+
+
+--------------------------------------------------------------------------------
+/logs.html:
+--------------------------------------------------------------------------------
+ 1 | <!DOCTYPE html>
+ 2 | <html lang="ja">
+ 3 | <head>
+ 4 |     <meta charset="UTF-8">
+ 5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 6 |     <title>打席ログ参照 - v1.2.0</title>
+ 7 |     <link rel="stylesheet" href="style.css">
+ 8 |     <style>
+ 9 |         .log-container { max-width: 600px; margin: 20px auto; }
+10 |         .log-item {
+11 |             background: #222;
+12 |             border-left: 5px solid #3498db;
+13 |             padding: 15px;
+14 |             margin-bottom: 10px;
+15 |             border-radius: 4px;
+16 |             display: flex;
+17 |             justify-content: space-between;
+18 |             align-items: center;
+19 |         }
+20 |         .log-item.bottom { border-left-color: #e74c3c; }
+21 |         .log-info { flex: 1; }
+22 |         .log-inning { font-weight: bold; color: #aaa; font-size: 0.9rem; }
+23 |         .log-action { font-size: 1.2rem; margin-top: 5px; }
+24 |         .log-time { font-size: 0.7rem; color: #666; }
+25 |     </style>
+26 | </head>
+27 | <body>
+28 |     <div class="log-container">
+29 |         <h1>試合ログ</h1>
+30 |         <div id="game-info" style="margin-bottom: 20px; color: #ddd;"></div>
+31 |         <div id="log-list">
+32 |             </div>
+33 |         <button onclick="window.close()" style="width:100%; padding:10px; margin-top:20px;">閉じる</button>
+34 |     </div>
+35 |     <script src="js/common.js"></script>
+36 |     <script>
+37 |         const GAS_URL = CONST_GAS_URL;
+38 |         const urlParams = new URLSearchParams(window.location.search);
+39 |         const gameId = urlParams.get('gameId');
+40 | 
+41 |         window.onload = async () => {
+42 |             if (!gameId) {
+43 |                 document.getElementById('log-list').innerHTML = "試合IDが指定されていません。";
+44 |                 return;
+45 |             }
+46 |             loadLogs();
+47 |         };
+48 | 
+49 |         async function loadLogs() {
+50 |             try {
+51 |                 
+52 |                 const response = await fetch(`${GAS_URL}?mode=getGameLogs&gameId=${gameId}`);
+53 |                 const logs = await response.json();
+54 |                 
+55 |                 const list = document.getElementById('log-list');
+56 |                 list.innerHTML = '';
+57 | 
+58 |                 logs.forEach(log => {
+59 |                     const isBottom = log.inning.includes("裏");
+60 |                     const div = document.createElement('div');
+61 |                     div.className = `log-item ${isBottom ? 'bottom' : ''}`;
+62 |                     div.innerHTML = `
+63 |                         <div class="log-info">
+64 |                             <div class="log-inning">${log.inning} | ${log.team}</div>
+65 |                             <div class="log-action">${log.batter} | ${log.action}</div>
+66 |                         </div>
+67 |                         <div class="log-time">${log.time}</div>
+68 |                     `;
+69 |                     list.appendChild(div);
+70 |                 });
+71 |             } catch (e) {
+72 |                 console.error(e);
+73 |                 document.getElementById('log-list').innerHTML = "ログの読み込みに失敗しました。";
+74 |             }
+75 |         }
+76 |     </script>
+77 | </body>
+78 | </html>
+
+
+--------------------------------------------------------------------------------
+/js/teams.js:
+--------------------------------------------------------------------------------
+  1 | const GAS_URL = CONST_GAS_URL;
+  2 | 
+  3 | // ページ読み込み時の処理
+  4 | document.addEventListener('DOMContentLoaded', () => {
+  5 |     loadTeams();
+  6 | });
+  7 | 
+  8 | /**
+  9 |  * 1. GASから既存のチーム一覧を取得してプルダウンに反映
+ 10 |  */
+ 11 | async function loadTeams() {
+ 12 |     try {
+ 13 |         const response = await fetch(`${GAS_URL}?mode=getTeamMaster`);
+ 14 |         const teams = await response.json();
+ 15 |         const select = document.getElementById('team-select');
+ 16 | 
+ 17 |         // プルダウンを初期化（新規作成の選択肢以外を消去）
+ 18 |         select.innerHTML = '<option value="NEW">-- 新規チーム作成 --</option>';
+ 19 | 
+ 20 |         teams.forEach(team => {
+ 21 |             const option = document.createElement('option');
+ 22 |             option.value = team.id;
+ 23 |             option.textContent = team.name;
+ 24 |             // チームの全データをデータ属性に保持させておくと展開が楽
+ 25 |             option.dataset.members = JSON.stringify(team.members);
+ 26 |             select.appendChild(option);
+ 27 |         });
+ 28 |     } catch (e) {
+ 29 |         console.error("チーム一覧の取得に失敗しました:", e);
+ 30 |     }
+ 31 | }
+ 32 | 
+ 33 | /**
+ 34 |  * 2. 選択されたチームの情報を画面に表示
+ 35 |  */
+ 36 | function loadTeamDetails() {
+ 37 |     const select = document.getElementById('team-select');
+ 38 |     const teamNameInput = document.getElementById('team-name');
+ 39 |     const memberList = document.getElementById('member-list');
+ 40 |     
+ 41 |     // 一旦クリア
+ 42 |     memberList.innerHTML = '';
+ 43 | 
+ 44 |     if (select.value === "NEW") {
+ 45 |         teamNameInput.value = '';
+ 46 |         addMemberRow(); // 新規作成時は空の行を1つ出す
+ 47 |     } else {
+ 48 |         const selectedOption = select.options[select.selectedIndex];
+ 49 |         teamNameInput.value = selectedOption.textContent;
+ 50 |         
+ 51 |         // 保存されていたメンバーデータを復元
+ 52 |         const members = JSON.parse(selectedOption.dataset.members || "[]");
+ 53 |         if (members.length > 0) {
+ 54 |             members.forEach(m => addMemberRow(m));
+ 55 |         } else {
+ 56 |             addMemberRow();
+ 57 |         }
+ 58 |     }
+ 59 | }
+ 60 | 
+ 61 | /**
+ 62 |  * 3. メンバー入力行を動的に追加
+ 63 |  * @param {Object} data - {name: string, number: string, pos: string, defaultOrder, string}
+ 64 |  */
+ 65 | function addMemberRow(data = { name: '', number: '', pos: '',defaultOrder: '' }) {
+ 66 |     const container = document.getElementById('member-list');
+ 67 |     const li = document.createElement('li');
+ 68 |     li.className = 'member-item';
+ 69 | 
+ 70 |     li.innerHTML = `
+ 71 |         <input type="text" class="m-name" placeholder="名前" value="${data.name || ''}" style="flex: 2;" required>
+ 72 |         <input type="number" class="m-number" placeholder="背番号" value="${data.number || ''}" style="flex: 1;" required>
+ 73 |         <select class="m-pos" style="flex: 1;">
+ 74 |             <option value="">-</option>
+ 75 |             <option value="投" ${data.pos === '投' ? 'selected' : ''}>投</option>
+ 76 |             <option value="野" ${data.pos === '外' ? 'selected' : ''}>外</option>
+ 77 |             <option value="DH" ${data.pos === 'DH' ? 'selected' : ''}>DH</option>
+ 78 |         </select>
+ 79 |         <input type="number" class="default-order" placeholder="デフォルトの打順" value="${data.order || ''}" style="flex: 1;" required>
+ 80 |         <button class="btn-remove" onclick="this.parentElement.remove()">×</button>
+ 81 |     `;
+ 82 |     container.appendChild(li);
+ 83 | }
+ 84 | 
+ 85 | /**
+ 86 |  * 4. チーム情報の保存（GASへのPOST）
+ 87 |  */
+ 88 | async function saveTeam() {
+ 89 |     const saveBtn = document.getElementById('save-team-btn');
+ 90 |     const teamName = document.getElementById('team-name').value.trim();
+ 91 |     const teamId = document.getElementById('team-select').value;
+ 92 |     if (!teamName) {
+ 93 |         alert("チーム名を入力してください");
+ 94 |         return;
+ 95 |     }
+ 96 | 
+ 97 |     // 保存ボタンをロック
+ 98 |     saveBtn.disabled = true;
+ 99 |     saveBtn.textContent = "保存中...";
+100 | 
+101 |     // 画面上の全メンバー行を収集
+102 |     const memberItems = document.querySelectorAll('.member-item');
+103 |     const members = Array.from(memberItems).map(item => ({
+104 |         name: item.querySelector('.m-name').value.trim(),
+105 |         number: item.querySelector('.m-number').value.trim(),
+106 |         pos: item.querySelector('.m-pos').value,
+107 |         defaultOrder: item.querySelector('.default-order').value
+108 |     })).filter(m => m.name !== ""); // 名前が空の行は除外
+109 | 
+110 |     const payload = {
+111 |     mode: 'saveTeamMaster',
+112 |     teamId: teamId,
+113 |     teamName: teamName,
+114 |     members: members // JSON.stringify(members) としていたのを「members」そのままにする
+115 | };
+116 | 
+117 | try {
+118 |     const result = await postToGAS(GAS_URL, payload);
+119 |     alert("チーム情報を保存しました");
+120 |     // ...
+121 | } catch (e) {
+122 |     alert("保存に失敗しました");
+123 | } finally {
+124 |         saveBtn.disabled = false;
+125 |         saveBtn.textContent = "チーム情報を保存";
+126 |     }
+127 | }
+
+
+--------------------------------------------------------------------------------
+/index.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>JUWA 試合速報システム（プロトタイプ） - メインメニュー</title>
+  7 |     <link rel="stylesheet" href="style.css">
+  8 |     <style>
+  9 |         .menu-container {
+ 10 |             display: flex;
+ 11 |             flex-direction: column;
+ 12 |             gap: 20px;
+ 13 |             padding: 40px 20px;
+ 14 |             max-width: 500px;
+ 15 |             margin: 0 auto;
+ 16 |         }
+ 17 |         .menu-card {
+ 18 |             background: #2c3e50;
+ 19 |             border-radius: 12px;
+ 20 |             padding: 30px;
+ 21 |             text-align: center;
+ 22 |             border: 2px solid transparent;
+ 23 |             transition: all 0.3s ease;
+ 24 |             cursor: pointer;
+ 25 |             text-decoration: none;
+ 26 |             color: white;
+ 27 |         }
+ 28 |         .menu-card:hover {
+ 29 |             border-color: #2ecc71;
+ 30 |             transform: translateY(-5px);
+ 31 |             background: #34495e;
+ 32 |         }
+ 33 |         .menu-card h2 {
+ 34 |             margin: 0 0 10px 0;
+ 35 |             color: #2ecc71;
+ 36 |         }
+ 37 |         .menu-card p {
+ 38 |             font-size: 0.9rem;
+ 39 |             color: #bdc3c7;
+ 40 |             margin: 0;
+ 41 |         }
+ 42 |         .icon {
+ 43 |             font-size: 3rem;
+ 44 |             margin-bottom: 15px;
+ 45 |             display: block;
+ 46 |         }
+ 47 |         .footer-simple {
+ 48 |             text-align: center;
+ 49 |             margin-top: 50px;
+ 50 |             font-size: 0.8rem;
+ 51 |             color: #7f8c8d;
+ 52 |         }
+ 53 |         .notice-card {
+ 54 |             background: #2c3e50;
+ 55 |             border-radius: 12px;
+ 56 |             padding: 10px;
+ 57 |             border: 2px solid transparent;
+ 58 |             transition: all 0.3s ease;
+ 59 |             cursor: pointer;
+ 60 |             text-decoration: none;
+ 61 |             color: white;
+ 62 |         }
+ 63 |         .notice-detail-card{ 
+ 64 |             position: relative;
+ 65 |             border-radius: 12px;
+ 66 |             display: inline-block;
+ 67 |             margin: 1.0em 5%;
+ 68 |             padding: 7px 10px;
+ 69 |             min-width: 120px;
+ 70 |             max-width: 100%;
+ 71 |             color: #555;
+ 72 |             font-size: 16px;
+ 73 |             background: #e0edff;
+ 74 |             border: #e0edff;
+ 75 |         }
+ 76 | 
+ 77 |     </style>
+ 78 | </head>
+ 79 | <body>
+ 80 |     <div class="container">
+ 81 |         <header style="text-align: center; margin-bottom: 40px;">
+ 82 |             <h1 style="color: #2ecc71; letter-spacing: 2px;">JUWA</h1>
+ 83 |             <p style="color: #bdc3c7;">Japan University Wiffleball Association</p>
+ 84 |             <h2 style="margin-top: 10px;">試合速報システム</h2>
+ 85 |         </header>
+ 86 |         <h3>お知らせ</h3>
+ 87 |         <div class="notice">
+ 88 |             <div class="notice-card" onclick="document.getElementById('notice01').classList.toggle('hidden');">
+ 89 |                 β版リリースのお知らせ（2026/01/30）
+ 90 |             </div>
+ 91 |             <div class="notice-detail-card hidden" id="notice01">
+ 92 |                 日本ウィッフルボール学生連盟公式の試合速報システムのβ版をリリースしました。<br>
+ 93 |                 β版のため、正式版リリースに向けたメンテナンス等によりアプリが使用できない可能性がございます。あらかじめご了承ください。
+ 94 |             </div>
+ 95 |             <br>
+ 96 |             <div class="notice-card" onclick="document.getElementById('notice02').classList.toggle('hidden');">
+ 97 |                 β版操作マニュアル（2026/01/30）
+ 98 |             </div>
+ 99 |             <div class="notice-detail-card hidden" id="notice02">
+100 |                 操作マニュアルは、<a href="manual/manual_main.html">こちら</a>からご参照いただけます。
+101 |             </div>
+102 |         </div>
+103 |         <div class="menu-container">
+104 |             <a href="league_manager.html" class="menu-card">
+105 |                 <span class="icon">?</span>
+106 |                 <h2>大会を作成する</h2>
+107 |                 <p>大会情報を入力・保存します。</p>
+108 |             </a>
+109 | 
+110 |             <a href="edit-games.html" class="menu-card">
+111 |                 <span class="icon">?</span>
+112 |                 <h2>記録をつける</h2>
+113 |                 <p>試合のスコア、カウント、打席結果をリアルタイムで入力・保存します。</p>
+114 |             </a>
+115 | 
+116 |             <a href="viewer.html" rel="noopener noreferrer" class="menu-card">
+117 |                 <span class="icon">?</span>
+118 |                 <h2>速報を見る</h2>
+119 |                 <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況を観戦します。</p>
+120 |             </a>
+121 | 
+122 |             <a href="teams.html" style="display: none;" rel="noopener noreferrer" class="menu-card">
+123 |                 <span class="icon">?</span>
+124 |                 <h2>チーム・メンバー管理</h2>
+125 |                 <p>チーム・メンバー情報を管理します。</p>
+126 |             </a>
+127 |         </div>
+128 | 
+129 |         <footer class="footer-simple">
+130 |             <p>&copy; 2026 Japan University Wiffleball Association. All Rights Reserved.</p>
+131 |         </footer>
+132 |     </div>
+133 | </body>
+134 | </html>
+
+
+--------------------------------------------------------------------------------
+/manual/manual_main.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>JUWA 試合速報システム - 総合操作マニュアル</title>
+  7 |     <style>
+  8 |         :root {
+  9 |             --primary-color: #2ecc71;
+ 10 |             --secondary-color: #2c3e50;
+ 11 |             --accent-color: #3498db;
+ 12 |             --bg-color: #f4f7f6;
+ 13 |             --text-color: #333;
+ 14 |         }
+ 15 |         body {
+ 16 |             font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+ 17 |             line-height: 1.6;
+ 18 |             color: var(--text-color);
+ 19 |             background-color: var(--bg-color);
+ 20 |             margin: 0;
+ 21 |             padding: 0;
+ 22 |         }
+ 23 |         .container {
+ 24 |             max-width: 900px;
+ 25 |             margin: 40px auto;
+ 26 |             padding: 40px;
+ 27 |             background: #fff;
+ 28 |             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+ 29 |             border-radius: 12px;
+ 30 |         }
+ 31 |         header {
+ 32 |             text-align: center;
+ 33 |             border-bottom: 4px solid var(--primary-color);
+ 34 |             margin-bottom: 40px;
+ 35 |             padding-bottom: 20px;
+ 36 |         }
+ 37 |         h1 { color: var(--secondary-color); margin-bottom: 10px; }
+ 38 |         .system-overview {
+ 39 |             background: #f8fafc;
+ 40 |             padding: 25px;
+ 41 |             border-radius: 8px;
+ 42 |             border-left: 6px solid var(--secondary-color);
+ 43 |             margin-bottom: 40px;
+ 44 |         }
+ 45 |         .menu-grid {
+ 46 |             display: grid;
+ 47 |             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+ 48 |             gap: 20px;
+ 49 |             margin-bottom: 40px;
+ 50 |         }
+ 51 |         .menu-item {
+ 52 |             display: block;
+ 53 |             text-decoration: none;
+ 54 |             color: inherit;
+ 55 |             padding: 20px;
+ 56 |             background: #fff;
+ 57 |             border: 2px solid #eee;
+ 58 |             border-radius: 10px;
+ 59 |             transition: all 0.3s ease;
+ 60 |         }
+ 61 |         .menu-item:hover {
+ 62 |             border-color: var(--primary-color);
+ 63 |             transform: translateY(-5px);
+ 64 |             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+ 65 |         }
+ 66 |         .menu-item h2 {
+ 67 |             margin: 0 0 10px 0;
+ 68 |             font-size: 1.2rem;
+ 69 |             color: var(--secondary-color);
+ 70 |         }
+ 71 |         .menu-item p {
+ 72 |             margin: 0;
+ 73 |             font-size: 0.9rem;
+ 74 |             color: #666;
+ 75 |         }
+ 76 |         .chapter-number {
+ 77 |             display: inline-block;
+ 78 |             background: var(--secondary-color);
+ 79 |             color: #fff;
+ 80 |             padding: 2px 8px;
+ 81 |             border-radius: 4px;
+ 82 |             font-size: 0.75rem;
+ 83 |             margin-bottom: 8px;
+ 84 |         }
+ 85 |         .admin-section {
+ 86 |             background: #fff5f5;
+ 87 |             border: 1px dashed #feb2b2;
+ 88 |             padding: 25px;
+ 89 |             border-radius: 8px;
+ 90 |         }
+ 91 |         .admin-section h2 {
+ 92 |             color: #c53030;
+ 93 |             margin-top: 0;
+ 94 |             font-size: 1.3rem;
+ 95 |         }
+ 96 |         .admin-section ul {
+ 97 |             margin-bottom: 0;
+ 98 |         }
+ 99 |         .badge-upcoming {
+100 |             background: #e2e8f0;
+101 |             color: #4a5568;
+102 |             padding: 2px 6px;
+103 |             border-radius: 4px;
+104 |             font-size: 0.7rem;
+105 |             margin-left: 5px;
+106 |         }
+107 |     </style>
+108 | </head>
+109 | <body>
+110 | 
+111 | <div class="container">
+112 |     <header>
+113 |         <h1>? JUWA 試合速報システム</h1>
+114 |         <p>総合操作マニュアル</p>
+115 |     </header>
+116 | 
+117 |     <section class="system-overview">
+118 |         <h2>システム概要</h2>
+119 |         <p>
+120 |             本システムは、大学ウィッフルボール（JUWA）の試合経過をリアルタイムで記録・共有するためのプラットフォームです。
+121 |             リーグの開設から、試合現場での直感的なスコア入力、そして全国のファンが閲覧できる速報ビューワー機能を備えています。
+122 |         </p>
+123 |     </section>
+124 | 
+125 |     <section>
+126 |         <h2 style="text-align: center; margin-bottom: 25px;">目次</h2>
+127 |         <div class="menu-grid">
+128 |             <a href="manual_league.html" class="menu-item">
+129 |                 <span class="chapter-number">第1章</span>
+130 |                 <h2>大会作成機能</h2>
+131 |                 <p>新規リーグの登録、開催期間の設定、大会IDの発行手順について解説します。</p>
+132 |             </a>
+133 | 
+134 |             <a href="manual_edit.html" class="menu-item">
+135 |                 <span class="chapter-number">第2章</span>
+136 |                 <h2>試合記録機能</h2>
+137 |                 <p>カウント更新、進塁処理、スコア入力、リアルタイム同期の方法を解説します。</p>
+138 |             </a>
+139 | 
+140 |             <a href="manual_viewer.html" class="menu-item">
+141 |                 <span class="chapter-number">第3章</span>
+142 |                 <h2>試合閲覧機能</h2>
+143 |                 <p>速報画面の見方、ライブ状況の確認、自動更新の切り替えについて解説します。</p>
+144 |             </a>
+145 |         </div>
+146 |     </section>
+147 | 
+148 |     <section class="admin-section">
+149 |         <h2>? システム外対応（管理者への作業依頼）</h2>
+150 |         <p>以下の操作は現在、ユーザー画面からは行えません。必要な場合はシステム管理者まで直接ご連絡ください。</p>
+151 |         <ul>
+152 |             <li><strong>大会（リーグ）の削除・編集：</strong> 一度登録した大会名やIDの変更・削除。</li>
+153 |             <li><strong>試合データの削除：</strong> 誤って作成した試合データの完全消去。</li>
+154 |             <li><strong>試合データの訂正：</strong> 終了した試合のスコアや記録の修正。
+155 |                 <span class="badge-upcoming">今後実装予定</span>
+156 |             </li>
+157 |         </ul>
+158 |         <p style="margin-top: 15px; font-size: 0.85rem; color: #718096;">
+159 |             ※データの整合性を保つため、DB（Googleスプレッドシート）を直接操作して対応いたします。
+160 |         </p>
+161 |     </section>
+162 | 
+163 |     <footer style="margin-top: 50px; text-align: center; color: #999; font-size: 0.8rem;">
+164 |         &copy; 2026 Japan University Wiffleball Association. All Rights Reserved.
+165 |     </footer>
+166 | </div>
+167 | 
+168 | </body>
+169 | </html>
+
+
+--------------------------------------------------------------------------------
+/manual/manual_viewer.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>操作マニュアル - 速報視聴機能 | JUWA</title>
+  7 |     <style>
+  8 |         :root {
+  9 |             --primary-color: #2ecc71;
+ 10 |             --viewer-bg: #1a1a1a;
+ 11 |             --card-bg: #2c3e50;
+ 12 |             --text-main: #333;
+ 13 |             --text-light: #ecf0f1;
+ 14 |             --accent: #3498db;
+ 15 |         }
+ 16 |         body {
+ 17 |             font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+ 18 |             line-height: 1.6;
+ 19 |             color: var(--text-main);
+ 20 |             background-color: #f4f7f6;
+ 21 |             margin: 0;
+ 22 |             padding: 0;
+ 23 |         }
+ 24 |         .container {
+ 25 |             max-width: 850px;
+ 26 |             margin: 40px auto;
+ 27 |             padding: 30px;
+ 28 |             background: #fff;
+ 29 |             box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+ 30 |             border-radius: 8px;
+ 31 |         }
+ 32 |         header {
+ 33 |             border-bottom: 3px solid var(--primary-color);
+ 34 |             margin-bottom: 30px;
+ 35 |             padding-bottom: 10px;
+ 36 |         }
+ 37 |         h1 { color: var(--card-bg); font-size: 1.8rem; }
+ 38 |         h2 {
+ 39 |             color: var(--card-bg);
+ 40 |             border-left: 5px solid var(--primary-color);
+ 41 |             padding-left: 15px;
+ 42 |             margin-top: 40px;
+ 43 |             font-size: 1.4rem;
+ 44 |         }
+ 45 |         .step {
+ 46 |             display: flex;
+ 47 |             align-items: flex-start;
+ 48 |             margin-bottom: 20px;
+ 49 |             background: #f9f9f9;
+ 50 |             padding: 15px;
+ 51 |             border-radius: 6px;
+ 52 |         }
+ 53 |         .step-number {
+ 54 |             background: var(--accent);
+ 55 |             color: white;
+ 56 |             width: 28px;
+ 57 |             height: 28px;
+ 58 |             border-radius: 50%;
+ 59 |             display: flex;
+ 60 |             align-items: center;
+ 61 |             justify-content: center;
+ 62 |             font-weight: bold;
+ 63 |             margin-right: 15px;
+ 64 |             flex-shrink: 0;
+ 65 |         }
+ 66 |         .live-badge {
+ 67 |             display: inline-block;
+ 68 |             background: var(--primary-color);
+ 69 |             color: white;
+ 70 |             padding: 2px 8px;
+ 71 |             border-radius: 4px;
+ 72 |             font-size: 0.8rem;
+ 73 |             font-weight: bold;
+ 74 |         }
+ 75 |         .ui-desc {
+ 76 |             background: var(--viewer-bg);
+ 77 |             color: var(--text-light);
+ 78 |             padding: 20px;
+ 79 |             border-radius: 8px;
+ 80 |             margin: 20px 0;
+ 81 |         }
+ 82 |         .ui-desc ul { list-style: none; padding: 0; }
+ 83 |         .ui-desc li { margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+ 84 |         .ui-desc b { color: var(--primary-color); }
+ 85 |         .important {
+ 86 |             background: #e1f5fe;
+ 87 |             border-left: 5px solid #03a9f4;
+ 88 |             padding: 15px;
+ 89 |             margin: 20px 0;
+ 90 |         }
+ 91 |     </style>
+ 92 | </head>
+ 93 | <body>
+ 94 | 
+ 95 | <div class="container">
+ 96 |     <header>
+ 97 |         <h1>? 操作マニュアル：速報を見る（Viewer）</h1>
+ 98 |         <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況をリアルタイムで観戦する方法を説明します。</p>
+ 99 |     </header>
+100 | 
+101 |     <section>
+102 |         <h2>1. 試合一覧から選択する</h2>
+103 |         <p>メインメニューの「速報を見る」をクリックすると、現在開催中の試合リストが表示されます。</p>
+104 |         
+105 |         <div class="step">
+106 |             <div class="step-number">1</div>
+107 |             <div>
+108 |                 <strong>試合一覧の確認:</strong> 画面には各試合のカードが表示されます。
+109 |                 カードには「チーム名」「現在のスコア」「試合状況（○回裏など）」がリアルタイムで反映されます。
+110 |             </div>
+111 |         </div>
+112 | 
+113 |         <div class="step">
+114 |             <div class="step-number">2</div>
+115 |             <div>
+116 |                 <strong>詳細画面へ移動:</strong> 見たい試合のカードをタップ（クリック）すると、詳細な実況画面に切り替わります。
+117 |             </div>
+118 |         </div>
+119 |     </section>
+120 | 
+121 |     <section>
+122 |         <h2>2. 観戦画面の見方</h2>
+123 |         <p>観戦画面（メインアプリ）では、記録員が入力している最新データが自動的に表示されます。</p>
+124 | 
+125 |         <div class="ui-desc">
+126 |             <ul>
+127 |                 <li><b>スコアボード:</b> 各イニングの得点を表示します。現在進行中のイニングは点滅します。</li>
+128 |                 <li><b>カウント (B/S/O):</b> ボール、ストライク、アウトカウントがランプで表示されます。</li>
+129 |                 <li><b>ダイヤモンド:</b> 出塁しているランナーがオレンジ色に点灯します。</li>
+130 |                 <li><b>ライブタグ:</b> 試合が動いている間は <span class="live-badge">LIVE</span> アイコンが表示されます。</li>
+131 |             </ul>
+132 |         </div>
+133 |     </section>
+134 | 
+135 |     <section>
+136 |         <h2>3. 更新設定と便利機能</h2>
+137 |         <div class="important">
+138 |             <strong>? 自動更新について:</strong><br>
+139 |             詳細画面は <b>10秒おき</b>、一覧画面は <b>30秒おき</b> に自動で最新の状態に更新されます。
+140 |         </div>
+141 | 
+142 |         <div class="step">
+143 |             <div class="step-number">3</div>
+144 |             <div>
+145 |                 <strong>手動更新:</strong> 画面下部の <b>「今すぐ手動更新」</b> ボタンを押すと、即座に最新データを取得します。
+146 |             </div>
+147 |         </div>
+148 | 
+149 |         <div class="step">
+150 |             <div class="step-number">4</div>
+151 |             <div>
+152 |                 <strong>自動更新の停止:</strong> <b>「自動更新: ON」</b> ボタンを押すと、一時的に更新を止めて状況をじっくり確認できます。
+153 |             </div>
+154 |         </div>
+155 | 
+156 |         <div class="step">
+157 |             <div class="step-number">5</div>
+158 |             <div>
+159 |                 <strong>打席ログの確認:</strong> <b>「試合ログを表示」</b> ボタンをクリックすると、これまでの全打席の履歴（ヒット、アウトの種類など）を一覧で確認できます。
+160 |             </div>
+161 |         </div>
+162 |     </section>
+163 | 
+164 |     <footer>
+165 |         <p style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 0.8rem;">
+166 |             &copy; 2026 Japan University Wiffleball Association. All Rights Reserved.
+167 |         </p>
+168 |     </footer>
+169 | </div>
+170 | 
+171 | </body>
+172 | </html>
+173 | 
+
+
+--------------------------------------------------------------------------------
+/league_manager.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>JUWA リーグ管理システム</title>
+  7 |     <link rel="stylesheet" href="style.css">
+  8 |     <style>
+  9 |         :root { --primary: #2ecc71; --bg: #1a1a1a; --card: #2c3e50; --text: #ecf0f1; }
+ 10 |         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+ 11 |         .container { max-width: 600px; margin: 0 auto; }
+ 12 |         h1, h2 { color: var(--primary); text-align: center; }
+ 13 |         .input-group { margin-bottom: 15px; }
+ 14 |         label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #bdc3c7; }
+ 15 |         input { width: 100%; padding: 12px; border: none; border-radius: 5px; background: #34495e; color: white; box-sizing: border-box; }
+ 16 |         .btn { width: 100%; padding: 15px; border: none; border-radius: 5px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 1rem; }
+ 17 |         .btn:active { transform: scale(0.98); opacity: 0.9; }
+ 18 |         .league-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid var(--primary); }
+ 19 |         .league-item small { color: #bdc3c7; }
+ 20 |         .status-badge { float: right; font-size: 0.8rem; padding: 2px 8px; border-radius: 10px; background: var(--primary); color: white; }
+ 21 |         .nav-link { text-align: center; display: block; color: var(--primary); text-decoration: none; margin-top: 20px; }
+ 22 |     </style>
+ 23 | </head>
+ 24 | <body>
+ 25 | 
+ 26 | <div class="container">
+ 27 |     <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+ 28 |             <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+ 29 |             <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+ 30 |     </div>
+ 31 |     <h1>? リーグ管理</h1>
+ 32 | 
+ 33 |     <section class="card">
+ 34 |         <h2>新規リーグ登録</h2>
+ 35 |         <div class="input-group">
+ 36 |             <label>大会略称 (ID用・半角英数推奨)</label>
+ 37 |             <input type="text" id="league-id" placeholder="例: JUWA2026S">
+ 38 |         </div>
+ 39 |         <div class="input-group">
+ 40 |             <label>正式名称 (表示用)</label>
+ 41 |             <input type="text" id="league-name" placeholder="例: 2026年度 春季リーグ">
+ 42 |         </div>
+ 43 |         <div class="input-group" style="display: flex; gap: 10px;">
+ 44 |             <div style="flex: 1;">
+ 45 |                 <label>開始日</label>
+ 46 |                 <input type="date" id="league-start">
+ 47 |             </div>
+ 48 |             <div style="flex: 1;">
+ 49 |                 <label>終了日</label>
+ 50 |                 <input type="date" id="league-end">
+ 51 |             </div>
+ 52 |         </div>
+ 53 |         <button type="button" id="save-btn" class="btn">リーグを開設する</button>
+ 54 |     </section>
+ 55 | 
+ 56 |     <section class="card">
+ 57 |         <h2>登録済みリーグ一覧</h2>
+ 58 |         <div id="league-list">読み込み中...</div>
+ 59 |     </section>
+ 60 | 
+ 61 |     <a href="edit-games.html" class="nav-link">記録用アプリへ →</a>
+ 62 | </div>
+ 63 | <script src="js/common.js"></script>
+ 64 | <script>
+ 65 |     const GAS_URL = CONST_GAS_URL;
+ 66 | 
+ 67 |     /**
+ 68 |      * 保存処理
+ 69 |      */
+ 70 |     document.getElementById('save-btn').addEventListener('click', async () => {
+ 71 |         const id = document.getElementById('league-id').value.trim();
+ 72 |         const name = document.getElementById('league-name').value.trim();
+ 73 |         const start = document.getElementById('league-start').value;
+ 74 |         const end = document.getElementById('league-end').value;
+ 75 | 
+ 76 |         if (!id || !name || !start || !end) {
+ 77 |             alert("すべての項目を入力してください");
+ 78 |             return;
+ 79 |         }
+ 80 |         if (id.includes("-")){
+ 81 |             alert("リーグIDに使用不許可文字「-（半角ハイフン）」が含まれているため登録できません。");
+ 82 |             return;
+ 83 |         }
+ 84 |         const btn = document.getElementById('save-btn');
+ 85 |         btn.disabled = true;
+ 86 |         btn.textContent = "送信中...";
+ 87 | 
+ 88 |         const payload = {
+ 89 |             mode: "saveLeague",
+ 90 |             leagueId: id,
+ 91 |             leagueName: name,
+ 92 |             startDate: start,
+ 93 |             endDate: end
+ 94 |         };
+ 95 | 
+ 96 |         try {
+ 97 |             await postToGAS(GAS_URL, payload);
+ 98 |             alert("リーグを登録しました！");
+ 99 |             location.reload();
+100 |         } catch (e) {
+101 |             alert("エラーが発生しました");
+102 |             btn.disabled = false;
+103 |             btn.textContent = "リーグを開設する";
+104 |         } 
+105 |     });
+106 | 
+107 |     /**
+108 |      * 一覧取得
+109 |      */
+110 |     async function loadLeagues() {
+111 |         const listEl = document.getElementById('league-list');
+112 |         try {
+113 |             const res = await fetch(`${GAS_URL}?mode=getLeagues&_=${Date.now()}`);
+114 |             const leagues = await res.json();
+115 | 
+116 |             if (leagues.length === 0) {
+117 |                 listEl.innerHTML = "<p>登録されたリーグはありません</p>";
+118 |                 return;
+119 |             }
+120 | 
+121 |             // league_manager.html の loadLeagues 関数内、map処理の部分を修正
+122 |             listEl.innerHTML = leagues.reverse().map(l => `
+123 |             <div class="league-item">
+124 |                 <span class="status-badge">${l.status}</span>
+125 |                 <strong>${l.name}</strong><br>
+126 |             <small>ID: ${l.id} | 期間: ${l.start} ～ ${l.end}</small>
+127 |             <div style="margin-top: 10px; text-align: right;">
+128 |             <button onclick="location.href='edit-games.html?leagueId=${l.id}'" 
+129 |                     style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;">
+130 |                 このリーグの試合を記録する
+131 |             </button>
+132 |             </div>
+133 |             </div>
+134 |         `).join('');
+135 |         } catch (e) {
+136 |             listEl.innerHTML = "<p>データの読み込みに失敗しました</p>";
+137 |         }
+138 |     }
+139 | 
+140 |     loadLeagues();
+141 | </script>
+142 | 
+143 | </body>
+144 | </html>
+
+
+--------------------------------------------------------------------------------
+/manual/manual_league.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>操作マニュアル - 大会作成機能 | JUWA</title>
+  7 |     <style>
+  8 |         :root {
+  9 |             --primary-color: #2ecc71;
+ 10 |             --secondary-color: #2c3e50;
+ 11 |             --bg-color: #f4f7f6;
+ 12 |             --text-color: #333;
+ 13 |             --accent-color: #e74c3c;
+ 14 |         }
+ 15 |         body {
+ 16 |             font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+ 17 |             line-height: 1.6;
+ 18 |             color: var(--text-color);
+ 19 |             background-color: var(--bg-color);
+ 20 |             margin: 0;
+ 21 |             padding: 0;
+ 22 |         }
+ 23 |         .container {
+ 24 |             max-width: 800px;
+ 25 |             margin: 40px auto;
+ 26 |             padding: 20px;
+ 27 |             background: #fff;
+ 28 |             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+ 29 |             border-radius: 8px;
+ 30 |         }
+ 31 |         header {
+ 32 |             border-bottom: 3px solid var(--primary-color);
+ 33 |             margin-bottom: 30px;
+ 34 |             padding-bottom: 10px;
+ 35 |         }
+ 36 |         h1 { color: var(--secondary-color); font-size: 1.8rem; }
+ 37 |         h2 {
+ 38 |             color: var(--secondary-color);
+ 39 |             border-left: 5px solid var(--primary-color);
+ 40 |             padding-left: 15px;
+ 41 |             margin-top: 40px;
+ 42 |             font-size: 1.4rem;
+ 43 |         }
+ 44 |         .step {
+ 45 |             display: flex;
+ 46 |             align-items: flex-start;
+ 47 |             margin-bottom: 20px;
+ 48 |             background: #f9f9f9;
+ 49 |             padding: 15px;
+ 50 |             border-radius: 6px;
+ 51 |         }
+ 52 |         .step-number {
+ 53 |             background: var(--primary-color);
+ 54 |             color: white;
+ 55 |             width: 30px;
+ 56 |             height: 30px;
+ 57 |             border-radius: 50%;
+ 58 |             display: flex;
+ 59 |             align-items: center;
+ 60 |             justify-content: center;
+ 61 |             font-weight: bold;
+ 62 |             margin-right: 15px;
+ 63 |             flex-shrink: 0;
+ 64 |         }
+ 65 |         .important {
+ 66 |             background: #fff3cd;
+ 67 |             border: 1px solid #ffeeba;
+ 68 |             color: #856404;
+ 69 |             padding: 15px;
+ 70 |             border-radius: 6px;
+ 71 |             margin: 20px 0;
+ 72 |         }
+ 73 |         .badge {
+ 74 |             display: inline-block;
+ 75 |             padding: 2px 8px;
+ 76 |             background: var(--secondary-color);
+ 77 |             color: white;
+ 78 |             border-radius: 4px;
+ 79 |             font-size: 0.8rem;
+ 80 |         }
+ 81 |         table {
+ 82 |             width: 100%;
+ 83 |             border-collapse: collapse;
+ 84 |             margin: 20px 0;
+ 85 |         }
+ 86 |         table th, table td {
+ 87 |             border: 1px solid #ddd;
+ 88 |             padding: 12px;
+ 89 |             text-align: left;
+ 90 |         }
+ 91 |         table th { background: #f2f2f2; }
+ 92 |         code {
+ 93 |             background: #eee;
+ 94 |             padding: 2px 5px;
+ 95 |             border-radius: 4px;
+ 96 |             font-family: monospace;
+ 97 |         }
+ 98 |     </style>
+ 99 | </head>
+100 | <body>
+101 | 
+102 | <div class="container">
+103 |     <header>
+104 |         <h1>? 操作マニュアル：大会作成（リーグ管理）</h1>
+105 |         <p>JUWA 試合速報システムにおいて、新しい大会（リーグ）を開設し、管理する手順を説明します。</p>
+106 |     </header>
+107 | 
+108 |     <section>
+109 |         <h2>1. リーグ管理画面へのアクセス</h2>
+110 |         <div class="step">
+111 |             <div class="step-number">1</div>
+112 |             <div>
+113 |                 メインメニューから <strong>「大会を作成する」</strong> カードをクリックします。
+114 |             </div>
+115 |         </div>
+116 |     </section>
+117 | 
+118 |     <section>
+119 |         <h2>2. 新規リーグの登録</h2>
+120 |         <p>「新規リーグ登録」セクションの各項目を入力します。</p>
+121 |         
+122 |         <table>
+123 |             <thead>
+124 |                 <tr>
+125 |                     <th>項目名</th>
+126 |                     <th>説明・入力例</th>
+127 |                 </tr>
+128 |             </thead>
+129 |             <tbody>
+130 |                 <tr>
+131 |                     <td><strong>大会略称 (ID用)</strong></td>
+132 |                     <td>システム内で識別するためのIDです。例: <code>JUWA2026S</code><br>
+133 |                     <small style="color: var(--accent-color);">※半角ハイフン（-）は使用できません。</small></td>
+134 |                 </tr>
+135 |                 <tr>
+136 |                     <td><strong>正式名称</strong></td>
+137 |                     <td>画面に表示される大会名です。例: <code>2026年度 春季リーグ</code></td>
+138 |                 </tr>
+139 |                 <tr>
+140 |                     <td><strong>開始日 / 終了日</strong></td>
+141 |                     <td>大会の開催期間を選択します。</td>
+142 |                 </tr>
+143 |             </tbody>
+144 |         </table>
+145 | 
+146 |         <div class="step">
+147 |             <div class="step-number">2</div>
+148 |             <div>
+149 |                 入力が完了したら <strong>「リーグを開設する」</strong> ボタンをクリックします。
+150 |                 <p><small>※「送信中...」と表示されている間は画面を閉じずにお待ちください。</small></p>
+151 |             </div>
+152 |         </div>
+153 | 
+154 |         <div class="important">
+155 |             <strong>?? 注意事項</strong><br>
+156 |             リーグIDに半角ハイフン <code>-</code> を含めるとエラーになります。英数字での入力を推奨します。
+157 |         </div>
+158 |     </section>
+159 | 
+160 |     <section>
+161 |         <h2>3. 登録済みリーグの確認と試合記録への遷移</h2>
+162 |         <p>登録されたリーグは「登録済みリーグ一覧」に表示されます。</p>
+163 | 
+164 |         <div class="step">
+165 |             <div class="step-number">3</div>
+166 |             <div>
+167 |                 一覧から該当するリーグを探します。最新のリーグが一番上に表示されます。
+168 |             </div>
+169 |         </div>
+170 | 
+171 |         <div class="step">
+172 |             <div class="step-number">4</div>
+173 |             <div>
+174 |                 <strong>「このリーグの試合を記録する」</strong> ボタンをクリックすると、そのリーグに紐付いた試合記録画面へ移動します。
+175 |             </div>
+176 |         </div>
+177 |     </section>
+178 | 
+179 |     <hr>
+180 |     
+181 |     <footer>
+182 |         <p style="text-align: center; color: #7f8c8d;">
+183 |             &copy; 2026 Japan University Wiffleball Association
+184 |         </p>
+185 |     </footer>
+186 | </div>
+187 | 
+188 | </body>
+189 | </html>
+190 | 
+
+
+--------------------------------------------------------------------------------
+/viewer.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>JUWA 野球速報 - Viewer</title>
+  7 |     <link rel="stylesheet" href="style.css">
+  8 |     <style>
+  9 |         :root { --bg: #1a1a1a; --card: #2c3e50; --text: #ecf0f1; --accent: #2ecc71; }
+ 10 |         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+ 11 |         .container { max-width: 800px; margin: 0 auto; }
+ 12 |         .hidden { display: none !important; }
+ 13 |         
+ 14 |         /* 一覧画面スタイル */
+ 15 |         .game-card { background: var(--card); margin: 12px 0; padding: 15px; border-radius: 10px; cursor: pointer; border: 1px solid #444; transition: transform 0.2s; }
+ 16 |         .game-card:active { transform: scale(0.98); }
+ 17 |         
+ 18 |         /* 詳細画面スタイル */
+ 19 |         .viewer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+ 20 |         .live-tag { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+ 21 |         
+ 22 |         /* カウント・ダイヤモンド */
+ 23 |         .status-container { display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; }
+ 24 |         .count-row { display: flex; align-items: center; margin-bottom: 8px; }
+ 25 |         .label { width: 20px; font-weight: bold; font-size: 1.2rem; }
+ 26 |         .dots { display: flex; gap: 8px; margin-left: 10px; }
+ 27 |         .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #555; }
+ 28 |         .dot.ball.active { background: #3498db; border-color: #3498db; }
+ 29 |         .dot.strike.active { background: #f1c40f; border-color: #f1c40f; }
+ 30 |         .dot.out.active { background: #e74c3c; border-color: #e74c3c; }
+ 31 |         
+ 32 |         /* 野球ダイヤモンド */
+ 33 |         .diamond { position: relative; width: 100px; height: 100px; transform: rotate(45deg); margin: 20px; }
+ 34 |         .base { position: absolute; width: 25px; height: 25px; border: 2px solid #888; transition: 0.3s; }
+ 35 |         #base1 { top: 0; right: 0; }
+ 36 |         #base2 { top: 0; left: 0; }
+ 37 |         #base3 { bottom: 0; left: 0; }
+ 38 |         .base.runner { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+ 39 | 
+ 40 |         /* コントロール */
+ 41 |         .controls { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
+ 42 |         button:active { opacity: 0.8; }
+ 43 | 
+ 44 |         .paused { background: #e67e22 !important; }
+ 45 |     </style>
+ 46 | </head>
+ 47 | <body>
+ 48 | 
+ 49 |     <div id="list-screen" class="container">
+ 50 |         <h2 style="text-align: center; color: var(--accent);">? 試合一覧</h2>
+ 51 |         <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+ 52 |             <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+ 53 |             <button type="button" class="btn-sm" onclick="location.href='manual/manual_league'">操作マニュアル</button>
+ 54 |         </div>
+ 55 |         <div id="game-list-container">
+ 56 |             <p style="text-align: center; color: #888; padding: 40px;">試合データを読み込み中...</p>
+ 57 |         </div>
+ 58 |         <button onclick="fetchGameList()" style="width: 100%; background: var(--accent);">リストを最新に更新</button>
+ 59 |     </div>
+ 60 | 
+ 61 |     <div id="main-app" class="container hidden">
+ 62 |         <div class="viewer-header">
+ 63 |             <button class="btn-sm" onclick="backToList()">← 一覧に戻る</button>
+ 64 |             <span class="live-tag">LIVE</span>
+ 65 |             <span id="display-game-id" style="font-family: monospace; color: #aaa;">ID: ----</span>
+ 66 |         </div>
+ 67 |         <div class="controls">
+ 68 |             <button id="refresh-btn" class="btn-sm" onclick="syncPull()">今すぐ手動更新</button>
+ 69 |             <button id="pause-btn" class="btn-sm" onclick="togglePause()">自動更新: ON</button>
+ 70 |         </div>
+ 71 |         <div id="sync-status" style="text-align: right; font-size: 0.7rem; color: #2ecc71; margin-bottom: 5px;">接続中...</div>
+ 72 | 
+ 73 |         <section class="score-board">
+ 74 |             <table id="scoreboard">
+ 75 |                 <thead id="scoreboard-head">
+ 76 |                 <tr id="header-row">
+ 77 |                     <th>チーム</th>
+ 78 |                     <th>R</th>
+ 79 |                 </tr>
+ 80 |                 </thead>
+ 81 |                 <tbody id="scoreboard-body">
+ 82 |                 <tr id="score-row-top">
+ 83 |                     <td id="top-team-name" class="team-name-cell">先攻</td>
+ 84 |                     <td class="total-cell" id="total-score-top">0</td>
+ 85 |                 </tr>
+ 86 |                 <tr id="score-row-bottom">
+ 87 |                     <td id="bottom-team-name" class="team-name-cell">後攻</td>
+ 88 |                     <td class="total-cell" id="total-score-bottom">0</td>
+ 89 |                 </tr>
+ 90 |                 </tbody>
+ 91 |             </table>
+ 92 | 
+ 93 |         </section>
+ 94 |         <section class="pitch-counter-box">
+ 95 |             <div class="match-status-bar">
+ 96 |                 <div class="status-item current-pitcher">
+ 97 |                     <span class="label">ピッチャー</span>
+ 98 |                     <span id="display-pitcher-name" class="value">読み込み中...</span>
+ 99 |                 </div>
+100 | 
+101 |                 <div class="status-item pitch-count">
+102 |                     <span class="label">PITCHES</span>
+103 |                     <span id="display-pitch-count" class="value">0</span>
+104 |                 </div>
+105 | 
+106 |                 <div class="status-item current-batter">
+107 |                     <span class="label">バッター</span>
+108 |                     <span id="display-batter-name" class="value">読み込み中...</span>
+109 |                 </div>
+110 |             </div>
+111 |         </section>
+112 | 
+113 |         <div class="status-container">
+114 |             <section class="counts">
+115 |                 <div class="count-row"><span class="label" style="color:#3498db">B</span><div class="dots"><span class="dot ball"></span><span class="dot ball"></span><span class="dot ball"></span></div></div>
+116 |                 <div class="count-row"><span class="label" style="color:#f1c40f">S</span><div class="dots"><span class="dot strike"></span><span class="dot strike"></span></div></div>
+117 |                 <div class="count-row"><span class="label" style="color:#e74c3c">O</span><div class="dots"><span class="dot out"></span><span class="dot out"></span></div></div>
+118 |             </section>
+119 | 
+120 |             <section class="diamond-wrapper">
+121 |                 <div class="diamond">
+122 |                     <div class="base" id="base2"></div>
+123 |                     <div class="base" id="base3"></div>
+124 |                     <div class="base" id="base1"></div>
+125 |                 </div>
+126 |             </section>
+127 |         </div>
+128 |                     <button class="btn-log" onclick="openLogWindow()">
+129 |                 試合ログ（打席記録）を表示
+130 |             </button>
+131 | 
+132 |     </div>
+133 |     <script src="js/common.js"></script>
+134 |     <script src="js/viewer.js"></script>
+135 | </body>
+136 | </html>
+
+
+--------------------------------------------------------------------------------
+/manual/manual_edit.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>操作マニュアル - 試合記録機能 | JUWA</title>
+  7 |     <style>
+  8 |         :root {
+  9 |             --primary-color: #3498db;
+ 10 |             --success-color: #2ecc71;
+ 11 |             --warning-color: #f1c40f;
+ 12 |             --danger-color: #e74c3c;
+ 13 |             --secondary-color: #2c3e50;
+ 14 |             --bg-color: #f4f7f6;
+ 15 |             --text-color: #333;
+ 16 |         }
+ 17 |         body {
+ 18 |             font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+ 19 |             line-height: 1.6;
+ 20 |             color: var(--text-color);
+ 21 |             background-color: var(--bg-color);
+ 22 |             margin: 0;
+ 23 |             padding: 0;
+ 24 |         }
+ 25 |         .container {
+ 26 |             max-width: 850px;
+ 27 |             margin: 40px auto;
+ 28 |             padding: 30px;
+ 29 |             background: #fff;
+ 30 |             box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+ 31 |             border-radius: 8px;
+ 32 |         }
+ 33 |         header {
+ 34 |             border-bottom: 3px solid var(--primary-color);
+ 35 |             margin-bottom: 30px;
+ 36 |             padding-bottom: 10px;
+ 37 |         }
+ 38 |         h1 { color: var(--secondary-color); font-size: 1.8rem; }
+ 39 |         h2 {
+ 40 |             color: var(--secondary-color);
+ 41 |             border-left: 5px solid var(--primary-color);
+ 42 |             padding-left: 15px;
+ 43 |             margin-top: 40px;
+ 44 |             font-size: 1.4rem;
+ 45 |         }
+ 46 |         h3 {
+ 47 |             color: var(--primary-color);
+ 48 |             font-size: 1.1rem;
+ 49 |             margin-top: 25px;
+ 50 |         }
+ 51 |         .step {
+ 52 |             display: flex;
+ 53 |             align-items: flex-start;
+ 54 |             margin-bottom: 20px;
+ 55 |             background: #f9f9f9;
+ 56 |             padding: 15px;
+ 57 |             border-radius: 6px;
+ 58 |             border: 1px solid #eee;
+ 59 |         }
+ 60 |         .step-number {
+ 61 |             background: var(--primary-color);
+ 62 |             color: white;
+ 63 |             width: 28px;
+ 64 |             height: 28px;
+ 65 |             border-radius: 50%;
+ 66 |             display: flex;
+ 67 |             align-items: center;
+ 68 |             justify-content: center;
+ 69 |             font-weight: bold;
+ 70 |             margin-right: 15px;
+ 71 |             flex-shrink: 0;
+ 72 |             font-size: 0.9rem;
+ 73 |         }
+ 74 |         .feature-grid {
+ 75 |             display: grid;
+ 76 |             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ 77 |             gap: 15px;
+ 78 |             margin: 20px 0;
+ 79 |         }
+ 80 |         .feature-item {
+ 81 |             padding: 15px;
+ 82 |             border-radius: 6px;
+ 83 |             color: white;
+ 84 |             font-weight: bold;
+ 85 |             text-align: center;
+ 86 |         }
+ 87 |         .bg-strike { background-color: #e67e22; }
+ 88 |         .bg-ball { background-color: #f1c40f; color: #333; }
+ 89 |         .bg-out { background-color: #e74c3c; }
+ 90 |         .bg-hit { background-color: #2ecc71; }
+ 91 |         
+ 92 |         .important {
+ 93 |             background: #fff3cd;
+ 94 |             border-left: 5px solid #ffeeba;
+ 95 |             color: #856404;
+ 96 |             padding: 15px;
+ 97 |             border-radius: 4px;
+ 98 |             margin: 20px 0;
+ 99 |         }
+100 |         code {
+101 |             background: #eee;
+102 |             padding: 2px 5px;
+103 |             border-radius: 4px;
+104 |             font-family: monospace;
+105 |         }
+106 |         .btn-ref {
+107 |             display: inline-block;
+108 |             padding: 3px 10px;
+109 |             background: #34495e;
+110 |             color: white;
+111 |             border-radius: 4px;
+112 |             font-size: 0.85rem;
+113 |         }
+114 |     </style>
+115 | </head>
+116 | <body>
+117 | 
+118 | <div class="container">
+119 |     <header>
+120 |         <h1>? 操作マニュアル：試合記録（記録をつける）</h1>
+121 |         <p>リアルタイムで試合のスコア、カウント、打席結果を入力・保存する手順を説明します。</p>
+122 |     </header>
+123 | 
+124 |     <section>
+125 |         <h2>1. 試合のセットアップ</h2>
+126 |         <p>アプリを起動すると、まず「試合設定 & 同期」画面が表示されます。</p>
+127 |         
+128 |         <div class="step">
+129 |             <div class="step-number">1</div>
+130 |             <div>
+131 |                 <strong>大会を選択:</strong> 「参加する大会を選択」プルダウンから対象のリーグを選びます。
+132 |             </div>
+133 |         </div>
+134 | 
+135 |         <div class="step">
+136 |             <div class="step-number">2</div>
+137 |             <div>
+138 |                 <strong>モード選択:</strong> 「新規試合を作成」または「既存試合を編集」を選択します。
+139 |                 <ul>
+140 |                     <li><strong>新規作成:</strong> <span class="btn-ref">自動発行</span> ボタンで試合IDを生成し、チーム名とイニング数を入力して「試合開始」をクリックします。</li>
+141 |                     <li><strong>既存編集:</strong> 過去に作成された試合を選んで「編集を再開する」をクリックします。</li>
+142 |                 </ul>
+143 |             </div>
+144 |         </div>
+145 |     </section>
+146 | 
+147 |     <section>
+148 |         <h2>2. カウントと打席結果の入力</h2>
+149 |         <p>メイン画面では、以下のボタンを使用して試合を進行させます。</p>
+150 | 
+151 |         <div class="feature-grid">
+152 |             <div class="feature-item bg-strike">ストライク</div>
+153 |             <div class="feature-item bg-ball">ボール</div>
+154 |             <div class="feature-item bg-out">フライ/ゴロアウト</div>
+155 |             <div class="feature-item bg-hit">ヒット/HR</div>
+156 |         </div>
+157 | 
+158 |         <h3>自動判定ロジック</h3>
+159 |         <ul>
+160 |             <li><strong>四球:</strong> ボールが4つたまると自動的に「四球」として処理され、走者が進塁します。</li>
+161 |             <li><strong>三振:</strong> ストライクが3つたまると自動的に「三振（アウト）」として記録されます。</li>
+162 |             <li><strong>チェンジ:</strong> 3アウトになると自動的に表裏の交代、またはイニングの進行が行われます。</li>
+163 |         </ul>
+164 | 
+165 |         <div class="important">
+166 |             <strong>? ヒント:</strong> 
+167 |             入力を間違えた場合は <span class="btn-ref">1つ戻る（修正）</span> ボタンを押すことで、直前の状態にリセットできます。
+168 |         </div>
+169 |     </section>
+170 | 
+171 |     <section>
+172 |         <h2>3. スコアボードとダイヤモンドの確認</h2>
+173 |         <div class="step">
+174 |             <div class="step-number">3</div>
+175 |             <div>
+176 |                 <strong>スコアボード:</strong> 各イニングの得点と合計点（R）が自動計算されます。現在進行中のイニングは点滅（アクティブ表示）します。
+177 |             </div>
+178 |         </div>
+179 |         <div class="step">
+180 |             <div class="step-number">4</div>
+181 |             <div>
+182 |                 <strong>ダイヤモンド表示:</strong> ヒットや四球に応じて、ランナーの状況がオレンジ色でリアルタイムに表示されます。
+183 |             </div>
+184 |         </div>
+185 |         <div class="step">
+186 |             <div class="step-number">5</div>
+187 |             <div>
+188 |                 <strong>同期状態:</strong> 画面上部の「同期完了」の表示を確認してください。10秒おきにサーバーと自動同期されます。
+189 |             </div>
+190 |         </div>
+191 |     </section>
+192 | 
+193 |     <section>
+194 |         <h2>4. ログの確認と試合の終了</h2>
+195 |         <h3>試合ログの参照</h3>
+196 |         <p><span class="btn-ref">試合ログ（打席記録）を表示</span> をクリックすると、別ウィンドウでこれまでの全打席の結果を時系列で確認できます。</p>
+197 | 
+198 |         <h3>試合の完了</h3>
+199 |         <div class="step">
+200 |             <div class="step-number">6</div>
+201 |             <div>
+202 |                 設定したイニングが終了するか、決着がついた時点で <span class="btn-ref" style="background:var(--danger-color)">試合を終了する</span> をクリックします。
+203 |                 <br><small>※終了後は閲覧専用モードとなり、追加の入力はできなくなります。</small>
+204 |             </div>
+205 |         </div>
+206 |     </section>
+207 | 
+208 |     <footer>
+209 |         <p style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 0.8rem;">
+210 |             &copy; 2026 Japan University Wiffleball Association. All Rights Reserved.
+211 |         </p>
+212 |     </footer>
+213 | </div>
+214 | 
+215 | </body>
+216 | </html>
+217 | 
+
+
+--------------------------------------------------------------------------------
+/js/viewer.js:
+--------------------------------------------------------------------------------
+  1 | 
+  2 | /*
+  3 | ======================================================================
+  4 | Project Name    : Scorer
+  5 | File Name       : edit-games.js
+  6 | Version         : v1.0.0
+  7 |  
+  8 | Copyright ? 2026 JapanUniversityWiffleballAssosiation. All rights reserved.
+  9 |  
+ 10 | This source code or any portion thereof must not be  
+ 11 | reproduced or used in any manner whatsoever.
+ 12 | ======================================================================
+ 13 |  */
+ 14 | 
+ 15 | /**
+ 16 |  * 設定: GASウェブアプリURL
+ 17 |  */
+ 18 | const GAS_URL = CONST_GAS_URL;
+ 19 | 
+ 20 | // --- 状態管理 ---
+ 21 | let autoUpdateTimer = null;
+ 22 | let isPaused = false;
+ 23 | let currentGameId = null;
+ 24 | let totalScore = null;
+ 25 | let currentInning = null;
+ 26 | let isBottomInning = null;
+ 27 | let totalInnings = null;
+ 28 | let score = null;
+ 29 | 
+ 30 | /**
+ 31 |  * 起動時の処理
+ 32 |  */
+ 33 | document.addEventListener('DOMContentLoaded', () => {
+ 34 |     const params = new URLSearchParams(window.location.search);
+ 35 |     const gameId = params.get('id');
+ 36 |     currentGameId = gameId;
+ 37 |     if (gameId) {
+ 38 |         // A. 詳細画面モード
+ 39 |         showScreen('main-app');
+ 40 |         document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
+ 41 |         fetchGameDetail(gameId);
+ 42 |         startAutoUpdate(() => fetchGameDetail(gameId), 10000); // 10秒更新
+ 43 |     } else {
+ 44 |         // B. 一覧画面モード
+ 45 |         showScreen('list-screen');
+ 46 |         fetchGameList();
+ 47 |         startAutoUpdate(fetchGameList, 30000); // 30秒更新
+ 48 |     }
+ 49 | });
+ 50 | 
+ 51 | /**
+ 52 |  * 画面の切り替えヘルパー
+ 53 |  */
+ 54 | function showScreen(screenId) {
+ 55 |     document.getElementById('list-screen').classList.add('hidden');
+ 56 |     document.getElementById('main-app').classList.add('hidden');
+ 57 |     document.getElementById(screenId).classList.remove('hidden');
+ 58 | }
+ 59 | 
+ 60 | /**
+ 61 |  * 一覧に戻る
+ 62 |  */
+ 63 | function backToList() {
+ 64 |     location.href = 'viewer.html';
+ 65 | }
+ 66 | 
+ 67 | /**
+ 68 |  * 【一覧画面】取得と表示
+ 69 |  */
+ 70 | async function fetchGameList() {
+ 71 |     const container = document.getElementById('game-list-container');
+ 72 |     if (!container) return;
+ 73 | 
+ 74 |     try {
+ 75 |         const response = await fetch(`${GAS_URL}?_=${Date.now()}`);
+ 76 |         const gameList = await response.json();
+ 77 | 
+ 78 |         if (!gameList || gameList.length === 0) {
+ 79 |             container.innerHTML = "<p style='text-align:center;'>現在、進行中の試合はありません。</p>";
+ 80 |             return;
+ 81 |         }
+ 82 | 
+ 83 |         // リーグごとにグループ化
+ 84 |         const grouped = gameList.reduce((acc, g) => {
+ 85 |             const name = g.leagueName || "その他";
+ 86 |             if (!acc[name]) acc[name] = [];
+ 87 |             acc[name].push(g);
+ 88 |             return acc;
+ 89 |         }, {});
+ 90 | 
+ 91 |         container.innerHTML = "";
+ 92 |         for (const league in grouped) {
+ 93 |             const section = document.createElement('div');
+ 94 |             section.innerHTML = `<h3 style="border-left:4px solid #2ecc71; padding-left:10px; margin-top:20px;">${league}</h3>`;
+ 95 |             
+ 96 |             const gamesHtml = grouped[league].map(g => `
+ 97 |                 <div class="game-card" onclick="location.href='viewer.html?id=${g.id}'">
+ 98 |                     <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; margin-bottom:5px;">
+ 99 |                         <span>${g.isFinished ? '【終了】' : '【LIVE】'}</span>
+100 |                         <span>ID: ${g.id}</span>
+101 |                     </div>
+102 |                     <div style="display:flex; justify-content:space-around; align-items:center;">
+103 |                         <div style="text-align:center; flex:1;"><strong>${g.topTeam}</strong></div>
+104 |                         <div style="font-size:1.5rem; font-weight:bold; flex:1; text-align:center;">${g.totalScore.top} - ${g.totalScore.bottom}</div>
+105 |                         <div style="text-align:center; flex:1;"><strong>${g.bottomTeam}</strong></div>
+106 |                     </div>
+107 |                     <div style="text-align:center; font-size:0.9rem; margin-top:5px; color:#2ecc71;">
+108 |                         ${g.isFinished ? '試合終了' : g.inning + '回' + (g.isBottom ? '裏' : '表')}
+109 |                     </div>
+110 |                 </div>
+111 |             `).join('');
+112 |             
+113 |             section.innerHTML += gamesHtml;
+114 |             container.appendChild(section);
+115 |         }
+116 |     } catch (e) {
+117 |         container.innerHTML = "<p>データ取得エラーが発生しました。</p>";
+118 |     }
+119 | }
+120 | 
+121 | /**
+122 |  * 【詳細画面】取得と反映
+123 |  */
+124 | async function fetchGameDetail(id) {
+125 |     if (isPaused) return;
+126 |     const statusEl = document.getElementById('sync-status');
+127 |     if (statusEl) statusEl.textContent = "更新中...";
+128 | 
+129 |     try {
+130 |         const response = await fetch(`${GAS_URL}?gameId=${id}&_=${Date.now()}`);
+131 |         const state = await response.json();
+132 | 
+133 |         if (!state || state.error) {
+134 |             alert("試合データが見つかりません。");
+135 |             backToList();
+136 |             return;
+137 |         }
+138 | 
+139 |         // スコアボードの更新
+140 |         document.getElementById('top-team-name').textContent = state.topTeamName;
+141 |         document.getElementById('bottom-team-name').textContent = state.bottomTeamName;
+142 |         
+143 |         score = state.score;
+144 |         totalScore = state.totalScore;
+145 |         currentInning = state.currentInning;
+146 |         isBottomInning = state.isBottomInning;
+147 |         totalInnings = state.totalInnings;
+148 |         updateScoreboardUI();
+149 | 
+150 |         // カウントの更新
+151 |         updateDots('ball', state.counts.ball);
+152 |         updateDots('strike', state.counts.strike);
+153 |         updateDots('out', state.counts.out);
+154 | 
+155 |         // ランナーの更新
+156 |         document.getElementById('base1').classList.toggle('runner', state.runners.base1);
+157 |         document.getElementById('base2').classList.toggle('runner', state.runners.base2);
+158 |         document.getElementById('base3').classList.toggle('runner', state.runners.base3);
+159 |         
+160 |         //ピッチャー、バッターの表示更新
+161 |         document.getElementById('display-pitch-count').textContent = state.isBottomInning ? state.pitchingCount.bottom.at(-1) : state.pitchingCount.top.at(-1);
+162 |         document.getElementById('display-pitcher-name').textContent = state.isBottomInning ? state.topPlayers.pitcher.at(-1)||"ピッチャー" : state.bottomPlayers.pitcher.at(-1)||"ピッチャー";
+163 |         
+164 |         if((state.isBottomInning&&state.bottomPlayers.batter.length>0) || (!state.isBottomInning && state.topPlayers.batter.length>0)){
+165 |             document.getElementById('display-batter-name').textContent = state.isBottomInning ? state.bottomPlayers.batter[state.battingCount.bottom % state.bottomPlayers.batter.length].name: state.topPlayers.batter[state.battingCount.top % state.topPlayers.batter.length].name;
+166 |         }else{
+167 |             document.getElementById('display-batter-name').textContent = "バッター"
+168 |         }
+169 | 
+170 |         
+171 |         if (statusEl) statusEl.textContent = "同期済み";
+172 |         
+173 |         if (state.isGameEnded) {
+174 |             document.querySelector('.live-tag').textContent = "試合終了";
+175 |             document.querySelector('.live-tag').style.background = "#7f8c8d";
+176 |             stopAutoUpdate();
+177 |         }
+178 |     } catch (e) {
+179 |         if (statusEl) statusEl.textContent = "通信エラー";
+180 |     }
+181 | }
+182 | 
+183 | /**
+184 |  * ドット更新用
+185 |  */
+186 | function updateDots(type, count) {
+187 |     const dots = document.querySelectorAll(`.dot.${type}`);
+188 |     dots.forEach((dot, i) => {
+189 |         dot.classList.toggle('active', i < count);
+190 |     });
+191 | }
+192 | 
+193 | /**
+194 |  * 自動更新制御
+195 |  */
+196 | function startAutoUpdate(func, interval) {
+197 |     stopAutoUpdate();
+198 |     autoUpdateTimer = setInterval(func, interval);
+199 | }
+200 | 
+201 | function stopAutoUpdate() {
+202 |     if (autoUpdateTimer) clearInterval(autoUpdateTimer);
+203 | }
+204 | 
+205 | function togglePause() {
+206 |     isPaused = !isPaused;
+207 |     const btn = document.getElementById('pause-btn');
+208 |     if (isPaused) {
+209 |         btn.textContent = "自動更新: OFF";
+210 |         btn.classList.add('paused');
+211 |     } else {
+212 |         btn.textContent = "自動更新: ON";
+213 |         btn.classList.remove('paused');
+214 |         // 再開時に一度即時更新
+215 |         const params = new URLSearchParams(window.location.search);
+216 |         fetchGameDetail(params.get('id'));
+217 |     }
+218 | }
+219 | 
+220 | // 手動更新ボタン用
+221 | function syncPull() {
+222 |     const params = new URLSearchParams(window.location.search);
+223 |     fetchGameDetail(params.get('id'));
+224 | }
+225 | 
+226 | 
+227 | 
+228 | /**
+229 |  * スコアボードUI更新
+230 |  * @returns {void}
+231 |  */
+232 | function updateScoreboardUI() {
+233 |     // 1. 要素を取得
+234 |     const headerRow = document.getElementById('header-row');
+235 |     const topRow = document.getElementById('score-row-top');
+236 |     const bottomRow = document.getElementById('score-row-bottom');
+237 | 
+238 |     // 2. ここでチェック！どれかが null ならエラーメッセージを出して中断する
+239 |     if (!headerRow || !topRow || !bottomRow) {
+240 |         console.error("エラー: スコアボードの行が見つかりません。", {headerRow, topRow, bottomRow});
+241 |         return; 
+242 |     }
+243 | 
+244 |     // --- 以降、安全に実行される ---
+245 |     const clearInningCells = (row) => {
+246 |         // row が undefined でないことは上記で確認済みなので length は安全に読める
+247 |         for (let i = row.cells.length - 2; i >= 1; i--) {
+248 |             row.deleteCell(i);
+249 |         }
+250 |     };
+251 | 
+252 |     clearInningCells(headerRow);
+253 |     clearInningCells(topRow);
+254 |     clearInningCells(bottomRow);
+255 | 
+256 |     const displayInnings = Math.max(currentInning, totalInnings);
+257 | 
+258 |     for (let i = 1; i <= displayInnings; i++) {
+259 |         // ヘッダー挿入
+260 |         const th = document.createElement('th');
+261 |         th.textContent = i;
+262 |         headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 1]);
+263 | 
+264 |         // 先攻セル挿入
+265 |         const tdTop = document.createElement('td');
+266 |         tdTop.textContent = (score.top && score.top[i] !== undefined) ? score.top[i] : "-";
+267 |         topRow.insertBefore(tdTop, topRow.cells[topRow.cells.length - 1]);
+268 | 
+269 |         // 後攻セル挿入
+270 |         const tdBottom = document.createElement('td');
+271 |         tdBottom.textContent = (score.bottom && score.bottom[i] !== undefined) ? score.bottom[i] : "-";
+272 |         bottomRow.insertBefore(tdBottom, bottomRow.cells[bottomRow.cells.length - 1]);
+273 | 
+274 |         // アクティブ表示（点滅）
+275 |         if (i === currentInning) {
+276 |             if (!isBottomInning) tdTop.classList.add('active-cell');
+277 |             else tdBottom.classList.add('active-cell');
+278 |         }
+279 |     }
+280 | 
+281 |     // 合計点の書き換え
+282 |     const topTotalEl = document.getElementById('total-score-top');
+283 |     const bottomTotalEl = document.getElementById('total-score-bottom');
+284 |     if (topTotalEl) topTotalEl.textContent = totalScore.top;
+285 |     if (bottomTotalEl) bottomTotalEl.textContent = totalScore.bottom;
+286 | }
+287 | 
+
+
+--------------------------------------------------------------------------------
+/style.css:
+--------------------------------------------------------------------------------
+  1 | body {
+  2 |     font-family: 'Helvetica Neue', Arial, sans-serif;
+  3 |     overflow-y: auto;
+  4 |     background-color: #222;
+  5 |     color: white;
+  6 |     margin: 0;
+  7 |     display: flex;
+  8 |     justify-content: center;
+  9 |     padding: 20px;
+ 10 | }
+ 11 | 
+ 12 | .container {
+ 13 |     width: 100%;
+ 14 |     max-width: 600px;
+ 15 |     background: #333;
+ 16 |     padding: 20px;
+ 17 |     border-radius: 10px;
+ 18 | }
+ 19 | 
+ 20 | .hidden { display: none !important; }
+ 21 | 
+ 22 | /* オーバーレイ設定画面 */
+ 23 | .overlay {
+ 24 |     position: fixed;
+ 25 |     top: 0; left: 0; width: 100%; height: 100%;
+ 26 |     background: rgba(0,0,0,0.9);
+ 27 |     display: flex; justify-content: center; align-items: center;
+ 28 |     z-index: 100;
+ 29 |     align-items: flex-start;
+ 30 |     /* スクロールを許可する設定 */
+ 31 |     overflow-y: auto;
+ 32 | }
+ 33 | .setup-box {
+ 34 |     background: #444; padding: 30px; border-radius: 10px; width: 85%; max-width: 400px;
+ 35 | }
+ 36 | .input-group { margin-bottom: 15px; }
+ 37 | .input-group label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #ccc; }
+ 38 | .input-group input {
+ 39 |     width: 100%; padding: 10px; background: #222; border: 1px solid #555; color: white; border-radius: 5px; box-sizing: border-box;
+ 40 | }
+ 41 | 
+ 42 | /* スコアボード */
+ 43 | table { width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #111; text-align: center; font-size: 0.8rem; }
+ 44 | th, td { border: 1px solid #444; padding: 10px 2px; }
+ 45 | .total { background: #444; color: #f1c40f; font-weight: bold; }
+ 46 | 
+ 47 | /* 点滅制御 */
+ 48 | @keyframes blink-score {
+ 49 |     0% { background-color: transparent; }
+ 50 |     50% { background-color: rgba(46, 204, 113, 0.4); }
+ 51 |     100% { background-color: transparent; }
+ 52 | }
+ 53 | .active-cell {
+ 54 |     color: #2ecc71 !important;
+ 55 |     animation: blink-score 1.5s infinite;
+ 56 |     border: 2px solid #2ecc71 !important;
+ 57 | }
+ 58 | .attacking-team-name { color: #2ecc71; font-weight: bold; }
+ 59 | 
+ 60 | /* カウント・ダイヤモンド */
+ 61 | .status-container { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; background: #222; padding: 15px; border-radius: 8px; }
+ 62 | .header-status { display: flex; justify-content: space-between; font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+ 63 | .dot { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #444; margin-left: 5px; }
+ 64 | .ball.active { background: #3498db; }
+ 65 | .strike.active { background: #f1c40f; }
+ 66 | .out.active { background: #e74c3c; }
+ 67 | 
+ 68 | .diamond { position: relative; width: 70px; height: 70px; transform: rotate(45deg); border: 2px solid #444; }
+ 69 | .base { position: absolute; width: 16px; height: 16px; background: #555; }
+ 70 | #base1 { right: -8px; top: -8px; }
+ 71 | #base2 { left: -8px; top: -8px; }
+ 72 | #base3 { left: -8px; bottom: -8px; }
+ 73 | .base.runner { background: #f1c40f; box-shadow: 0 0 8px #f1c40f; }
+ 74 | 
+ 75 | /* ボタン */
+ 76 | .controls { display: grid; gap: 10px; }
+ 77 | .button-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+ 78 | .full-width { grid-template-columns: 1fr; }
+ 79 | .btn { padding: 15px; border: none; border-radius: 5px; font-weight: bold; color: white; background: #555; cursor: pointer; }
+ 80 | .strike { border-bottom: 4px solid #f1c40f; }
+ 81 | .ball { border-bottom: 4px solid #3498db; }
+ 82 | .out { border-bottom: 4px solid #e74c3c; }
+ 83 | .hit, .hr { border-bottom: 4px solid #2ecc71; }
+ 84 | .undo { background: #e67e22; border-bottom: 4px solid #d35400; }
+ 85 | .change-player { background: #1fa8d1; border-bottom: 4px solid #1f9dc4; }
+ 86 | 
+ 87 | /* 閲覧用 */
+ 88 | .game-card {
+ 89 |     background: #2c3e50;
+ 90 |     border-left: 5px solid #3498db;
+ 91 |     margin-bottom: 15px;
+ 92 |     padding: 12px;
+ 93 |     transition: transform 0.2s;
+ 94 | }
+ 95 | .game-card:active { transform: scale(0.98); }
+ 96 | .game-card[data-finished="true"] { border-left-color: #95a5a6; }
+ 97 | 
+ 98 | /*コピーライト用*/
+ 99 | .footer-bottom {
+100 |     text-align: center;
+101 |     margin-top: 40px;
+102 |     padding-top: 20px;
+103 |     border-top: 1px solid #2c3e50;
+104 |     font-size: 0.8rem;
+105 |     color: #7f8c8d;
+106 | }
+107 | 
+108 | /* リーグごとのグループ化用スタイル */
+109 | .league-group {
+110 |     margin-bottom: 40px;
+111 | }
+112 | 
+113 | .league-title {
+114 |     font-size: 1.2rem;
+115 |     color: #2ecc71;
+116 |     border-left: 5px solid #2ecc71;
+117 |     padding-left: 15px;
+118 |     margin-bottom: 15px;
+119 |     background: rgba(46, 204, 113, 0.1);
+120 |     padding-top: 8px;
+121 |     padding-bottom: 8px;
+122 |     border-radius: 0 4px 4px 0;
+123 | }
+124 | 
+125 | /* 試合終了時のカードを少し暗くする */
+126 | .game-card.finished {
+127 |     opacity: 0.8;
+128 |     border-left: 4px solid #95a5a6;
+129 | }
+130 | 
+131 | .game-card.finished .status-badge {
+132 |     background: #7f8c8d;
+133 | }
+134 | 
+135 | /* スマホでのカードの並びを調整 */
+136 | .league-games {
+137 |     display: grid;
+138 |     grid-template-columns: 1fr;
+139 |     gap: 15px;
+140 | }
+141 | 
+142 | @media (min-width: 768px) {
+143 |     .league-games {
+144 |         grid-template-columns: 1fr 1fr;
+145 |     }
+146 | }
+147 | 
+148 | 
+149 | 
+150 | /*投球数のスタイル*/
+151 | /* 投球数表示のボックス */
+152 | .pitch-counter-box {
+153 |     background: #222;
+154 |     border: 2px solid #444;
+155 |     border-radius: 8px;
+156 |     padding: 10px;
+157 |     text-align: center;
+158 |     min-width: 80px;
+159 |     display: flex;
+160 |     flex-direction: column;
+161 |     justify-content: center;
+162 | }
+163 | 
+164 | /* 「投球数」のラベル部分 */
+165 | .pitch-label {
+166 |     font-size: 0.7rem;
+167 |     color: #aaa;
+168 |     font-weight: bold;
+169 |     letter-spacing: 1px;
+170 |     margin-bottom: 2px;
+171 | }
+172 | 
+173 | /* 数字部分（デジタル数字っぽく） */
+174 | #pitching-count {
+175 |     font-family: 'Courier New', Courier, monospace; /* 等幅フォント */
+176 |     font-size: 2rem;
+177 |     color: #2ecc71; /* 緑色、または黄色 (#f1c40f) が見やすい */
+178 |     font-weight: bold;
+179 |     line-height: 1;
+180 | }
+181 | 
+182 | /* レスポンシブ調整：横幅が狭い場合 */
+183 | @media (max-width: 480px) {
+184 |     .status-container {
+185 |         display: flex;
+186 |         justify-content: space-around;
+187 |         align-items: center;
+188 |     }
+189 |     .pitch-counter-box {
+190 |         margin-right: 0;
+191 |         padding: 5px;
+192 |     }
+193 | }
+194 | 
+195 | /*セレクトボックスのスタイル*/
+196 | /* SELECTタグ全体のスタイル */
+197 | select {
+198 |     width: 100%;
+199 |     padding: 12px 15px;
+200 |     font-size: 1rem;
+201 |     color: #fff; /* 文字を白に */
+202 |     background-color: #333; /* 背景をダークグレーに */
+203 |     border: 2px solid #444; /* 境界線を少し明るく */
+204 |     border-radius: 8px;
+205 |     appearance: none; /* デフォルトの矢印を消す（モダンブラウザ用） */
+206 |     -webkit-appearance: none; /* Safari用 */
+207 |     -moz-appearance: none; /* Firefox用 */
+208 |     cursor: pointer;
+209 |     transition: border-color 0.3s, box-shadow 0.3s;
+210 |     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); /* 自作の矢印アイコン */
+211 |     background-repeat: no-repeat;
+212 |     background-position: right 15px center;
+213 |     background-size: 15px;
+214 | }
+215 | 
+216 | /* ホバー（マウスを乗せた時） */
+217 | select:hover {
+218 |     border-color: #2ecc71; /* チームカラーやアクセントカラーに合わせる */
+219 | }
+220 | 
+221 | /* フォーカス（選択中） */
+222 | select:focus {
+223 |     outline: none;
+224 |     border-color: #2ecc71;
+225 |     box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+226 | }
+227 | 
+228 | /* 選択肢（ドロップダウンの中身）のスタイル */
+229 | select option {
+230 |     background-color: #222;
+231 |     color: #fff;
+232 |     padding: 10px;
+233 | }
+234 | 
+235 | /* ラベルとの隙間など */
+236 | .input-group label {
+237 |     display: block;
+238 |     margin-bottom: 8px;
+239 |     color: #ccc;
+240 |     font-size: 0.9rem;
+241 |     font-weight: bold;
+242 | }
+243 | 
+244 | .viewer-header {
+245 |     width: 95%;
+246 |     max-width: 600px;
+247 |     background: #8d8b8b;
+248 |     padding: 10px;
+249 |     border-radius: 8px;
+250 | }
+251 | 
+252 | button { padding: 12px 20px; border: none; border-radius: 6px; background: #43a1ff; color: rgb(255, 255, 255); cursor: pointer; font-weight: bold; }
+253 | .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+254 | .card { background: #2c3e50; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+255 |  
+256 | 
+257 | /* インジケーター全体のコンテナ */
+258 | .match-status-bar {
+259 |   display: flex;
+260 |   justify-content: space-between;
+261 |   align-items: center;
+262 |   background-color: #1a202c; /* ダークネイビー */
+263 |   color: white;
+264 |   padding: 8px 12px;
+265 |   border-radius: 6px;
+266 |   margin: 10px 0;
+267 |   font-family: 'sans-serif';
+268 |   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+269 | }
+270 | 
+271 | /* 各要素の共通スタイル */
+272 | .status-item {
+273 |   display: flex;
+274 |   flex-direction: column; /* 上下にラベルと値を配置 */
+275 |   align-items: center;
+276 |   flex: 1; /* 均等な幅に広がる */
+277 | }
+278 | 
+279 | /* ラベル部分（P, PITCHES, B） */
+280 | .status-item .label {
+281 |   font-size: 10px;
+282 |   text-align: center;
+283 |   width: auto;
+284 |   color: #a0aec0; /* グレー */
+285 |   font-weight: bold;
+286 |   letter-spacing: 0.05em;
+287 |   margin-bottom: 2px;
+288 | }
+289 | 
+290 | /* 値の部分（選手名、数字） */
+291 | .status-item .value {
+292 |   font-size: 16px;
+293 |   font-weight: 700;
+294 |   color: #ffffff;
+295 |   white-space: nowrap;
+296 |   overflow: hidden;
+297 |   text-overflow: ellipsis; /* 名前が長すぎる場合に「...」にする */
+298 |   max-width: 100px;
+299 | }
+300 | 
+301 | /* 投球数（中央）だけ色を変えて目立たせる */
+302 | .pitch-count .value {
+303 |   color: #ed8936; /* オレンジ */
+304 |   font-size: 18px;
+305 | }
+306 | 
+307 | /* 境界線（仕切り）の追加 */
+308 | .status-item:not(:last-child) {
+309 |   border-right: 1px solid #4a5568;
+310 | }
+311 | 
+312 | .notice {
+313 |     border: 2px solid #969595;
+314 |     border-radius: 8px;
+315 |     padding: 10px;
+316 | }
+317 | 
+318 | 
+319 | /* ダイアログ用のCSS*/
+320 | 
+321 | /* モーダル全体の背景（暗転） */
+322 | .modal-overlay {
+323 |   position: fixed;
+324 |   top: 0;
+325 |   left: 0;
+326 |   width: 100%;
+327 |   height: 100%;
+328 |   background-color: rgba(0, 0, 0, 0.6);
+329 |   display: none; /* JavaScriptで表示・非表示を切り替える際は none に変更 */
+330 |   justify-content: center;
+331 |   align-items: center;
+332 |   z-index: 1000;
+333 |   backdrop-filter: blur(4px); /* 背景を少しぼかすとおしゃれです */
+334 | }
+335 | 
+336 | /* ダイアログ本体 */
+337 | .modal-content {
+338 |   background-color: #fff;
+339 |   width: 90%;
+340 |   max-width: 400px;
+341 |   border-radius: 12px;
+342 |   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+343 |   overflow: hidden;
+344 |   animation: modal-fade-in 0.3s ease-out;
+345 | }
+346 | 
+347 | @keyframes modal-fade-in {
+348 |   from { opacity: 0; transform: translateY(-20px); }
+349 |   to { opacity: 1; transform: translateY(0); }
+350 | }
+351 | 
+352 | .modal-header {
+353 |   background-color: #f8f9fa;
+354 |   padding: 15px;
+355 |   text-align: center;
+356 |   border-bottom: 1px solid #eee;
+357 | }
+358 | 
+359 | .modal-header h2 {
+360 |   margin: 0;
+361 |   font-size: 1.2rem;
+362 |   color: #333;
+363 | }
+364 | 
+365 | .modal-body {
+366 |   padding: 25px;
+367 |   text-align: center;
+368 |   line-height: 1.6;
+369 | }
+370 | 
+371 | .highlight-text {
+372 |   font-weight: bold;
+373 |   font-size: 1.1rem;
+374 |   color: #007bff;
+375 |   margin-top: 10px;
+376 | }
+377 | 
+378 | .modal-footer {
+379 |   display: flex;
+380 |   padding: 15px;
+381 |   gap: 10px;
+382 |   border-top: 1px solid #eee;
+383 | }
+384 | 
+385 | /* ボタン共通設定 */
+386 | .modal-footer button {
+387 |   flex: 1;
+388 |   padding: 12px;
+389 |   border: none;
+390 |   border-radius: 6px;
+391 |   font-size: 1rem;
+392 |   font-weight: bold;
+393 |   cursor: pointer;
+394 |   transition: background 0.2s;
+395 | }
+396 | 
+397 | .btn-primary {
+398 |   background-color: #007bff;
+399 |   color: white;
+400 | }
+401 | 
+402 | .btn-primary:hover {
+403 |   background-color: #0056b3;
+404 | }
+405 | 
+406 | .btn-secondary {
+407 |   background-color: #e9ecef;
+408 |   color: #495057;
+409 | }
+410 | 
+411 | .btn-secondary:hover {
+412 |   background-color: #dee2e6;
+413 | }
+
+
+--------------------------------------------------------------------------------
+/edit-games.html:
+--------------------------------------------------------------------------------
+  1 | <!DOCTYPE html>
+  2 | <html lang="ja">
+  3 | <head>
+  4 |     <meta charset="UTF-8">
+  5 |     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  6 |     <title>JUWA 試合速報システム - 試合登録</title>
+  7 |     <link rel="stylesheet" href="style.css">
+  8 | </head>
+  9 | <body>
+ 10 |     <div id="setup-screen" class="overlay">
+ 11 |         <div class="container">
+ 12 |         <div class="card">
+ 13 |         <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+ 14 |             <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+ 15 |             <button type="button" class="btn-sm" onclick="location.href='manual/manual_edit'">操作マニュアル</button>
+ 16 |         </div>
+ 17 |             <h2>試合設定 & 同期</h2>
+ 18 |             <div class="input-group">
+ 19 |                 <label>参加する大会を選択<br>（大会を選択すると追加の設定画面が表示されます。）</label>
+ 20 |                 <select id="select-league" onchange="handleLeagueSelect()">
+ 21 |                     <option value="">リーグを読み込み中...</option>
+ 22 |                 </select>
+ 23 |             </div>
+ 24 | 
+ 25 |             <div id="mode-selection" class="hidden" style="margin-top: 20px;">
+ 26 |                 <label>操作モードを選択</label>
+ 27 |                 <div style="display: flex; gap: 10px; margin-top: 10px;">
+ 28 |                     <button type="button" class="btn-sm" onclick="showNewGameForm()" style="flex:1; background:#2ecc71; color:white;">新規試合を作成</button>
+ 29 |                     <button type="button" class="btn-sm" onclick="showExistingGameForm()" style="flex:1; background:#3498db; color:white;">既存試合を編集</button>
+ 30 |                 </div>
+ 31 |             </div>
+ 32 | 
+ 33 |             <div id="new-game-form" class="hidden" style="margin-top: 20px; border-top: 1px solid #555; padding-top: 15px;">
+ 34 |                 <div class="input-group">
+ 35 |                     <label>試合ID</label>
+ 36 |                     <div style="display: flex; gap: 5px;">
+ 37 |                         <input type="text" id="input-game-id" readonly placeholder="自動発行してください" style="width: 60%;">
+ 38 |                         <button type="button" id="gen-id-btn" class="btn-sm">自動発行</button>
+ 39 |                     </div>
+ 40 |                 </div>
+ 41 |                 <div class="input-group">
+ 42 |                     <label>先攻チーム</label>
+ 43 |                     <div style="display: flex; gap: 5px;">
+ 44 |                     <select id="top-team-name" style="width: 60%;">
+ 45 |                         <option value="loading">チーム情報を読み込み中...</option>
+ 46 |                     </select>
+ 47 |                     <button type="button" id="edit-top-member" onclick="setMemberData(false)">メンバー編集</button>
+ 48 |                     </div>
+ 49 |                 </div>
+ 50 |                 <div class="input-group">
+ 51 |                     <label>後攻チーム</label>
+ 52 |                     <div style="display: flex; gap: 5px;">
+ 53 |                     <select id="bottom-team-name" style="width: 60%;">
+ 54 |                         <option value="loading">チーム情報を読み込み中...</option>
+ 55 |                     </select>
+ 56 |                     <button type="button" id="edit-bottom-member" onclick="setMemberData(true)">メンバー編集</button>
+ 57 |                     </div>
+ 58 |                 </div>
+ 59 |                 <div class="input-group">
+ 60 |                 <label>イニング数</label>
+ 61 |                 <input type="number" id="input-innings" value="3" min="1" max="12" style="width: 30%;">
+ 62 |                 </div>
+ 63 |                 <button type="button" id="start-btn" class="btn-save">この内容で試合開始</button>
+ 64 |             </div>
+ 65 | 
+ 66 |             <div id="existing-game-form" class="hidden" style="margin-top: 20px; border-top: 1px solid #555; padding-top: 15px;">
+ 67 |                 <div class="input-group">
+ 68 |                     <label>編集する試合を選択</label>
+ 69 |                     <select id="select-existing-game">
+ 70 |                         <option value="">試合を読み込み中...</option>
+ 71 |                     </select>
+ 72 |                 </div>
+ 73 |                 <button type="button" onclick="resumeGame()" class="btn-save" style="background:#3498db;">編集を再開する</button>
+ 74 |             </div>
+ 75 | 
+ 76 |             <div id="member-data-form" class="hidden" style="margin-top: 20px; border-top: 1px solid #555; padding-top: 15px;">
+ 77 |                 <div class="input-group">
+ 78 |                     <h3 id="setting-team-name">チーム名</h3>
+ 79 |                     <input type="hidden" value="" id="isBottom">
+ 80 |                     <label>投手</label>
+ 81 |                     <div style="display: flex; gap: 5px;">
+ 82 |                     <select id="pitcher-name" style="width: 60%;">
+ 83 |                         <option value="loading">チーム情報を読み込み中...</option>
+ 84 |                     </select>
+ 85 |                     </div>
+ 86 |                 </div>
+ 87 |                 <div class="input-group">
+ 88 |                     <label>打順</label>
+ 89 |                     <table id="batting-order">
+ 90 |                     <tr>
+ 91 |                         <th style="width: 25%;">打順</th>
+ 92 |                         <th style="width: 50%;">メンバー</th>
+ 93 |                         <th style="width: 25%;">背番号</th>
+ 94 |                     </tr>
+ 95 |                     </table>
+ 96 |                 </div>
+ 97 |                 <button type="button" id="submit-member" onclick="submitMemberData()" class="btn-save">この内容で確定</button>
+ 98 |             </div>
+ 99 |         </div>
+100 |         </div>
+101 |     </div>
+102 | 
+103 |     <div id="main-app" class="container hidden">
+104 |       <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center;">
+105 |             <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
+106 |         </div>
+107 |         <br>
+108 |         <div class="header-status">
+109 |             <div id="display-game-id">ID: ----</div>
+110 |             <div id="sync-status">同期オフライン</div>
+111 |         </div>
+112 |         <div class="share-section" style="margin-top: 20px; padding: 10px; background: #a1a1a1; border-radius: 5px;">
+113 |             <label style="font-size: 12px; color: #000000;">この試合の編集用URL:</label>
+114 |             <div id="share-link" style="word-break: break-all; font-family: monospace; font-size: 12px; margin-bottom: 10px; color: #333;">
+115 |              (URL生成中...)
+116 |             </div>
+117 |             <button type="button" onclick="copyShareLink()" class="btn-sm" style="background: #3498db; color: white; width: 100%;">
+118 |                 URLをコピーする
+119 |             </button>
+120 |         </div>
+121 |         <br>
+122 |         <section class="score-board">
+123 |         <table id="scoreboard">
+124 |             <thead id="scoreboard-head">
+125 |             <tr id="header-row">
+126 |                 <th>チーム</th>
+127 |                 <th>R</th>
+128 |             </tr>
+129 |             </thead>
+130 |             <tbody id="scoreboard-body">
+131 |             <tr id="score-row-top">
+132 |                 <td id="top-team-name-cell" class="team-name-cell">先攻</td>
+133 |                 <td class="total-cell" id="total-score-top">0</td>
+134 |             </tr>
+135 |             <tr id="score-row-bottom">
+136 |                 <td id="bottom-team-name-cell" class="team-name-cell">後攻</td>
+137 |                 <td class="total-cell" id="total-score-bottom">0</td>
+138 |             </tr>
+139 |             </tbody>
+140 |         </table>
+141 |         </section>
+142 |         <section class="pitch-counter-box">
+143 |             <div class="match-status-bar">
+144 |                 <div class="status-item current-pitcher">
+145 |                     <span class="label">ピッチャー</span>
+146 |                     <span id="display-pitcher-name" class="value">読み込み中...</span>
+147 |                 </div>
+148 | 
+149 |                 <div class="status-item pitch-count">
+150 |                     <span class="label">PITCHES</span>
+151 |                     <span id="display-pitch-count" class="value">0</span>
+152 |                 </div>
+153 | 
+154 |                 <div class="status-item current-batter">
+155 |                     <span class="label">バッター</span>
+156 |                     <span id="display-batter-name" class="value">読み込み中...</span>
+157 |                 </div>
+158 |             </div>
+159 |         </section>
+160 |         <div class="status-container">
+161 |             <section class="counts">
+162 |                 <div class="count-row">
+163 |                     <span class="label">B</span>
+164 |                     <div class="dots">
+165 |                         <span class="dot ball"></span><span class="dot ball"></span><span class="dot ball"></span>
+166 |                     </div>
+167 |                 </div>
+168 |                 <div class="count-row">
+169 |                     <span class="label">S</span>
+170 |                     <div class="dots">
+171 |                         <span class="dot strike"></span><span class="dot strike"></span>
+172 |                     </div>
+173 |                 </div>
+174 |                 <div class="count-row">
+175 |                     <span class="label">O</span>
+176 |                     <div class="dots">
+177 |                         <span class="dot out"></span><span class="dot out"></span>
+178 |                     </div>
+179 |                 </div>    
+180 |             </section>
+181 | 
+182 |             <section class="diamond">
+183 |                 <div class="base" id="base2"></div>
+184 |                 <div class="base" id="base3"></div>
+185 |                 <div class="base" id="base1"></div>
+186 |             </section>
+187 |         </div>
+188 | 
+189 |         <section class="controls">
+190 | <div class="button-group">
+191 |     <button type="button" id="strike-btn" class="btn strike">ストライク</button>
+192 |     <button type="button" id="ball-btn" class="btn ball">ボール</button>
+193 |     <button type="button" id="foul-btn" class="btn strike">ファウル</button>
+194 |     <button type="button" id="out-btn" class="btn out">アウト</button>
+195 | </div>
+196 | <div class="button-group">
+197 |     <button type="button" id="single-hit-btn" class="btn hit">シングルヒット</button>
+198 |     <button type="button" id="double-hit-btn" class="btn hit">ダブルヒット</button>
+199 |     <button type="button" id="triple-hit-btn" class="btn hit">トリプルヒット</button>
+200 |     <button type="button" id="hr-btn" class="btn hr">ホームラン</button>
+201 | </div>
+202 |             <div class="button-group full-width">
+203 |                 <button type="button" id="undo-btn" class="btn undo">1つ戻る（修正） </button>
+204 |             </div>
+205 |             <div class="button-group full-width">
+206 |                 <button type="button" id="change-pitcher-btn" class="btn change-player">投手交代</button>
+207 |             </div>
+208 |           <div class="button-group full-width" style="margin-top: 10px;">
+209 |     <button type="button" id="end-game-btn" class="btn" style="background: #c0392b; border-bottom: 4px solid #a93226;">試合を終了する</button>
+210 | </div>
+211 |         </section>
+212 | 
+213 |         <div id="tiebreak-dialog-overlay" class="modal-overlay">
+214 |             <div class="modal-content">
+215 |                 <div class="modal-header">
+216 |                     <span class="icon">?</span>
+217 |                     <h2>試合続行の確認</h2>
+218 |                 </div>
+219 |                 <div class="modal-body">
+220 |                     <p>規定イニングで決着がつきませんでした。</p>
+221 |                     <p class="highlight-text">タイブレーク（無死一二塁）に進みますか？</p>
+222 |                 </div>
+223 |                 <div class="modal-footer">
+224 |                     <button id="btn-tiebreak-no" class="btn-secondary">いいえ（引き分け）</button>
+225 |                     <button id="btn-tiebreak-yes" class="btn-primary">はい（タイブレーク開始）</button>
+226 |                 </div>
+227 |             </div>
+228 |         </div>
+229 | 
+230 |         <div id="player-change-dialog-overlay" class="modal-overlay">
+231 |             <div class="modal-content">
+232 |                 <div class="modal-header">
+233 |                     <span class="icon">?</span>
+234 |                     <h2>投手交代</h2>
+235 |                 </div>
+236 |                 <div class="modal-body">
+237 |                     <p>次のピッチャーを選択してください。</p>
+238 |                     <select id="next-pitcher"> <option>--メンバーを読み込み中--</option></select>
+239 |                 </div>
+240 |                 <div class="modal-footer">
+241 |                     <button id="btn-player-change-yes" class="btn-primary">確定</button>
+242 |                     <button id="btn-player-change-no" class="btn-secondary">キャンセル</button>
+243 |                 </div>
+244 |             </div>
+245 |         </div>
+246 |     </div>
+247 | 
+248 |     <script src="js/common.js"></script>
+249 |     <script src="js/edit-games.js"></script>
+250 | </body>
+251 | </html>
+
+
+--------------------------------------------------------------------------------
+/js/edit-games.js:
+--------------------------------------------------------------------------------
+   1 | /*
+   2 | ======================================================================
+   3 | Project Name    : Scorer
+   4 | File Name       : edit-games.js
+   5 | Version         : v1.0.0
+   6 |  
+   7 | Copyright ? 2026 JapanUniversityWiffleballAssosiation. All rights reserved.
+   8 |  
+   9 | This source code or any portion thereof must not be  
+  10 | reproduced or used in any manner whatsoever.
+  11 | ======================================================================
+  12 |  */
+  13 | 
+  14 | const GAS_URL = CONST_GAS_URL;
+  15 | 
+  16 | // --- 状態管理変数 ---
+  17 | let gameId = "";
+  18 | let counts = { ball: 0, strike: 0, out: 0 };
+  19 | let runners = { base1: false, base2: false, base3: false };
+  20 | let score = { top: {}, bottom: {} };// 各イニングの得点を保持するオブジェクト
+  21 | let totalScore = {top: 0, bottom: 0};
+  22 | let currentInning = 1;
+  23 | let isBottomInning = false;
+  24 | let isGameEnded = false;
+  25 | let historyStack = [];
+  26 | let isPushing = false;
+  27 | let syncTimer = null;
+  28 | let totalInnings = 9;
+  29 | let lastPushTime = 0;
+  30 | let pitchingCount = {top:[0],bottom:[0]};
+  31 | let topTeamName = null;
+  32 | let bottomTeamName = null;
+  33 | let topPlayers = {pitcher:[],batter:[]};
+  34 | let bottomPlayers = {pitcher:[],batter:[]};
+  35 | let battingCount = {top: 0,bottom: 0};
+  36 | 
+  37 | // --- 初期化処理 ---
+  38 | document.addEventListener('DOMContentLoaded', () => {
+  39 |     fetchLeagues();
+  40 |     
+  41 |     // 1. 試合IDの自動生成ボタン
+  42 |     const genIdBtn = document.getElementById('gen-id-btn');
+  43 |     if (genIdBtn) {
+  44 |         genIdBtn.addEventListener('click', () => {
+  45 |             const leagueId = document.getElementById('select-league').value || "G";
+  46 |             const dateStr = new Date().toISOString().slice(2,10).replace(/-/g, '');
+  47 |             const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
+  48 |             document.getElementById('input-game-id').value = `${leagueId}-${dateStr}-${rand}`;
+  49 |         });
+  50 |     }
+  51 | 
+  52 |     // 2. 試合開始ボタン
+  53 |     const startBtn = document.getElementById('start-btn');
+  54 |     if (startBtn) {
+  55 |         startBtn.addEventListener('click', handleStartGame); // 関数に切り出し
+  56 |     }
+  57 | 
+  58 |     // 3. 各操作ボタンの紐付け
+  59 |     const bindBtn = (id, fn) => {
+  60 |         const btn = document.getElementById(id);
+  61 |         if (btn) btn.addEventListener('click', fn);
+  62 |     };
+  63 | 
+  64 |     bindBtn('strike-btn', () => {countPitching();addCount('strike');});
+  65 |     bindBtn('ball-btn', () => {countPitching();addCount('ball');});
+  66 |     bindBtn('foul-btn', () => {countPitching();addCount('foul');});
+  67 |     bindBtn('out-btn', () => {countPitching();addCount('out');});
+  68 | 
+  69 |     bindBtn('single-hit-btn', () => {countPitching();recordPlay('シングルヒット');});
+  70 |     bindBtn('double-hit-btn', () => {countPitching();recordPlay('ダブルヒット');});
+  71 |     bindBtn('triple-hit-btn', () => {countPitching();recordPlay('トリプルヒット');});
+  72 |     bindBtn('hr-btn', () => {countPitching();recordPlay('ホームラン');});
+  73 | 
+  74 |     bindBtn('undo-btn', undo);
+  75 |     bindBtn('change-pitcher-btn',changePitcher);
+  76 |     bindBtn('end-game-btn', endGame);
+  77 | 
+  78 |     const gameId = getQueryParam('gameId');
+  79 |     if(gameId) {
+  80 |         resumeGame(gameId);
+  81 |         startAutoSync();
+  82 |     }
+  83 | });
+  84 | 
+  85 | /**
+  86 |  * URLパラメータを取得する
+  87 |  */
+  88 | function getQueryParam(name) {
+  89 |     const urlParams = new URLSearchParams(window.location.search);
+  90 |     return urlParams.get(name);
+  91 | }
+  92 | 
+  93 | 
+  94 | 
+  95 | /**
+  96 |  * 試合開始ボタンの本体処理
+  97 |  */
+  98 | async function handleStartGame(e) {
+  99 |     e.preventDefault();
+ 100 |     const idInput = document.getElementById('input-game-id');
+ 101 |     const leagueSelect = document.getElementById('select-league');
+ 102 |     
+ 103 |     gameId = idInput.value.trim();
+ 104 |     const leagueId = leagueSelect.value;
+ 105 |     topTeamName = document.getElementById('top-team-name').value;
+ 106 |     bottomTeamName = document.getElementById('bottom-team-name').value;
+ 107 | 
+ 108 |     if (!leagueId || !gameId) {
+ 109 |         alert("リーグを選択し、試合IDを入力してください。");
+ 110 |         return;
+ 111 |     }
+ 112 |     if(!topTeamName || !bottomTeamName) {
+ 113 |         alert("チームを選択してください。");
+ 114 |         return;
+ 115 |     }
+ 116 |     if(topTeamName === bottomTeamName){
+ 117 |         if(!confirm('先攻と後攻のチームが同じです。試合を開始してよろしいですか？')){
+ 118 |             return;
+ 119 |         }
+ 120 |     }
+ 121 |     if(topPlayers.pitcher.length + bottomPlayers.pitcher.length <= 1){
+ 122 |         if(!confirm('ピッチャーが登録されていません。試合を開始してよろしいですか？')){
+ 123 |             return;
+ 124 |         }
+ 125 |     }
+ 126 |     totalInnings = parseInt(document.getElementById('input-innings').value) || 9;
+ 127 |     initScoreboard(topTeamName, bottomTeamName, totalInnings);
+ 128 | 
+ 129 |     document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
+ 130 |     document.getElementById('setup-screen').classList.add('hidden');
+ 131 |     document.getElementById('main-app').classList.remove('hidden');
+ 132 | 
+ 133 |     showStatus("試合を登録中...");
+ 134 |     await syncPush();
+ 135 |     await syncPull();
+ 136 |     updateCountDisplay();
+ 137 |     updateDiamondDisplay();
+ 138 |     updateScoreboardUI();
+ 139 |     updateShareLinkDisplay()
+ 140 |     startAutoPull();
+ 141 | }
+ 142 | 
+ 143 | function startAutoPull() {
+ 144 |     // すでに動いている場合は一度クリア
+ 145 |     if (syncTimer) clearInterval(syncTimer);
+ 146 |     
+ 147 |     // 30秒ごとに syncPull を実行（時間は運営規模に合わせて調整してください）
+ 148 |     syncTimer = setInterval(() => {
+ 149 |         // 自分が入力中（isPushing）は同期しないようにガード
+ 150 |         if (!isPushing) {
+ 151 |             console.log("Auto-syncing data...");
+ 152 |             syncPull(); 
+ 153 |         }
+ 154 |     }, 30000); 
+ 155 | }
+ 156 | 
+ 157 | /**
+ 158 |  * 自動同期を停止する（試合終了時などに使用）
+ 159 |  */
+ 160 | function stopAutoSync() {
+ 161 |     if (syncTimer) {
+ 162 |         clearInterval(syncTimer);
+ 163 |         syncTimer = null;
+ 164 |     }
+ 165 | }
+ 166 | 
+ 167 | 
+ 168 | /**
+ 169 |  * GASへデータを送信 (POST)
+ 170 |  */
+ 171 | async function syncPush(actionName = null, logData = null) {
+ 172 |     if (!gameId) return;
+ 173 |     
+ 174 |     const state = {
+ 175 |         gameId: gameId,
+ 176 |         leagueName: document.getElementById('select-league').selectedOptions[0].text,
+ 177 |         topTeamName: document.getElementById('top-team-name-cell').textContent,
+ 178 |         bottomTeamName: document.getElementById('bottom-team-name-cell').textContent,
+ 179 |         totalInnings: totalInnings,
+ 180 |         score: score,
+ 181 |         totalScore: totalScore,
+ 182 |         counts: counts,
+ 183 |         runners: runners,
+ 184 |         pitchingCount: pitchingCount,
+ 185 |         currentInning: currentInning,
+ 186 |         isBottomInning: isBottomInning,
+ 187 |         isGameEnded: isGameEnded,
+ 188 |         updatedAt: new Date().toISOString(),
+ 189 |         topPlayers : topPlayers,
+ 190 |         bottomPlayers: bottomPlayers,
+ 191 |         battingCount : battingCount
+ 192 |     };
+ 193 | 
+ 194 |     const payload = {
+ 195 |         gameId: gameId,
+ 196 |         state: state, // オブジェクトのまま
+ 197 |         action: actionName,
+ 198 |         logData: logData // 文字列化不要
+ 199 |     };
+ 200 | 
+ 201 |     try {
+ 202 |         await postToGAS(GAS_URL, payload);
+ 203 |         showStatus("同期完了");
+ 204 |         lastPushTime = Date.now();
+ 205 |     } catch (e) {
+ 206 |         showStatus("同期失敗");
+ 207 |     } finally {
+ 208 |         isPushing = false;
+ 209 |     }
+ 210 | }
+ 211 | 
+ 212 | /**
+ 213 |  * リーグ一覧の取得
+ 214 |  */
+ 215 | async function fetchLeagues() {
+ 216 |     try {
+ 217 |         const res = await fetch(`${GAS_URL}?mode=getLeagues`);
+ 218 |         const leagues = await res.json();
+ 219 |         const select = document.getElementById('select-league');
+ 220 |         select.options[0].text = "--リーグを選択--";
+ 221 |         let url = new URL(window.location.href);
+ 222 |         let params = url.searchParams;
+ 223 | 
+ 224 |         leagues.forEach(l => {
+ 225 |             const opt = document.createElement('option');
+ 226 |             opt.value = l.id;
+ 227 |             opt.textContent = l.name;
+ 228 |             if(l.id === params.get('leagueId')){
+ 229 |                 opt.selected = true;
+ 230 |             }
+ 231 |             select.appendChild(opt);
+ 232 |         });
+ 233 | 
+ 234 | 
+ 235 |         if(params.get('leagueId')){
+ 236 |             handleLeagueSelect()
+ 237 |         }
+ 238 |     } catch (e) {
+ 239 |          console.error("League Fetch Error:", e);
+ 240 |     }
+ 241 | }
+ 242 | 
+ 243 | /**
+ 244 |  * スコアボードの初期化
+ 245 |  */
+ 246 | function initScoreboard(top, bottom, innings) {
+ 247 |     updateScoreboardUI();
+ 248 | }
+ 249 | 
+ 250 | /**
+ 251 |  * ステータス表示
+ 252 |  */
+ 253 | function showStatus(msg) {
+ 254 |     const el = document.getElementById('sync-status');
+ 255 |     if (el) el.textContent = msg;
+ 256 | }
+ 257 | 
+ 258 | /**
+ 259 |  * 定期的なデータ取得 (Pull)
+ 260 |  * 他の端末での更新を反映するために実行
+ 261 |  */
+ 262 | async function syncPull() {
+ 263 |     if (isPushing || !gameId) return; // 送信中は受信しない
+ 264 |     if (Date.now() - lastPushTime < 15000) {
+ 265 |         console.log("自分の操作直後のため、外部更新をスキップします");
+ 266 |         return;
+ 267 |     }
+ 268 |     try {
+ 269 |         const response = await fetch(`${GAS_URL}?gameId=${gameId}&_=${Date.now()}`);
+ 270 |         const state = await response.json();
+ 271 | 
+ 272 |         if (state && !state.error) {
+ 273 |             // サーバー側のデータが新しい場合のみ反映（簡易的な競合回避）
+ 274 |             // 実際には updatedAt を比較するロジックが望ましい
+ 275 |             applyState(state);
+ 276 |             showStatus("同期済み");
+ 277 |             startAutoSync();
+ 278 |         }
+ 279 |     } catch (e) {
+ 280 |         console.error("Pull Error:", e);
+ 281 |         showStatus("受信エラー");
+ 282 |     }
+ 283 | }
+ 284 | 
+ 285 | /**
+ 286 |  * 受信したデータを画面に反映
+ 287 |  */
+ 288 | function applyState(state) {
+ 289 |     counts = state.counts || { ball: 0, strike: 0, out: 0 };
+ 290 |     runners = state.runners || { base1: false, base2: false, base3: false };
+ 291 |     score = state.score || { top: 0, bottom: 0 };
+ 292 |     totalScore = state.totalScore || { top: 0, bottom: 0 };
+ 293 |     currentInning = state.currentInning || 1;
+ 294 |     isBottomInning = state.isBottomInning || false;
+ 295 |     isGameEnded = state.isGameEnded || false;
+ 296 |     battingCount = state.battingCount;
+ 297 |     topPlayers = state.topPlayers;
+ 298 |     bottomPlayers = state.bottomPlayers;
+ 299 |     topTeamName = state.topTeamName || "先攻";
+ 300 |     bottomTeamName = state.bottomTeamName || "後攻";
+ 301 |     pitchingCount = state.pitchingCount || {top:[],bottom:[]};
+ 302 | 
+ 303 |     // UI更新
+ 304 |     updateCountDisplay();
+ 305 |     updateDiamondDisplay();
+ 306 |     updateScoreboardUI();
+ 307 |     updateShareLinkDisplay()
+ 308 | }
+ 309 | 
+ 310 | /**
+ 311 |  * カウント操作関数
+ 312 |  */
+ 313 | async function addCount(type) {
+ 314 |     if (isGameEnded || isPushing) return;
+ 315 |     saveHistory();
+ 316 |     if (type === 'strike') {
+ 317 |         counts.strike++;
+ 318 |         if (counts.strike >= 3) {
+ 319 |             counts.out ++;
+ 320 |             await recordPlay('三振');
+ 321 |             if (counts.out >= 3) {
+ 322 |                 handleInningChange();
+ 323 |             }
+ 324 |         }
+ 325 |     } else if (type === 'ball') {
+ 326 |         counts.ball++;
+ 327 |         if (counts.ball >= 4) { recordPlay('四球'); return;}
+ 328 |     } else if (type === 'foul') {
+ 329 |         if(counts.strike <= 2) {
+ 330 |             counts.strike ++;
+ 331 |         }
+ 332 |     } else if (type === 'out') {
+ 333 |         counts.out++;
+ 334 |         await recordPlay('アウト');
+ 335 |         if (counts.out >= 3) {
+ 336 |             handleInningChange();
+ 337 |         }
+ 338 |         return;
+ 339 |     }
+ 340 |     updateCountDisplay();
+ 341 |     updateScoreboardUI();
+ 342 |     syncPush();
+ 343 | }
+ 344 | 
+ 345 | /**
+ 346 |  * 打撃結果の処理
+ 347 |  * @param {string} actionName - "シングルヒット", "四球" など
+ 348 |  */
+ 349 | async function recordPlay(actionName) {
+ 350 |     if (isGameEnded || isPushing) return;
+ 351 |      
+ 352 |     setControlsDisabled(true);
+ 353 |     try{
+ 354 |     if (actionName === "ホームラン") {
+ 355 |         let runs = 1;
+ 356 |         if (runners.base1) runs++;
+ 357 |         if (runners.base2) runs++;
+ 358 |         if (runners.base3) runs++;
+ 359 |         addScore(runs);
+ 360 |         runners = { base1: false, base2: false, base3: false };
+ 361 |     } 
+ 362 |     else if (actionName === "シングルヒット") {
+ 363 |         if (runners.base3) addScore(1);
+ 364 |         runners.base3 = runners.base2;
+ 365 |         runners.base2 = runners.base1;
+ 366 |         runners.base1 = true;
+ 367 |     } 
+ 368 |     else if (actionName === "ダブルヒット") {
+ 369 |         if (runners.base3) addScore(1);
+ 370 |         if (runners.base2) addScore(1);
+ 371 |         runners.base3 = runners.base1;
+ 372 |         runners.base2 = true;
+ 373 |         runners.base1 = false;
+ 374 |     } 
+ 375 |     else if (actionName === "トリプルヒット") {
+ 376 |         let runs = 0;
+ 377 |         if (runners.base1) runs++;
+ 378 |         if (runners.base2) runs++;
+ 379 |         if (runners.base3) runs++;
+ 380 |         addScore(runs);
+ 381 |         runners = { base1: false, base2: false, base3: true };
+ 382 |     }
+ 383 |     // --- 追加：四球（押し出し）のロジック ---
+ 384 |     else if (actionName === "四球") {
+ 385 |         if (runners.base1 && runners.base2 && runners.base3) {
+ 386 |             // 満塁なら押し出し得点
+ 387 |             addScore(1);
+ 388 |         } else if (runners.base1 && runners.base2) {
+ 389 |             // 1,2塁なら3塁へ進塁
+ 390 |             runners.base3 = true;
+ 391 |         } else if (runners.base1) {
+ 392 |             // 1塁のみなら2塁へ進塁
+ 393 |             runners.base2 = true;
+ 394 |         }
+ 395 |         // どんな状況でも1塁は埋まる
+ 396 |         runners.base1 = true;
+ 397 |     }
+ 398 | 
+ 399 |     // カウントリセット
+ 400 |     counts.strike = 0;
+ 401 |     counts.ball = 0;
+ 402 |     
+ 403 |     await syncPush(actionName, getLogSnapshot());
+ 404 |     if(isBottomInning) {
+ 405 |         battingCount.bottom ++;
+ 406 |     }else {
+ 407 |         battingCount.top ++;
+ 408 |     }     
+ 409 |     updateCountDisplay();
+ 410 |     updateDiamondDisplay();
+ 411 |     updateScoreboardUI();
+ 412 |     updateShareLinkDisplay()
+ 413 |     historyStack = [];
+ 414 | 
+ 415 |     }   
+ 416 |     catch(error) {
+ 417 |         console.error("送信エラー:", error);
+ 418 |         alert("データの送信に失敗しました。通信環境を確認してください。");
+ 419 |         undo();
+ 420 |     }finally {
+ 421 | 
+ 422 |         setControlsDisabled(false);
+ 423 |     }
+ 424 | }
+ 425 | /**
+ 426 |  * イニング交代処理
+ 427 |  */
+ 428 | async function handleInningChange() {
+ 429 |     // イニング交代時に「その回の得点」をリセットする
+ 430 |     counts = { ball: 0, strike: 0, out: 0 };
+ 431 |     runners = { base1: false, base2: false, base3: false };
+ 432 |     if (isBottomInning) {
+ 433 |         if(score.bottom[currentInning]===undefined){
+ 434 |             score.bottom[currentInning] = 0
+ 435 |         }
+ 436 |         if (currentInning >= totalInnings) {
+ 437 |             const isTiebreak = await showTiebreakDialogue();
+ 438 |             if (isTiebreak) {
+ 439 |                 console.log("タイブレーク処理を開始します");
+ 440 |                 totalInnings ++;
+ 441 |                 runners = {base1:true, base2: true, base3: false};
+ 442 |                 currentInning++;
+ 443 |                 isBottomInning = false;
+ 444 |             }else {
+ 445 |                 syncPush("試合終了", getLogSnapshot());
+ 446 |                 alert("試合終了です。");
+ 447 |                 stopAutoSync();
+ 448 |             }
+ 449 |         } else {
+ 450 |             currentInning++;
+ 451 |             isBottomInning = false;
+ 452 |         }
+ 453 |     } else {
+ 454 |         isBottomInning = true;
+ 455 |         if(score.top[currentInning]===undefined){
+ 456 |             score.top[currentInning] = 0;
+ 457 |         }
+ 458 |     }
+ 459 |     updateDiamondDisplay();
+ 460 |     updateScoreboardUI();
+ 461 |     updateCountDisplay();
+ 462 |     syncPush();
+ 463 | }
+ 464 | 
+ 465 | /**
+ 466 |  * スコア加算
+ 467 |  */
+ 468 | function addScore(runs) {
+ 469 |     if (isGameEnded || runs <= 0) return; // 0点以下のときは何もしない
+ 470 |     
+ 471 |     if (!isBottomInning) {
+ 472 |         if(score.top[currentInning]===undefined){
+ 473 |             score.top[currentInning] = 0
+ 474 |         }
+ 475 |         score.top[currentInning] += runs;
+ 476 |         totalScore.top += runs;
+ 477 |     } else {
+ 478 |         if(score.bottom[currentInning]===undefined){
+ 479 |             score.bottom[currentInning] = 0
+ 480 |         }
+ 481 |         score.bottom[currentInning] += runs;
+ 482 |         totalScore.bottom += runs;
+ 483 |     }
+ 484 |     // ここでは変数の中身を変えるだけ。描画は updateScoreboardUI に任せる
+ 485 |     updateScoreboardUI();
+ 486 | }
+ 487 | 
+ 488 | /**
+ 489 |  * ログ記録用の現在のスナップショットを作成
+ 490 |  */
+ 491 | function getLogSnapshot() {
+ 492 |     let batter = "バッター"
+ 493 |     if((isBottomInning && bottomPlayers.batter.length>0) || (!isBottomInning && topPlayers.batter.length>0)){
+ 494 |         batter = isBottomInning ?
+ 495 |             bottomPlayers.batter[battingCount.bottom % bottomPlayers.batter.length].name :
+ 496 |             topPlayers.batter[battingCount.top % topPlayers.batter.length].name
+ 497 |     }
+ 498 |     return {
+ 499 |         inning: currentInning,
+ 500 |         isBottom: isBottomInning,
+ 501 |         offenseTeam: isBottomInning ? 
+ 502 |             bottomTeamName : 
+ 503 |             topTeamName,
+ 504 |         defenseTeam: isBottomInning ?
+ 505 |             topTeamName :
+ 506 |             bottomTeamName,
+ 507 |         pitcher: isBottomInning ?
+ 508 |             topPlayers.pitcher.at(-1) || "ピッチャー":
+ 509 |             bottomPlayers.pitcher.at(-1)|| "ピッチャー",
+ 510 |         batter: batter
+ 511 |     };
+ 512 | }
+ 513 | 
+ 514 | /**
+ 515 |  * Undo（やり直し）機能
+ 516 |  */
+ 517 | function undo() {
+ 518 |     if (historyStack.length === 0) return;
+ 519 |     const previousState = historyStack.pop();
+ 520 |     
+ 521 |     counts = previousState.counts;
+ 522 |     runners = previousState.runners;
+ 523 |     score = previousState.score;
+ 524 |     currentInning = previousState.currentInning;
+ 525 |     isBottomInning = previousState.isBottomInning;
+ 526 |     pitchingCount = previousState.pitchingCount;
+ 527 |     battingCount = previousState.battingCount;
+ 528 |     topPlayers = previousState.topPlayers;
+ 529 |     bottomPlayers = previousState.bottomPlayers;
+ 530 |     updateCountDisplay();
+ 531 |     updateDiamondDisplay();
+ 532 |     updateScoreboardUI();
+ 533 |     syncPush("取り消し操作");
+ 534 | }
+ 535 | 
+ 536 | function saveHistory() {
+ 537 |     if (historyStack.length > 20) historyStack.shift();
+ 538 |     historyStack.push(JSON.parse(JSON.stringify({ counts, runners, score, currentInning, isBottomInning, pitchingCount, battingCount, topPlayers, bottomPlayers})));
+ 539 | }
+ 540 | 
+ 541 | /**
+ 542 |  * UI更新系
+ 543 |  */
+ 544 | function updateCountDisplay() {
+ 545 |     const updateDots = (type, count) => {
+ 546 |         const dots = document.querySelectorAll(`.dot.${type}`);
+ 547 |         dots.forEach((dot, i) => dot.classList.toggle('active', i < count));
+ 548 |     };
+ 549 |     updateDots('ball', counts.ball);
+ 550 |     updateDots('strike', counts.strike);
+ 551 |     updateDots('out', counts.out);
+ 552 | 
+ 553 |     document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.top.at(-1) : pitchingCount.bottom.at(-1);
+ 554 |     document.getElementById('display-pitcher-name').textContent = isBottomInning ? topPlayers.pitcher.at(-1)||"ピッチャー" : bottomPlayers.pitcher.at(-1)||"ピッチャー";
+ 555 |     if((isBottomInning&&bottomPlayers.batter.length>0) || (!isBottomInning && topPlayers.batter.length>0)){
+ 556 |         document.getElementById('display-batter-name').textContent = isBottomInning ? bottomPlayers.batter[battingCount.bottom % bottomPlayers.batter.length].name: topPlayers.batter[battingCount.top % topPlayers.batter.length].name;
+ 557 |     }else{
+ 558 |         document.getElementById('display-batter-name').textContent = "バッター"
+ 559 |     }
+ 560 | }
+ 561 | 
+ 562 | function updateDiamondDisplay() {
+ 563 |     document.getElementById('base1').classList.toggle('runner', runners.base1);
+ 564 |     document.getElementById('base2').classList.toggle('runner', runners.base2);
+ 565 |     document.getElementById('base3').classList.toggle('runner', runners.base3);
+ 566 | }
+ 567 | 
+ 568 | /**
+ 569 |  * スコアボードUI更新
+ 570 |  * @returns {void}
+ 571 |  */
+ 572 | function updateScoreboardUI() {
+ 573 |     // 1. 要素を取得
+ 574 |     const headerRow = document.getElementById('header-row');
+ 575 |     const topRow = document.getElementById('score-row-top');
+ 576 |     const bottomRow = document.getElementById('score-row-bottom');
+ 577 | 
+ 578 |     // 2. ここでチェック！どれかが null ならエラーメッセージを出して中断する
+ 579 |     if (!headerRow || !topRow || !bottomRow) {
+ 580 |         console.error("エラー: スコアボードの行が見つかりません。", {headerRow, topRow, bottomRow});
+ 581 |         return; 
+ 582 |     }
+ 583 | 
+ 584 |     
+ 585 |     // --- 以降、安全に実行される ---
+ 586 |     const clearInningCells = (row) => {
+ 587 |         // row が undefined でないことは上記で確認済みなので length は安全に読める
+ 588 |         for (let i = row.cells.length - 2; i >= 1; i--) {
+ 589 |             row.deleteCell(i);
+ 590 |         }
+ 591 |     };
+ 592 | 
+ 593 |     clearInningCells(headerRow);
+ 594 |     clearInningCells(topRow);
+ 595 |     clearInningCells(bottomRow);
+ 596 |     
+ 597 |     //チーム名の設定
+ 598 |     document.getElementById('top-team-name-cell').textContent = topTeamName;
+ 599 |     document.getElementById('bottom-team-name-cell').textContent = bottomTeamName;
+ 600 |     
+ 601 | 
+ 602 |     const displayInnings = Math.max(currentInning, totalInnings);
+ 603 | 
+ 604 |     for (let i = 1; i <= displayInnings; i++) {
+ 605 |         // ヘッダー挿入
+ 606 |         const th = document.createElement('th');
+ 607 |         th.textContent = i;
+ 608 |         headerRow.insertBefore(th, headerRow.cells[headerRow.cells.length - 1]);
+ 609 | 
+ 610 |         // 先攻セル挿入
+ 611 |         const tdTop = document.createElement('td');
+ 612 |         tdTop.textContent = (score.top && score.top[i] !== undefined) ? score.top[i] : "-";
+ 613 |         topRow.insertBefore(tdTop, topRow.cells[topRow.cells.length - 1]);
+ 614 | 
+ 615 |         // 後攻セル挿入
+ 616 |         const tdBottom = document.createElement('td');
+ 617 |         tdBottom.textContent = (score.bottom && score.bottom[i] !== undefined) ? score.bottom[i] : "-";
+ 618 |         bottomRow.insertBefore(tdBottom, bottomRow.cells[bottomRow.cells.length - 1]);
+ 619 | 
+ 620 |         // アクティブ表示（点滅）
+ 621 |         if (i === currentInning) {
+ 622 |             if (!isBottomInning) tdTop.classList.add('active-cell');
+ 623 |             else tdBottom.classList.add('active-cell');
+ 624 |         }
+ 625 |     }
+ 626 | 
+ 627 |     // 合計点の書き換え
+ 628 |     const topTotalEl = document.getElementById('total-score-top');
+ 629 |     const bottomTotalEl = document.getElementById('total-score-bottom');
+ 630 |     if (topTotalEl) topTotalEl.textContent = totalScore.top;
+ 631 |     if (bottomTotalEl) bottomTotalEl.textContent = totalScore.bottom;
+ 632 | }
+ 633 | 
+ 634 | /**
+ 635 |  * 共有リンクを表示用に更新する
+ 636 |  */
+ 637 | function updateShareLinkDisplay() {
+ 638 |     if (!gameId) return;
+ 639 |     
+ 640 |     // 現在のページのURL（?以降を除く）を取得し、gameIdを付与
+ 641 |     const baseUrl = window.location.origin + window.location.pathname;
+ 642 |     const shareUrl = `${baseUrl}?gameId=${gameId}`;
+ 643 |     
+ 644 |     document.getElementById('share-link').textContent = shareUrl;
+ 645 | }
+ 646 | 
+ 647 | async function endGame() {
+ 648 |     if (!confirm("試合を終了しますか？")) return;
+ 649 | 
+ 650 |     isGameEnded = true;
+ 651 |     const finalAction = "試合終了";
+ 652 |     
+ 653 |     // ボタンを無効化して連打を防ぐ
+ 654 |     const endBtn = document.getElementById('end-game-btn');
+ 655 |     if (endBtn) endBtn.disabled = true;
+ 656 | 
+ 657 |     // サーバーに「終了状態」を確実に送り出す
+ 658 |     await syncPush(finalAction);
+ 659 |     
+ 660 |     alert("試合が終了しました。この画面は閲覧専用になります。");
+ 661 |     
+ 662 |     // 最後にUIを更新
+ 663 |     updateScoreboardUI();
+ 664 |     document.body.classList.add('game-over');
+ 665 | }
+ 666 | 
+ 667 | /**
+ 668 |  * 操作ボタンの状態を一括切り替え
+ 669 |  * @param {boolean} disabled - trueで無効化、falseで有効化
+ 670 |  */
+ 671 | function setControlsDisabled(disabled) {
+ 672 |     // 制御対象のボタンを選択（クラス名などで一括指定すると楽）
+ 673 |     const buttons = document.querySelectorAll('button:not(#undo-btn)'); // Undo以外を対象にする例
+ 674 |     buttons.forEach(btn => {
+ 675 |         btn.disabled = disabled;
+ 676 |         // 視覚的に分かりやすくするために透明度を変える
+ 677 |         btn.style.opacity = disabled ? "0.5" : "1.0";
+ 678 |         btn.style.cursor = disabled ? "not-allowed" : "pointer";
+ 679 |     });
+ 680 | }
+ 681 | 
+ 682 | //試合作成時の試合選択処理
+ 683 | /**
+ 684 |  * リーグ選択時のハンドル処理
+ 685 |  */
+ 686 | async function handleLeagueSelect() {
+ 687 |     const leagueId = document.getElementById('select-league').value;
+ 688 |     const modeSelection = document.getElementById('mode-selection');
+ 689 |     
+ 690 |     if (!leagueId) {
+ 691 |         modeSelection.classList.add('hidden');
+ 692 |         return;
+ 693 |     }
+ 694 | 
+ 695 |     // モード選択ボタンを表示
+ 696 |     modeSelection.classList.remove('hidden');
+ 697 |     
+ 698 |     // 既存の試合一覧を裏で取得しておく
+ 699 |     await fetchExistingGames(leagueId);
+ 700 | }
+ 701 | 
+ 702 | /**
+ 703 |  * 特定のリーグに紐づく試合一覧を取得
+ 704 |  */
+ 705 | async function fetchExistingGames(leagueId) {
+ 706 |     const selectExisting = document.getElementById('select-existing-game');
+ 707 |     selectExisting.innerHTML = '<option value="">試合を読み込み中...</option>';
+ 708 | 
+ 709 |     try {
+ 710 |         // GASのdoGetに mode=getGamesByLeague を実装している想定
+ 711 |         const response = await fetch(`${GAS_URL}?mode=getGamesByLeague&leagueId=${leagueId}`);
+ 712 |         const games = await response.json();
+ 713 | 
+ 714 |         selectExisting.innerHTML = '<option value="">-- 編集する試合を選択 --</option>';
+ 715 |         
+ 716 |         if (games.length === 0) {
+ 717 |             selectExisting.innerHTML = '<option value="">(試合がありません)</option>';
+ 718 |             return;
+ 719 |         }
+ 720 | 
+ 721 |         games.forEach(game => {
+ 722 |             if(game.isGameEnded) {
+ 723 |                 return;
+ 724 |             }
+ 725 |             const option = document.createElement('option');
+ 726 |             option.value = game.id;
+ 727 |             option.textContent = `${game.name} (${game.id})`;
+ 728 |             selectExisting.appendChild(option);
+ 729 |         });
+ 730 |     } catch (e) {
+ 731 |         console.error("試合一覧の取得失敗:", e);
+ 732 |         selectExisting.innerHTML = '<option value="">読み込みに失敗しました</option>';
+ 733 |     }
+ 734 | }
+ 735 | 
+ 736 | async function showNewGameForm() {
+ 737 |     document.getElementById('new-game-form').classList.remove('hidden');
+ 738 |     document.getElementById('existing-game-form').classList.add('hidden');
+ 739 |     // 新規作成用にIDを自動生成しておく
+ 740 |     generateGameId(); 
+ 741 |     //チーム情報を取得
+ 742 |     try{
+ 743 |         const response = await fetch(`${GAS_URL}?mode=getTeamMaster`);
+ 744 |         const teams = await response.json();
+ 745 |         const topSelect = document.getElementById('top-team-name');
+ 746 |         const bottomSelect = document.getElementById('bottom-team-name');
+ 747 |         topSelect.innerHTML = '<option value="">-- チームを選択 --</option>';
+ 748 |         teams.forEach(team => {
+ 749 |             const option = document.createElement('option');
+ 750 |             option.value = team.name;
+ 751 |             option.textContent = team.name;
+ 752 |             // チームの全データをデータ属性に保持させておくと展開が楽
+ 753 |             option.dataset.members = JSON.stringify(team.members);
+ 754 |             topSelect.appendChild(option);
+ 755 |         });
+ 756 |         bottomSelect.innerHTML = topSelect.innerHTML;
+ 757 | 
+ 758 |     }catch{
+ 759 |         topSelect.innerHTML = '<option value="">チーム取得時にエラーが発生しました。</option>';
+ 760 |         bottomSelect.innerHTML = '<option value="">チーム取得時にエラーが発生しました。</option>';
+ 761 |     }
+ 762 | }
+ 763 | 
+ 764 | function showExistingGameForm() {
+ 765 |     document.getElementById('existing-game-form').classList.remove('hidden');
+ 766 |     document.getElementById('new-game-form').classList.add('hidden');
+ 767 | }
+ 768 | 
+ 769 | /**
+ 770 |  * 既存の試合データを読み込んでアプリを起動
+ 771 |  */
+ 772 | async function resumeGame(selectedId = null) {
+ 773 |     if(!selectedId){
+ 774 |         selectedId = document.getElementById('select-existing-game').value;
+ 775 |     }
+ 776 |     if (!selectedId) {
+ 777 |         alert("編集する試合を選択してください");
+ 778 |         return;
+ 779 |     }
+ 780 | 
+ 781 |     try {
+ 782 |         // アプリ画面へ
+ 783 |         document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
+ 784 |         document.getElementById('setup-screen').classList.add('hidden');
+ 785 |         document.getElementById('main-app').classList.remove('hidden');
+ 786 | 
+ 787 |         // GASから現在の試合状態(state)を取得
+ 788 |         const response = await fetch(`${GAS_URL}?mode=getGameDetail&gameId=${selectedId}`);
+ 789 |         const gameData = await response.json();
+ 790 | 
+ 791 |         if (!gameData || !gameData.state) {
+ 792 |             throw new Error("試合データが見つかりません");
+ 793 |         }
+ 794 | 
+ 795 |         // --- 状態の復元 (重要!) ---
+ 796 |         const state = (typeof gameData.state === 'string') ? JSON.parse(gameData.state) : gameData.state;
+ 797 |         gameId = selectedId;
+ 798 |         // 試合IDを復元復元
+ 799 |         document.getElementById('display-game-id').textContent = `ID: ${gameId}`;
+ 800 |         totalInnings = state.totalInnings || 9;
+ 801 |         
+ 802 |         applyState(state);
+ 803 | 
+ 804 |     } catch (e) {
+ 805 |         console.error("再開エラー:", e);
+ 806 |         alert("データの読み込みに失敗しました。");
+ 807 |     }
+ 808 | }
+ 809 | 
+ 810 | function generateGameId(){
+ 811 |     const leagueId = document.getElementById('select-league').value || "G";
+ 812 |     const dateStr = new Date().toISOString().slice(2,10).replace(/-/g, '');
+ 813 |     const rand = Math.random().toString(36).substring(2, 5).toUpperCase();
+ 814 |     document.getElementById('input-game-id').value = `${leagueId}-${dateStr}-${rand}`;
+ 815 | }
+ 816 | 
+ 817 | async function changePitcher(){
+ 818 |     let teamMember = isBottomInning ? topPlayers.batter : bottomPlayers.batter;
+ 819 |     
+ 820 |     //投手設定用のプルダウンを作成
+ 821 |     const pitcherSelect = document.getElementById('next-pitcher');
+ 822 |     const setPitcherName = isBottomInning ? topPlayers.pitcher.slice(-1)[0] : bottomPlayers.pitcher.slice(-1)[0];
+ 823 |     pitcherSelect.innerHTML = '<option value="">-- ピッチャーを選択 --</option>';
+ 824 |     teamMember.forEach((member) => {
+ 825 |         let pitcherOption = document.createElement('option');
+ 826 |         pitcherOption.value = member.name;
+ 827 |         pitcherOption.textContent = member.name;
+ 828 |         if(setPitcherName===member.name){
+ 829 |             pitcherOption.selected = true;
+ 830 |         }
+ 831 |         pitcherSelect.appendChild(pitcherOption);
+ 832 | 
+ 833 |     })
+ 834 | 
+ 835 |     const nextPitcher = await showPlayerChangeDialogue();
+ 836 |     
+ 837 |     if(!nextPitcher || nextPitcher === setPitcherName){
+ 838 |         return;
+ 839 |     }
+ 840 |     if(isBottomInning) {
+ 841 |         pitchingCount.top.push(0);
+ 842 |         topPlayers.pitcher.push(nextPitcher)
+ 843 |     }else{
+ 844 |         pitchingCount.bottom.push(0);
+ 845 |         bottomPlayers.pitcher.push(nextPitcher)
+ 846 |     }
+ 847 |     updateCountDisplay();
+ 848 |     await syncPush();
+ 849 | }
+ 850 | 
+ 851 | function countPitching(){
+ 852 |     if(isGameEnded){
+ 853 |         return;
+ 854 |     }
+ 855 |     // 配列が空、またはundefinedの場合の初期化（保険）
+ 856 |     if (!pitchingCount.bottom) pitchingCount.bottom = [0];
+ 857 |     if (!pitchingCount.top) pitchingCount.top = [0];
+ 858 | 
+ 859 |     if (isBottomInning) {
+ 860 |         // 配列の最後（現在の投手）をインクリメント
+ 861 |         let idx = pitchingCount.top.length - 1;
+ 862 |         pitchingCount.top[idx] = (pitchingCount.top[idx] || 0) + 1;
+ 863 |     } else {
+ 864 |         let idx = pitchingCount.bottom.length - 1;
+ 865 |         pitchingCount.bottom[idx] = (pitchingCount.bottom[idx] || 0) + 1;
+ 866 |     }
+ 867 |     // ここでUIを更新（表示に即座に反映させる）
+ 868 |     document.getElementById('display-pitch-count').textContent = isBottomInning ? pitchingCount.top.at(-1) : pitchingCount.bottom.at(-1);
+ 869 | }
+ 870 | 
+ 871 | function setMemberData(isBottom) {
+ 872 | 
+ 873 |     const target = isBottom ? 'bottom-team-name' : 'top-team-name';
+ 874 |     
+ 875 |     const selectedTeam = document.getElementById(target);
+ 876 |     
+ 877 |     if(!selectedTeam.value) {
+ 878 |         alert('チームを選択してください。');
+ 879 |         return;
+ 880 |     }
+ 881 | 
+ 882 |     const teamName = selectedTeam.options[selectedTeam.selectedIndex].textContent;
+ 883 |     let teamMember = JSON.parse(selectedTeam.options[selectedTeam.selectedIndex].dataset.members);
+ 884 |     
+ 885 |     //隠しフィールドに、先後を保持する。
+ 886 |     document.getElementById('isBottom').value = isBottom ? "bottom" : "top" ;
+ 887 | 
+ 888 |     document.getElementById("setting-team-name").textContent = teamName;
+ 889 | 
+ 890 |     //投手設定用のプルダウンを作成
+ 891 |     const pitcherSelect = document.getElementById('pitcher-name');
+ 892 |     pitcherSelect.innerHTML = '<option value="">-- ピッチャーを選択 --</option>';
+ 893 |     teamMember.forEach((member) => {
+ 894 |         let pitcherOption = document.createElement('option');
+ 895 |         pitcherOption.value = member.name;
+ 896 |         pitcherOption.textContent = member.name;
+ 897 |         pitcherSelect.appendChild(pitcherOption);
+ 898 |     })
+ 899 | 
+ 900 |     //打順設定用のテーブルを作成
+ 901 |     let orderTable =document.getElementById('batting-order');
+ 902 |     orderTable.innerHTML = 
+ 903 |     '<tr> <th style="width: 25%;">打順</th> <th style="width: 50%;">メンバー</th> <th style="width: 25%;">背番号</th></tr>';
+ 904 |     let setMemberData = isBottom ? bottomPlayers.batter : topPlayers.batter;
+ 905 |     teamMember.forEach((member) => {
+ 906 |         let memberRow = document.createElement('tr');
+ 907 |         let orderCell = document.createElement('td');
+ 908 |         let nameCell = document.createElement('td');
+ 909 |         let numberCell = document.createElement('td');
+ 910 |         let orderInput = document.createElement('input');
+ 911 |         orderInput.type = "number";
+ 912 |         orderInput.max = teamMember.length;
+ 913 |         orderInput.min = "1";
+ 914 | 
+ 915 |         let setOrder = setMemberData.findIndex(data => data.name === member.name) + 1;
+ 916 |         orderInput.value = setOrder > 0 ? setOrder : member.order;
+ 917 |         orderCell.appendChild(orderInput);
+ 918 |         nameCell.textContent = member.name;
+ 919 |         numberCell.textContent = member.number;
+ 920 |             
+ 921 |         memberRow.appendChild(orderCell);
+ 922 |         memberRow.appendChild(nameCell);
+ 923 |         memberRow.appendChild(numberCell);
+ 924 | 
+ 925 |         orderTable.appendChild(memberRow);
+ 926 |     });
+ 927 |     
+ 928 |     document.getElementById('new-game-form').classList.add("hidden");
+ 929 |     document.getElementById('member-data-form').classList.remove("hidden");
+ 930 | }
+ 931 | 
+ 932 | function submitMemberData() {
+ 933 |     const pitcherName = document.getElementById('pitcher-name').value;
+ 934 |     if(!pitcherName){
+ 935 |         alert("ピッチャーを選択してください。");
+ 936 |         return;
+ 937 |     }
+ 938 |     let memberList = [];
+ 939 |     const orderTable = document.getElementById('batting-order');
+ 940 |     const orderRow = orderTable.querySelectorAll('tr');
+ 941 |     //ヘッダーを抜いてtr分ループする。
+ 942 |     for(let i = 1; i < orderRow.length; i++){
+ 943 |         let cells = orderRow[i].querySelectorAll('td');
+ 944 |         let battingOrder = cells[0].firstElementChild.value;
+ 945 |         if(!battingOrder) {
+ 946 |             continue;
+ 947 |         }
+ 948 |         if(memberList[battingOrder-1]!=null){
+ 949 |             alert('打順が重複しています。');
+ 950 |             return;
+ 951 |         }
+ 952 |         let member = {
+ 953 |             name: cells[1].textContent,
+ 954 |             number: cells[2].textContent
+ 955 |         }
+ 956 |         memberList[battingOrder-1] = member;
+ 957 |         
+ 958 |     }
+ 959 | 
+ 960 |     const index = memberList.findIndex(x => x == null);
+ 961 | 
+ 962 |     if(index >= 0){
+ 963 |         alert('打順に抜けがあります。打順を確認してください。');
+ 964 |         return;
+ 965 |     }
+ 966 | 
+ 967 |     if(document.getElementById('isBottom').value === "bottom"){
+ 968 |         bottomPlayers.pitcher = [pitcherName];
+ 969 |         bottomPlayers.batter = memberList.slice();
+ 970 |     }else{
+ 971 |         topPlayers.pitcher = [pitcherName];
+ 972 |         topPlayers.batter = memberList.slice();
+ 973 |     }
+ 974 |     document.getElementById('new-game-form').classList.remove("hidden");
+ 975 |     document.getElementById('member-data-form').classList.add("hidden");    
+ 976 | }
+ 977 | 
+ 978 | function showTiebreakDialogue() {
+ 979 |     return new Promise((resolve) => {
+ 980 |         document.getElementById('tiebreak-dialog-overlay').style.display = 'flex';
+ 981 | 
+ 982 |         const select = (result) => {
+ 983 |             document.getElementById('tiebreak-dialog-overlay').style.display = 'none';
+ 984 |             resolve(result);
+ 985 |         }
+ 986 |         //はいを押したとき
+ 987 |         document.getElementById('btn-tiebreak-yes').onclick = () => select(true);
+ 988 | 
+ 989 |         // いいえを押したとき
+ 990 |         document.getElementById('btn-tiebreak-no').onclick = () => select(false);
+ 991 |     })
+ 992 |     
+ 993 | }
+ 994 | 
+ 995 | function showPlayerChangeDialogue() {
+ 996 |     return new Promise((resolve) => {
+ 997 |         document.getElementById('player-change-dialog-overlay').style.display = 'flex';
+ 998 | 
+ 999 |         const select = (result) => {
+1000 |             document.getElementById('player-change-dialog-overlay').style.display = 'none';
+1001 |             resolve(result);
+1002 |         }
+1003 |         //はいを押したとき
+1004 |         document.getElementById('btn-player-change-yes').onclick = () => select(document.getElementById('next-pitcher').value);
+1005 | 
+1006 |         // いいえを押したとき
+1007 |         document.getElementById('btn-player-change-no').onclick = () => select(null);
+1008 |     })
+1009 |     
+1010 | }
+1011 | 
+1012 | /**
+1013 |  * id="share-link" のテキストをクリップボードにコピーする
+1014 |  */
+1015 | async function copyShareLink() {
+1016 |     const linkText = document.getElementById('share-link').textContent;
+1017 |     
+1018 |     try {
+1019 |         await navigator.clipboard.writeText(linkText);
+1020 |         alert("URLをクリップボードにコピーしました！\nそのままLINE等に貼り付けて共有できます。");
+1021 |     } catch (err) {
+1022 |         console.error('コピーに失敗しました: ', err);
+1023 |         alert("コピーに失敗しました。お使いのブラウザの設定を確認してください。");
+1024 |     }
+1025 | }
+1026 | 
+
+
+--------------------------------------------------------------------------------

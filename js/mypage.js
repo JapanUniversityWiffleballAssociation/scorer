@@ -22,44 +22,56 @@ document.addEventListener('DOMContentLoaded', () => {
  * 1. ユーザー情報の編集（表示名・パスワード変更）
  */
 async function updateProfile() {
+  document.getElementById('profile-update-btn').disabled = true; // ボタンを無効化して多重送信防止
+  document.getElementById('profile-update-btn').textContent = "更新中...";
   const displayName = document.getElementById('profile-name').value.trim();
   const newPassword = document.getElementById('profile-password').value;
   const hassednewPassword = await AuthService.hashPassword(newPassword);
   const confirmPassword = document.getElementById('profile-password-confirm').value;
-  
+  const email = document.getElementById('profile-email').value.trim();
 
-  if (!displayName && !newPassword) {
-    await CustomDialog.alert("エラー", "変更内容を入力してください。");
+  if (!displayName && !newPassword && !email) {
+    await CustomDialog.alert("変更内容を入力してください。","エラー");
+    document.getElementById('profile-update-btn').disabled = false;
+    document.getElementById('profile-update-btn').textContent = "更新する";
     return;
   }
 
   if (newPassword !== confirmPassword) {
-    await CustomDialog.alert("エラー", "パスワードと確認用パスワードが一致しません。");
+    await CustomDialog.alert("パスワードと確認用パスワードが一致しません。","エラー");
+    document.getElementById('profile-update-btn').disabled = false;
+    document.getElementById('profile-update-btn').textContent = "更新する";
     return;
   }
 
   const passwordHasBoth = (newPassword) => /[a-zA-Z]/.test(newPassword) && /\d/.test(newPassword);
       if(!passwordHasBoth(newPassword) && newPassword.length < 8){
-        await CustomDialog.alert("エラー", "パスワードは数字とアルファベットの両方を含む8文字以上である必要があります。");
+        await CustomDialog.alert("パスワードは数字とアルファベットの両方を含む8文字以上である必要があります。","エラー");
+        document.getElementById('profile-update-btn').disabled = false;
+        document.getElementById('profile-update-btn').textContent = "更新する";
         return;
       }
 
   const payload = {
     mode: 'updateProfile',
     api_key: getApiKey(),
+    email: email,
     displayName: displayName,
     newPassword: hassednewPassword
   };
 
   try {
     const result = await postToGAS(GAS_URL, payload);
-    await CustomDialog.alert("成功", result.message);
+    await CustomDialog.alert(result.message, "成功");
     document.getElementById('profile-password').value = ""; // パスワード欄のみクリア
     document.getElementById('profile-password-confirm').value = ""; // 確認用パスワード欄もクリア
   } catch (e) {
     await CustomDialog.init();
-    await CustomDialog.alert("エラー", "更新に失敗しました: " + e.message);
-    }
+    await CustomDialog.alert("更新に失敗しました: " + e.message, "エラー");
+  } finally {
+    document.getElementById('profile-update-btn').disabled = false;
+    document.getElementById('profile-update-btn').textContent = "更新する";
+  }
 }
 
 /**
@@ -73,9 +85,9 @@ async function toggleMail() {
 
   try {
     const result = await postToGAS(GAS_URL, payload);
-    await CustomDialog.alert("成功",  result.message);
+    await CustomDialog.alert(result.message, "成功");
   } catch (e) {
-    await CustomDialog.alert("エラー", "メール配信設定の切り替えに失敗しました: " + e.message);
+    await CustomDialog.alert("メール配信設定の切り替えに失敗しました: " + e.message, "エラー");
   }
 }
 
@@ -114,7 +126,7 @@ async function loadJoinRequests() {
       listEl.innerHTML = "<p>現在、チームへの加入申請はありません。</p>";
     }
   } catch (e) {
-    await CustomDialog.alert("エラー", "データの取得に失敗しました。");
+    await CustomDialog.alert("データの取得に失敗しました。", "エラー");
   }
 }
 
@@ -126,7 +138,7 @@ async function sendInquiry() {
   const message = document.getElementById('inquiry-message').value.trim();
 
   if (!subject || !message) {
-    await CustomDialog.alert("エラー", "件名と問い合わせ内容を両方入力してください。");
+    await CustomDialog.alert("件名と問い合わせ内容を両方入力してください。", "エラー");
     return;
   }
 
@@ -143,7 +155,7 @@ async function sendInquiry() {
     btn.textContent = "送信中...";
 
     const result = await postToGAS(GAS_URL, payload);
-    await CustomDialog.alert("成功", result.message);
+    await CustomDialog.alert(result.message, "成功");
     
     // 送信成功時はフォームをクリア
     if (result.status === "success") {
@@ -151,7 +163,7 @@ async function sendInquiry() {
       document.getElementById('inquiry-message').value = "";
     }
   } catch (e) {
-    await CustomDialog.alert("エラー", "送信に失敗しました: " + e.message);
+    await CustomDialog.alert("送信に失敗しました: " + e.message, "エラー");
   } finally {
     const btn = document.querySelector('button[onclick="sendInquiry()"]');
     btn.disabled = false;
