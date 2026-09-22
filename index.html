@@ -139,7 +139,7 @@
     const result = await AuthService.login(userId, pass);
 
     if (result.success) {
-
+        
         // URLパラメータを確認して遷移先を決定
         const urlParams = new URLSearchParams(window.location.search);
         const redirectTarget = urlParams.get('redirect');

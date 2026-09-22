@@ -1,53 +1,69 @@
-// GAS_URL‚Í common.js ‚Å’è‹`‚³‚ê‚Ä‚¢‚é CONST_GAS_URL ‚ğg—p
+// GAS_URLã¯ common.js ã§å®šç¾©ã•ã‚Œã¦ã„ã‚‹ CONST_GAS_URL ã‚’ä½¿ç”¨
 const GAS_URL = CONST_GAS_URL;
 
-// ƒƒOƒCƒ“‚É•Û‘¶‚³‚ê‚½APIƒL[‚ğæ“¾‚·‚éŠÖ”iÀ‘•ŠÂ‹«‚É‡‚í‚¹‚Ä’²®‚µ‚Ä‚­‚¾‚³‚¢j
+// ãƒ­ã‚°ã‚¤ãƒ³æ™‚ã«ä¿å­˜ã•ã‚ŒãŸAPIã‚­ãƒ¼ã‚’å–å¾—ã™ã‚‹é–¢æ•°ï¼ˆå®Ÿè£…ç’°å¢ƒã«åˆã‚ã›ã¦èª¿æ•´ã—ã¦ãã ã•ã„ï¼‰
 function getApiKey() {
-  return localStorage.getItem('api_key') || "";
+  return localStorage.getItem('juwa_api_key') || "";
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const apiKey = getApiKey();
   if (!apiKey) {
-    alert("ƒƒOƒCƒ“‚ª•K—v‚Å‚·B");
-    location.href = 'index.html'; // ƒƒOƒCƒ“‰æ–Ê‚ÖƒŠƒ_ƒCƒŒƒNƒg
+    alert("ãƒ­ã‚°ã‚¤ãƒ³ãŒå¿…è¦ã§ã™ã€‚");
+    location.href = 'index.html'; // ãƒ­ã‚°ã‚¤ãƒ³ç”»é¢ã¸ãƒªãƒ€ã‚¤ãƒ¬ã‚¯ãƒˆ
     return;
   }
   
-  // ‰æ–Êƒ[ƒh‚É\¿ó‹µ‚ğæ“¾
+  // ç”»é¢ãƒ­ãƒ¼ãƒ‰æ™‚ã«ç”³è«‹çŠ¶æ³ã‚’å–å¾—
   loadJoinRequests();
 });
 
 /**
- * 1. ƒ†[ƒU[î•ñ‚Ì•ÒWi•\¦–¼EƒpƒXƒ[ƒh•ÏXj
+ * 1. ãƒ¦ãƒ¼ã‚¶ãƒ¼æƒ…å ±ã®ç·¨é›†ï¼ˆè¡¨ç¤ºåãƒ»ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰å¤‰æ›´ï¼‰
  */
 async function updateProfile() {
   const displayName = document.getElementById('profile-name').value.trim();
   const newPassword = document.getElementById('profile-password').value;
+  const hassednewPassword = await AuthService.hashPassword(newPassword);
+  const confirmPassword = document.getElementById('profile-password-confirm').value;
+  
 
   if (!displayName && !newPassword) {
-    alert("•ÏX‚·‚é“à—e‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B");
+    await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "å¤‰æ›´å†…å®¹ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚");
     return;
   }
+
+  if (newPassword !== confirmPassword) {
+    await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã¨ç¢ºèªç”¨ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒä¸€è‡´ã—ã¾ã›ã‚“ã€‚");
+    return;
+  }
+
+  const passwordHasBoth = (newPassword) => /[a-zA-Z]/.test(newPassword) && /\d/.test(newPassword);
+      if(!passwordHasBoth(newPassword) && newPassword.length < 8){
+        await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã¯æ•°å­—ã¨ã‚¢ãƒ«ãƒ•ã‚¡ãƒ™ãƒƒãƒˆã®ä¸¡æ–¹ã‚’å«ã‚€8æ–‡å­—ä»¥ä¸Šã§ã‚ã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚");
+        return;
+      }
 
   const payload = {
     mode: 'updateProfile',
     api_key: getApiKey(),
     displayName: displayName,
-    newPassword: newPassword
+    newPassword: hassednewPassword
   };
 
   try {
     const result = await postToGAS(GAS_URL, payload);
-    alert(result.message);
-    document.getElementById('profile-password').value = ""; // ƒpƒXƒ[ƒh—“‚Ì‚İƒNƒŠƒA
+    await CustomDialog.alert("æˆåŠŸ", result.message);
+    document.getElementById('profile-password').value = ""; // ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰æ¬„ã®ã¿ã‚¯ãƒªã‚¢
+    document.getElementById('profile-password-confirm').value = ""; // ç¢ºèªç”¨ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰æ¬„ã‚‚ã‚¯ãƒªã‚¢
   } catch (e) {
-    alert("XV‚É¸”s‚µ‚Ü‚µ‚½: " + e.message);
-  }
+    await CustomDialog.init();
+    await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "æ›´æ–°ã«å¤±æ•—ã—ã¾ã—ãŸ: " + e.message);
+    }
 }
 
 /**
- * 2. ƒ[ƒ‹”zM‚ÌØ‚è‘Ö‚¦
+ * 2. ãƒ¡ãƒ¼ãƒ«é…ä¿¡ã®åˆ‡ã‚Šæ›¿ãˆ
  */
 async function toggleMail() {
   const payload = {
@@ -57,21 +73,20 @@ async function toggleMail() {
 
   try {
     const result = await postToGAS(GAS_URL, payload);
-    alert(result.message);
+    await CustomDialog.alert("æˆåŠŸ",  result.message);
   } catch (e) {
-    alert("İ’è‚Ì•ÏX‚É¸”s‚µ‚Ü‚µ‚½: " + e.message);
+    await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "ãƒ¡ãƒ¼ãƒ«é…ä¿¡è¨­å®šã®åˆ‡ã‚Šæ›¿ãˆã«å¤±æ•—ã—ã¾ã—ãŸ: " + e.message);
   }
 }
 
 /**
- * 3. \¿ó‹µ‚ÌŠm”F
+ * 3. ç”³è«‹çŠ¶æ³ã®ç¢ºèª
  */
 async function loadJoinRequests() {
   const listEl = document.getElementById('join-request-list');
   
   const payload = {
     mode: 'getJoinRequests',
-    api_key: getApiKey()
   };
 
   try {
@@ -79,13 +94,13 @@ async function loadJoinRequests() {
     
     if (result.requests && result.requests.length > 0) {
       let html = '<table style="width: 100%; border-collapse: collapse; text-align: left;">';
-      html += '<tr style="border-bottom: 1px solid #444;"><th>ƒ`[ƒ€–¼</th><th>\¿“ú</th><th>ó‘Ô</th></tr>';
+      html += '<tr style="border-bottom: 1px solid #444;"><th>ãƒãƒ¼ãƒ å</th><th>ç”³è«‹æ—¥</th><th>çŠ¶æ…‹</th></tr>';
       
       result.requests.forEach(req => {
         let badgeClass = 'status-pending';
-        let statusText = '³”F‘Ò‚¿';
-        if (req.status === 'APPROVED') { badgeClass = 'status-approved'; statusText = '³”FÏ'; }
-        if (req.status === 'REJECTED') { badgeClass = 'status-rejected'; statusText = '‹‘”Û'; }
+        let statusText = 'æ‰¿èªå¾…ã¡';
+        if (req.status === 'APPROVED') { badgeClass = 'status-approved'; statusText = 'æ‰¿èªæ¸ˆ'; }
+        if (req.status === 'REJECTED') { badgeClass = 'status-rejected'; statusText = 'æ‹’å¦'; }
 
         html += `<tr style="border-bottom: 1px solid #444;">
                   <td style="padding: 8px 0;">${req.teamName}</td>
@@ -96,22 +111,22 @@ async function loadJoinRequests() {
       html += '</table>';
       listEl.innerHTML = html;
     } else {
-      listEl.innerHTML = "<p>Œ»İAƒ`[ƒ€‚Ö‚Ì‰Á“ü\¿‚Í‚ ‚è‚Ü‚¹‚ñB</p>";
+      listEl.innerHTML = "<p>ç¾åœ¨ã€ãƒãƒ¼ãƒ ã¸ã®åŠ å…¥ç”³è«‹ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚</p>";
     }
   } catch (e) {
-    listEl.innerHTML = "<p style='color: #e74c3c;'>ƒf[ƒ^‚Ìæ“¾‚É¸”s‚µ‚Ü‚µ‚½B</p>";
+    await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "ãƒ‡ãƒ¼ã‚¿ã®å–å¾—ã«å¤±æ•—ã—ã¾ã—ãŸã€‚");
   }
 }
 
 /**
- * 4. ƒVƒXƒeƒ€ŠÇ—Ò‚Ö‚Ì–â‚¢‡‚í‚¹
+ * 4. ã‚·ã‚¹ãƒ†ãƒ ç®¡ç†è€…ã¸ã®å•ã„åˆã‚ã›
  */
 async function sendInquiry() {
   const subject = document.getElementById('inquiry-subject').value.trim();
   const message = document.getElementById('inquiry-message').value.trim();
 
   if (!subject || !message) {
-    alert("Œ–¼‚Æ–â‚¢‡‚í‚¹“à—e‚ğ—¼•û“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B");
+    await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "ä»¶åã¨å•ã„åˆã‚ã›å†…å®¹ã‚’ä¸¡æ–¹å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚");
     return;
   }
 
@@ -125,21 +140,21 @@ async function sendInquiry() {
   try {
     const btn = document.querySelector('button[onclick="sendInquiry()"]');
     btn.disabled = true;
-    btn.textContent = "‘—M’†...";
+    btn.textContent = "é€ä¿¡ä¸­...";
 
     const result = await postToGAS(GAS_URL, payload);
-    alert(result.message);
+    await CustomDialog.alert("æˆåŠŸ", result.message);
     
-    // ‘—M¬Œ÷‚ÍƒtƒH[ƒ€‚ğƒNƒŠƒA
+    // é€ä¿¡æˆåŠŸæ™‚ã¯ãƒ•ã‚©ãƒ¼ãƒ ã‚’ã‚¯ãƒªã‚¢
     if (result.status === "success") {
       document.getElementById('inquiry-subject').value = "";
       document.getElementById('inquiry-message').value = "";
     }
   } catch (e) {
-    alert("‘—M‚É¸”s‚µ‚Ü‚µ‚½: " + e.message);
+    await CustomDialog.alert("ã‚¨ãƒ©ãƒ¼", "é€ä¿¡ã«å¤±æ•—ã—ã¾ã—ãŸ: " + e.message);
   } finally {
     const btn = document.querySelector('button[onclick="sendInquiry()"]');
     btn.disabled = false;
-    btn.textContent = "–â‚¢‡‚í‚¹‚ğ‘—M‚·‚é";
+    btn.textContent = "å•ã„åˆã‚ã›ã‚’é€ä¿¡ã™ã‚‹";
   }
 }

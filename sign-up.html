@@ -244,7 +244,7 @@
       errorEl.textContent = '登録処理中...';
       errorEl.style.color = '#007bff';
 
-      const result = await AuthService.register(email, displayName, password);
+      const result = await AuthService.register(email, displayName, await AuthService.hashPassword(password));
 
       if (result.success) {
         alert('ユーザー登録が完了しました！チームに参加する場合はチーム管理メニューから操作してください。');

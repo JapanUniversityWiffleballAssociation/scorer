@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JUWA �ȈՃX�R�A�V�X�e�� - �}�C�y�[�W</title>
+  <title>JUWA 簡易スコアシステム - マイページ</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* �}�C�y�[�W�ŗL�̒ǉ��X�^�C�� */
+    /* マイページ固有の追加スタイル */
     .section-card {
       background: #2c3e50;
       padding: 20px;
@@ -35,51 +35,55 @@
 <body>
   <div class="container">
     <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <button type="button" class="btn-sm" onclick="location.href='index.html'">���j���[�ɖ߂�</button>
-      <span style="font-weight: bold; color: white;">�}�C�y�[�W</span>
+      <span style="font-weight: bold; color: white;">マイページ</span>
     </div>
 
-    <!-- 1. ���[�U�[���̕ҏW -->
+    <!-- 1. ユーザー情報の編集 -->
     <div class="section-card">
-      <h3>���[�U�[���̕ҏW</h3>
+      <h3>ユーザー情報の編集</h3>
       <div class="input-group">
-        <label>�\����</label>
-        <input type="text" id="profile-name" placeholder="�V�����\���������">
+        <label>表示名</label>
+        <input type="text" id="profile-name" placeholder="新しい表示名を入力">
+      </div>
+      
+      <div class="input-group">
+        <label>パスワード変更</label>
+        <input type="password" id="profile-password" placeholder="変更する場合のみ入力">
       </div>
       <div class="input-group">
-        <label>�p�X���[�h�ύX</label>
-        <input type="password" id="profile-password" placeholder="�ύX����ꍇ�̂ݓ���">
+        <label>パスワード変更（確認）</label>
+        <input type="password" id="profile-password-confirm" placeholder="再度入力">
       </div>
-      <button type="button" class="btn" onclick="updateProfile()">�����X�V����</button>
+      <button type="button" class="btn" onclick="updateProfile()">情報を更新する</button>
     </div>
 
-    <!-- 2. ���[���z�M�̐؂�ւ� -->
+    <!-- 2. メール配信の切り替え -->
     <div class="section-card">
-      <h3>���[���ʒm�ݒ�</h3>
-      <p style="font-size: 0.9rem; color: #bdc3c7;">�`�[���\���̌��ʂȂǂ̒ʒm���[�����󂯎�邩�ݒ肵�܂��B</p>
-      <button type="button" class="btn btn-toggle" id="btn-toggle-mail" onclick="toggleMail()">���[���z�M��؂�ւ���</button>
+      <h3>メール通知設定</h3>
+      <p style="font-size: 0.9rem; color: #bdc3c7;">チーム申請の結果などの通知メールを受け取るか設定します。</p>
+      <button type="button" class="btn btn-toggle" id="btn-toggle-mail" onclick="toggleMail()">メール配信を切り替える</button>
     </div>
 
-    <!-- 3. �\���󋵂̊m�F -->
+    <!-- 3. 申請状況の確認 -->
     <div class="section-card">
-      <h3>�`�[�������\���̏�</h3>
+      <h3>チーム加入申請の状況</h3>
       <div id="join-request-list" style="font-size: 0.9rem;">
-        <p style="color: #888;">�ǂݍ��ݒ�...</p>
+        <p style="color: #888;">読み込み中...</p>
       </div>
     </div>
 
-    <!-- 4. �V�X�e���Ǘ��҂ւ̖₢���킹 -->
+    <!-- 4. システム管理者への問い合わせ -->
     <div class="section-card">
-      <h3>�V�X�e���Ǘ��҂֖₢���킹</h3>
+      <h3>システム管理者へ問い合わせ</h3>
       <div class="input-group">
-        <label>����</label>
-        <input type="text" id="inquiry-subject" placeholder="���������">
+        <label>件名</label>
+        <input type="text" id="inquiry-subject" placeholder="件名を入力">
       </div>
       <div class="input-group">
-        <label>�₢���킹���e</label>
-        <textarea id="inquiry-message" rows="5" style="width: 100%; padding: 12px; border-radius: 5px; background: #34495e; color: white; border: none; box-sizing: border-box;" placeholder="��̓I�ȓ��e�����L����������"></textarea>
+        <label>問い合わせ内容</label>
+        <textarea id="inquiry-message" rows="5" style="width: 100%; padding: 12px; border-radius: 5px; background: #34495e; color: white; border: none; box-sizing: border-box;" placeholder="具体的な内容をご記入ください"></textarea>
       </div>
-      <button type="button" class="btn" style="background-color: #e67e22;" onclick="sendInquiry()">�₢���킹�𑗐M����</button>
+      <button type="button" class="btn" style="background-color: #e67e22;" onclick="sendInquiry()">問い合わせを送信する</button>
     </div>
 
   </div>

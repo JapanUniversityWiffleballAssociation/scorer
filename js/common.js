@@ -75,8 +75,9 @@ if(!NO_HEADER.includes(fileName)){
  * @returns {Promise<Object>} サーバーからのレスポンスJSON
  */
 async function postToGAS(url, payload) {
+    const authKey = localStorage.getItem('juwa_api_key');
     try {
-        payload.authKey = "JUWA-Auth-Key";
+        payload.authKey = authKey; // デフォルトの認証キーを使用する場合
         const response = await fetch(url, {
             method: 'POST',
             // GASのdoPostで確実にパースさせるための設定
@@ -116,8 +117,6 @@ function openLogWindow() {
 
 //ログインボタン押下時の処理
 const AuthService = {
-  // システム全体の認証キー（既存の規約に合わせる）
-  AUTH_KEY: 'JUWA-Auth-Key',
   API_URL: CONST_GAS_URL, // GASのエンドポイントURL
   /**
    * ログインを実行し、セッションを保存する
@@ -125,9 +124,8 @@ const AuthService = {
   async login(userId, password) {
     const payload = {
       mode: 'login',
-      authKey: this.AUTH_KEY,
       userId: userId,
-      password: password
+      password: await this.hashPassword(password)
     };
 
     try {
@@ -177,10 +175,10 @@ const AuthService = {
   async register(email, displayName, password) {
     const payload = {
       mode: 'registerUser',
-      authKey: this.AUTH_KEY, // 既存の 'JUWA-Auth-Key' 
+      authKey: this.getApiKey(), // 既存の 'JUWA-Auth-Key' 
       userId: email,          // ユーザーIDとしてメールアドレスを送信
       displayName: displayName,
-      password: password
+      password: await this.hashPassword(password)// パスワードをSHA-256でハッシュ化して送信
     };
 
     try {
@@ -225,6 +223,18 @@ const AuthService = {
         message: 'サーバーとの通信に失敗しました。ネットワーク環境を確認してください。' 
       };
     }
+  },
+  // SHA-256でパスワードをハッシュ化する関数
+  // @param {string} password - ハッシュ化するパスワード
+  // @returns {Promise<string>} - ハッシュ化されたパスワードの16進数文字列
+  async hashPassword(password) {
+    // SHA-256でハッシュ化する関数
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    return crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    });
   }
 };
 
