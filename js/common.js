@@ -2,7 +2,7 @@
 //共通変数・定数
 //GASAPIのURL
 const CONST_GAS_URL = "https://script.google.com/macros/s/AKfycbxrrOQLcilVPofC0Vbx9Cwz5G5no6GxpMDZwa4oySwvzHa5Bvrj5Gu_TNBWcEZ0eBA/exec";
-const NO_HEADER = ["index.html","sign-up.html"];
+const NO_HEADER = ["index.html","sign-up.html","forgot-password.html"]; // ヘッダーを表示しないページのリスト
 
 /**
  * ヘッダー注入用の関数
@@ -11,7 +11,7 @@ const NO_HEADER = ["index.html","sign-up.html"];
 async function injectHeader() {
   // ログイン画面（index.html）の場合は何もしない（無限ループ防止）
   const fileName = window.location.pathname.split('/').pop();
-  if (fileName === "index.html" || fileName === "sign-up.html") {
+  if (fileName === "index.html" || fileName === "sign-up.html" || fileName === "forgot-password.html") {
     return;
   }
 

@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function updateProfile() {
   document.getElementById('profile-update-btn').disabled = true; // ボタンを無効化して多重送信防止
   document.getElementById('profile-update-btn').textContent = "更新中...";
+  
   const displayName = document.getElementById('profile-name').value.trim();
   const newPassword = document.getElementById('profile-password').value;
   const hassednewPassword = await AuthService.hashPassword(newPassword);
