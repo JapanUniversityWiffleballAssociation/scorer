@@ -88,6 +88,26 @@
             padding: 15px;
             margin: 20px 0;
         }
+        .screen {
+            margin: 20px 0;
+            border: 1px solid #34495e;
+            border-radius: 10px;
+            overflow: hidden;
+            color: #ecf0f1;
+            background: #1a1a1a;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .16);
+        }
+        .screen-bar { padding: 9px 14px; background: #111; color: #b9c8d4; font-size: .85rem; }
+        .screen-body { padding: 16px; }
+        .mock-score { width: 100%; border-collapse: collapse; text-align: center; }
+        .mock-score th, .mock-score td { padding: 8px 5px; border: 1px solid #526273; }
+        .mock-score th { background: #2c3e50; }
+        .mock-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 10px 0; }
+        .mock-pill { padding: 7px 10px; border-radius: 6px; background: #2c3e50; }
+        .mock-pill.live { background: #238b4e; }
+        .mock-diamond { text-align: center; color: #f1c40f; font-size: 1.2rem; padding: 10px; }
+        .caption { color: #667085; font-size: .85rem; }
+        @media (max-width: 600px) { .container { margin: 0; padding: 22px 16px; border-radius: 0; } }
     </style>
 </head>
 <body>
@@ -95,7 +115,8 @@
 <div class="container">
     <header>
         <h1>📱 操作マニュアル：速報を見る（Viewer）</h1>
-        <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況をリアルタイムで観戦する方法を説明します。</p>
+        <p>試合一覧から試合を選び、スコアやカウント、選手、打席記録を確認する方法を説明します。</p>
+        <p><a href="manual_main.html">← 総合マニュアルへ戻る</a></p>
     </header>
 
     <section>
@@ -122,12 +143,27 @@
         <h2>2. 観戦画面の見方</h2>
         <p>観戦画面（メインアプリ）では、記録員が入力している最新データが自動的に表示されます。</p>
 
+        <div class="screen" role="img" aria-label="試合速報の簡易イメージ">
+            <div class="screen-bar">← 一覧に戻る　　LIVE　　ID: GAME-001</div>
+            <div class="screen-body">
+                <div class="mock-row"><span class="mock-pill">今すぐ手動更新</span><span class="mock-pill">自動更新: ON</span><span class="mock-pill live">接続中</span></div>
+                <table class="mock-score">
+                    <thead><tr><th>チーム</th><th>1回</th><th>2回</th><th>R</th></tr></thead>
+                    <tbody><tr><td>チームA</td><td>1</td><td>0</td><td>1</td></tr><tr><td>チームB</td><td>0</td><td>0</td><td>0</td></tr></tbody>
+                </table>
+                <div class="mock-row"><span class="mock-pill">投手: 選手X</span><span class="mock-pill">投球数: 12</span><span class="mock-pill">打者: 選手B</span></div>
+                <div class="mock-diamond">B ●●○　 S ●○　 O ●○<br><br>◇　2塁 ●　◇</div>
+                <div class="mock-row"><span class="mock-pill">試合ログ（打席記録）を表示</span></div>
+            </div>
+        </div>
+        <p class="caption">画面イメージです。表示されるイニング数や選手情報は試合の進行状況で変わります。</p>
+
         <div class="ui-desc">
             <ul>
-                <li><b>スコアボード:</b> 各イニングの得点を表示します。現在進行中のイニングは点滅します。</li>
+                <li><b>スコアボード:</b> 各イニングの得点と合計得点（R）を表示します。</li>
                 <li><b>カウント (B/S/O):</b> ボール、ストライク、アウトカウントがランプで表示されます。</li>
                 <li><b>ダイヤモンド:</b> 出塁しているランナーがオレンジ色に点灯します。</li>
-                <li><b>ライブタグ:</b> 試合が動いている間は <span class="live-badge">LIVE</span> アイコンが表示されます。</li>
+                <li><b>ライブタグ:</b> 詳細画面に <span class="live-badge">LIVE</span> が表示されます。同期状態もあわせて確認してください。</li>
             </ul>
         </div>
     </section>
@@ -136,27 +172,27 @@
         <h2>3. 更新設定と便利機能</h2>
         <div class="important">
             <strong>🔄 自動更新について:</strong><br>
-            詳細画面は <b>10秒おき</b>、一覧画面は <b>30秒おき</b> に自動で最新の状態に更新されます。
+            詳細画面は <b>10秒おき</b>、一覧画面は <b>30秒おき</b> に自動で最新の状態に更新されます。記録中の通信状況などにより、表示が反映されるまで時間がかかることがあります。
         </div>
 
         <div class="step">
             <div class="step-number">3</div>
             <div>
-                <strong>手動更新:</strong> 画面下部の <b>「今すぐ手動更新」</b> ボタンを押すと、即座に最新データを取得します。
+                <strong>手動更新:</strong> 詳細画面の <b>「今すぐ手動更新」</b> ボタンを押すと、最新データを取得します。一覧画面では「リストを最新に更新」を使います。
             </div>
         </div>
 
         <div class="step">
             <div class="step-number">4</div>
             <div>
-                <strong>自動更新の停止:</strong> <b>「自動更新: ON」</b> ボタンを押すと、一時的に更新を止めて状況をじっくり確認できます。
+                <strong>自動更新の停止:</strong> <b>「自動更新: ON」</b> ボタンを押すと一時停止します。再開するときはもう一度押してください。
             </div>
         </div>
 
         <div class="step">
             <div class="step-number">5</div>
             <div>
-                <strong>打席ログの確認:</strong> <b>「試合ログを表示」</b> ボタンをクリックすると、これまでの全打席の履歴（ヒット、アウトの種類など）を一覧で確認できます。
+                <strong>打席ログの確認:</strong> <b>「試合ログ（打席記録）を表示」</b> ボタンを押すと、打席結果や打点を一覧で確認できます。
             </div>
         </div>
     </section>

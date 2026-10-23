@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JUWA 試合速報システム（プロトタイプ） - メインメニュー</title>
     <link rel="stylesheet" href="style.css">
+
     <style>
         .menu-container {
             display: flex;
@@ -77,7 +78,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="c">
         <header style="text-align: center; margin-bottom: 40px;">
             <h1 style="color: #2ecc71; letter-spacing: 2px;">JUWA</h1>
             <p style="color: #bdc3c7;">Japan University Wiffleball Association</p>
@@ -100,35 +101,91 @@
                 操作マニュアルは、<a href="manual/manual_main.html">こちら</a>からご参照いただけます。
             </div>
         </div>
-        <div class="menu-container">
-            <a href="league_manager.html" class="menu-card">
-                <span class="icon">🏆</span>
-                <h2>大会を作成する</h2>
-                <p>大会情報を入力・保存します。</p>
-            </a>
 
-            <a href="edit-games.html" class="menu-card">
-                <span class="icon">📝</span>
-                <h2>記録をつける</h2>
-                <p>試合のスコア、カウント、打席結果をリアルタイムで入力・保存します。</p>
-            </a>
-
-            <a href="viewer.html" rel="noopener noreferrer" class="menu-card">
-                <span class="icon">📱</span>
-                <h2>速報を見る</h2>
-                <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況を観戦します。</p>
-            </a>
-
-            <a href="teams.html" style="display: none;" rel="noopener noreferrer" class="menu-card">
-                <span class="icon">👥</span>
-                <h2>チーム・メンバー管理</h2>
-                <p>チーム・メンバー情報を管理します。</p>
-            </a>
+    <div id="login-container">
+        <h2>ログイン</h2>
+    <form id="loginForm">    
+        <div class="form-group">
+            <label>ユーザーID</label>
+            <input type="text" id="userId" placeholder="Enter ID">
         </div>
+        <div class="form-group">
+            <label>パスワード</label>
+            <input type="password" id="password" placeholder="Enter Password">
+        </div>
+        <button type="submit" id="loginBtn">ログイン</button>
+    </form>
+        <p id="errorMessage" style="color: red;"></p>
+
+        <div style="text-align: center; margin-top: 15px; margin-bottom: 20px;">
+            <a href="forgot-password.html" style="color: #007bff; text-decoration: none; font-size: 0.9rem; font-weight: bold;">パスワードを忘れた方はこちら</a>
+        </div>
+        
+        <button id="guestBtn">ゲストでログイン</button>
+        <button id="signUpBtn" onclick="location.href='sign-up.html'">アカウント作成</button>
+        
+    </div>
 
         <footer class="footer-simple">
             <p>&copy; 2026 Japan University Wiffleball Association. All Rights Reserved.</p>
         </footer>
     </div>
+<script>
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        localStorage.clear();
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = document.getElementById('userId').value;
+    const pass = document.getElementById('password').value;
+    const errorEl = document.getElementById('errorMessage');
+
+    // ローディング表示（SE的なUX配慮）
+    errorEl.textContent = '認証中...';
+    
+    try {
+        const result = await AuthService.login(userId, pass);
+    if (result.success) {
+        
+        // URLパラメータを確認して遷移先を決定
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectTarget = urlParams.get('redirect');
+        if (redirectTarget === 'mail-setting') {
+            window.location.href = 'mail-setting.html'; // 設定画面へ
+        } else {
+            window.location.href = 'menu.html'; // 通常のメニュー画面へ
+        }
+    } else {
+      errorEl.textContent = result.message;
+    }
+    } catch (error) {
+        errorEl.textContent = error.message || '通信エラーが発生しました。';
+    }
+
+  });
+
+  document.getElementById('guestBtn').addEventListener('click', async () => {
+    const userId = 'guest';
+    const pass = 'guest';
+    const errorEl = document.getElementById('errorMessage');
+
+    // ローディング表示（SE的なUX配慮）
+    errorEl.textContent = '読み込み中...';
+    
+    try {
+        const result = await AuthService.login(userId, pass);
+        if (result.success) {
+            window.location.href = 'menu.html'; // 遷移先
+        } else {
+            errorEl.textContent = result.message || 'ログインに失敗しました。';
+        }
+    } catch (error) {
+        errorEl.textContent = error.message || '通信エラーが発生しました。';
+    }
+  });
+</script>
+<script src="js/common.js"></script>
 </body>
 </html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大会エントリー - JUWA Scorer</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .filter-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .league-card { background: #2c3e50; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #3498db; cursor: pointer; transition: 0.2s; }
+        .league-card:hover { background: #34495e; }
+        .league-card.selected { border-left-color: #f1c40f; background: rgba(241, 196, 15, 0.1); }
+        .member-table th, .member-table td { padding: 10px; text-align: left; border-bottom: 1px solid #555; }
+        .badge { background: #e74c3c; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; color: white; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>? 大会エントリー申し込み</h2>
+
+    <!-- Step 1: 大会の選択 -->
+    <section class="card">
+        <h3>1. 参加する大会を選択</h3>
+        <div class="filter-group">
+            <input type="month" id="month-filter" style="flex: 1;" title="開催月でカレンダー絞り込み">
+            <input type="text" id="text-filter" placeholder="大会名・IDで検索" style="flex: 2;">
+        </div>
+        <div id="league-list" style="max-height: 300px; overflow-y: auto;">
+            <p>受付中の大会を読み込み中...</p>
+        </div>
+        <p id="selected-league-display" style="color: #f1c40f; font-weight: bold; margin-top: 10px;"></p>
+    </section>
+
+    <!-- Step 2: チームとメンバーの選択 (大会選択後に表示) -->
+    <section id="team-selection-section" class="card" style="display: none;">
+        <h3>2. 参加チームとメンバーの提出</h3>
+        <div class="input-group">
+            <label>管理しているチームを選択</label>
+            <select id="team-select">
+                <option value="">チームを読み込み中...</option>
+            </select>
+        </div>
+
+        <div id="member-section" style="display: none; margin-top: 20px;">
+            <div id="entry-status-notice" style="display: none; padding: 12px; background: rgba(241, 196, 15, 0.15); border-left: 4px solid #f1c40f; border-radius: 4px; margin-bottom: 15px; font-size: 0.9rem; color: #f1c40f; line-height: 1.5;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <label style="margin: 0;">今回参加するメンバーを選択（不参加のメンバーはチェックを外す）</label>
+                <span id="member-count-display" style="font-size: 0.85rem; color: #bdc3c7;">選択中: 0名</span>
+            </div>
+            <table class="member-table" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>参加</th>
+                        <th>背番号</th>
+                        <th>選手名</th>
+                    </tr>
+                </thead>
+                <tbody id="member-list"></tbody>
+            </table>
+            <button type="button" id="submit-entry-btn" class="btn" style="margin-top: 20px;">この内容で大会にエントリーする</button>
+        </div>
+    </section>
+</div>
+
+<script src="js/common.js"></script>
+<script>
+    let allLeagues = [];
+    let selectedLeagueId = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const authKey = AuthService.getApiKey();
+        if (!authKey) {
+            alert("ログインが必要です。");
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // 大会一覧の取得
+        await loadAvailableLeagues();
+        // 管理チーム一覧の取得
+        await loadAdminTeams(authKey);
+
+        // フィルター機能のイベント
+        document.getElementById('month-filter').addEventListener('change', renderLeagues);
+        document.getElementById('text-filter').addEventListener('input', renderLeagues);
+        // チーム選択時のイベント
+        document.getElementById('team-select').addEventListener('change', (e) => loadTeamMembers(e.target.value, authKey));
+        // 送信ボタンのイベント
+        document.getElementById('submit-entry-btn').addEventListener('click', () => submitEntry(authKey));
+    });
+
+    async function loadAvailableLeagues() {
+        try {
+            const res = await fetch(`${CONST_GAS_URL}?mode=getEntryLeagues`);
+            const json = await res.json();
+            if (json.status === 'success') {
+                allLeagues = json.leagues;
+                renderLeagues();
+            } else {
+                document.getElementById('league-list').textContent = json.message || '大会一覧を取得できませんでした。';
+            }
+        } catch (e) {
+            document.getElementById('league-list').textContent = e.message || '大会の読み込みに失敗しました。';
+        }
+    }
+
+    function renderLeagues() {
+        const monthFilter = document.getElementById('month-filter').value;
+        const textFilter = document.getElementById('text-filter').value.toLowerCase();
+        const listDiv = document.getElementById('league-list');
+        listDiv.innerHTML = '';
+
+        const filtered = allLeagues.filter(l => {
+            // テキスト絞り込み
+            const matchText = l.name.toLowerCase().includes(textFilter) || l.id.toLowerCase().includes(textFilter);
+            // 月絞り込み (例: '2026-03')
+            const matchMonth = !monthFilter || (l.start && l.start.startsWith(monthFilter));
+            return matchText && matchMonth;
+        });
+
+        if (filtered.length === 0) {
+            listDiv.innerHTML = '<p style="color:#bdc3c7;">該当する大会がありません。</p>';
+            return;
+        }
+
+        filtered.forEach(l => {
+            const card = document.createElement('div');
+            card.className = `league-card ${l.id === selectedLeagueId ? 'selected' : ''}`;
+            card.innerHTML = `
+                <div style="font-weight: bold; font-size: 1.1rem;">${l.name} <span class="badge">受付中</span></div>
+                <div style="font-size: 0.85rem; color: #bdc3c7; margin-top: 5px;">
+                    ID: ${l.id} | 期間: ${new Date(l.start).toLocaleDateString('ja-JP')} ～ ${new Date(l.end).toLocaleDateString('ja-JP')}
+                </div>
+            `;
+            card.onclick = () => {
+                selectedLeagueId = l.id;
+                document.getElementById('selected-league-display').textContent = `選択中の大会: ${l.name} (${l.id})`;
+                document.getElementById('team-selection-section').style.display = 'block';
+                renderLeagues(); // 選択状態(CSS)の再描画
+            };
+            listDiv.appendChild(card);
+        });
+    }
+
+    async function loadAdminTeams(authKey) {
+        try {
+            const fetchUrl = `${CONST_GAS_URL}?mode=getAdminTeams&authKey=${encodeURIComponent(authKey)}`;
+            const res = await fetch(fetchUrl);
+            const json = await res.json();
+            
+            const select = document.getElementById('team-select');
+            select.innerHTML = '<option value="">-- チームを選択 --</option>';
+            if (json.status === 'success' && json.teams.length > 0) {
+                json.teams.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.teamId;
+                    opt.textContent = t.teamName;
+                    select.appendChild(opt);
+                });
+            } else if (json.status === 'success') {
+                select.innerHTML = '<option value="">管理しているチームがありません</option>';
+            } else {
+                select.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = json.message || 'チーム一覧を取得できませんでした。';
+                select.appendChild(option);
+            }
+        } catch (e) {
+            console.error("チーム取得エラー", e);
+            document.getElementById('team-select').innerHTML = '<option value="">チーム一覧を取得できませんでした。</option>';
+        }
+    }
+
+    let isCurrentTeamAlreadyEntered = false;
+
+    async function loadTeamMembers(teamId, authKey) {
+        if (!teamId) {
+            document.getElementById('member-section').style.display = 'none';
+            return;
+        }
+        
+        const tbody = document.getElementById('member-list');
+        tbody.innerHTML = '<tr><td colspan="3">メンバー読み込み中...</td></tr>';
+        document.getElementById('member-section').style.display = 'block';
+
+        try {
+            const payload = { 
+                mode: 'getTeamMembersForEntry', 
+                authKey: authKey, 
+                teamId: teamId,
+                leagueId: selectedLeagueId
+            };
+            const json = await postToGAS(CONST_GAS_URL, payload);
+
+            if (json.status === 'success') {
+                tbody.innerHTML = '';
+                isCurrentTeamAlreadyEntered = !!json.existingEntry;
+
+                // 既存エントリーの有無による案内文とボタンの切り替え
+                const noticeEl = document.getElementById('entry-status-notice');
+                const submitBtn = document.getElementById('submit-entry-btn');
+
+                let existingMemberNames = [];
+                if (isCurrentTeamAlreadyEntered) {
+                    const status = json.existingEntry.status || "受付中";
+                    noticeEl.style.display = 'block';
+                    noticeEl.innerHTML = `⚠️ このチームは既にエントリー済みです（状態: <strong>${status}</strong>）。<br>内容を変更して再送信すると、エントリー内容が上書き更新されます。`;
+                    submitBtn.textContent = "この内容でエントリーを上書き更新する";
+                    if (Array.isArray(json.existingEntry.entryMembers)) {
+                        existingMemberNames = json.existingEntry.entryMembers.map(m => m.name);
+                    }
+                } else {
+                    noticeEl.style.display = 'none';
+                    submitBtn.textContent = "この内容で大会にエントリーする";
+                }
+
+                json.members.forEach((m, index) => {
+                    const tr = document.createElement('tr');
+                    // 既存エントリーがあれば前回選ばれていたメンバーのみチェック、新規なら全員チェック
+                    const isChecked = isCurrentTeamAlreadyEntered
+                        ? existingMemberNames.includes(m.name)
+                        : true;
+
+                    tr.innerHTML = `
+                        <td><input type="checkbox" class="member-checkbox" ${isChecked ? 'checked' : ''} data-index="${index}"></td>
+                        <td>${m.number || '-'}</td>
+                        <td>${m.name}</td>
+                    `;
+                    // 全メンバーデータを保持（あとで送信時に使うため）
+                    tr.dataset.memberObj = JSON.stringify(m);
+
+                    const cb = tr.querySelector('.member-checkbox');
+                    cb.addEventListener('change', updateMemberCountDisplay);
+
+                    tbody.appendChild(tr);
+                });
+
+                updateMemberCountDisplay();
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 3;
+                cell.textContent = json.message || '読み込みに失敗しました。';
+                row.appendChild(cell);
+                tbody.replaceChildren(row);
+            }
+        } catch (e) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 3;
+            cell.textContent = e.message || 'メンバーの読み込みに失敗しました。';
+            row.appendChild(cell);
+            tbody.replaceChildren(row);
+        }
+    }
+
+    /**
+     * 選択メンバー数表示の更新
+     */
+    function updateMemberCountDisplay() {
+        const selectedLeague = allLeagues.find(l => l.id === selectedLeagueId);
+        const checkboxes = document.querySelectorAll('#member-list .member-checkbox:checked');
+        const count = checkboxes.length;
+        const displayEl = document.getElementById('member-count-display');
+        if (!displayEl) return;
+
+        if (selectedLeague && !selectedLeague.isOpenLeague && selectedLeague.maxMembersPerTeam) {
+            const max = selectedLeague.maxMembersPerTeam;
+            displayEl.textContent = `選択中: ${count}名 / 上限: ${max}名`;
+            if (count > max) {
+                displayEl.style.color = '#e74c3c';
+                displayEl.style.fontWeight = 'bold';
+            } else {
+                displayEl.style.color = '#bdc3c7';
+                displayEl.style.fontWeight = 'normal';
+            }
+        } else {
+            displayEl.textContent = `選択中: ${count}名`;
+            displayEl.style.color = '#bdc3c7';
+            displayEl.style.fontWeight = 'normal';
+        }
+    }
+
+    async function submitEntry(authKey) {
+        const teamId = document.getElementById('team-select').value;
+        if (!selectedLeagueId || !teamId) {
+            await CustomDialog.alert("大会と参加チームを選択してください。");
+            return;
+        }
+
+        // チェックされたメンバーだけを抽出
+        const entryMembers = [];
+        const rows = document.querySelectorAll('#member-list tr');
+        rows.forEach(row => {
+            const checkbox = row.querySelector('.member-checkbox');
+            if (checkbox && checkbox.checked) {
+                entryMembers.push(JSON.parse(row.dataset.memberObj));
+            }
+        });
+
+        if (entryMembers.length === 0) {
+            await CustomDialog.alert("参加メンバーを1人以上選択してください。");
+            return;
+        }
+
+        // 人数上限チェック（フロントエンド事前バリデーション）
+        const selectedLeague = allLeagues.find(l => l.id === selectedLeagueId);
+        if (selectedLeague && !selectedLeague.isOpenLeague && selectedLeague.maxMembersPerTeam) {
+            if (entryMembers.length > selectedLeague.maxMembersPerTeam) {
+                await CustomDialog.alert(`登録人数が大会の上限（${selectedLeague.maxMembersPerTeam}名）を超えています。\n（現在: ${entryMembers.length}名選択中）`);
+                return;
+            }
+        }
+
+        const confirmMsg = isCurrentTeamAlreadyEntered
+            ? "このチームのエントリー内容を上書き更新しますか？"
+            : "このメンバーで大会にエントリーしますか？";
+
+        const isOk = await CustomDialog.confirm(confirmMsg, "確認");
+        if (!isOk) return;
+
+        const btn = document.getElementById('submit-entry-btn');
+        btn.disabled = true;
+        btn.textContent = "送信中...";
+
+        const payload = {
+            mode: 'submitLeagueEntry',
+            authKey: authKey,
+            leagueId: selectedLeagueId,
+            teamId: teamId,
+            entryMembers: entryMembers
+        };
+
+        try {
+            const result = await postToGAS(CONST_GAS_URL, payload);
+            if (result.status === 'success') {
+                await CustomDialog.alert(result.message || "エントリーが完了しました！");
+                window.location.href = 'menu.html';
+            } else {
+                await CustomDialog.alert(result.message);
+            }
+        } catch(e) {
+            console.error("エントリー送信エラー", e);
+            await CustomDialog.alert(e.message || "通信エラーが発生しました。しばらくしてから再度お試しください。");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = isCurrentTeamAlreadyEntered ? "この内容でエントリーを上書き更新する" : "この内容で大会にエントリーする";
+        }
+    }
+</script>
+</body>
+</html>

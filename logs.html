@@ -51,6 +51,9 @@
                 
                 const response = await fetch(`${GAS_URL}?mode=getGameLogs&gameId=${gameId}`);
                 const logs = await response.json();
+                if (!Array.isArray(logs)) {
+                    throw new Error(logs.message || "ログを取得できませんでした。");
+                }
                 
                 const list = document.getElementById('log-list');
                 list.innerHTML = '';
@@ -62,7 +65,7 @@
                     div.innerHTML = `
                         <div class="log-info">
                             <div class="log-inning">${log.inning} | ${log.team}</div>
-                            <div class="log-action">${log.batter} | ${log.action}</div>
+                            <div class="log-action">${log.batter} | ${log.action} | 打点 ${log.rbi || 0}</div>
                         </div>
                         <div class="log-time">${log.time}</div>
                     `;
@@ -70,7 +73,7 @@
                 });
             } catch (e) {
                 console.error(e);
-                document.getElementById('log-list').innerHTML = "ログの読み込みに失敗しました。";
+                document.getElementById('log-list').textContent = e.message || "ログの読み込みに失敗しました。";
             }
         }
     </script>

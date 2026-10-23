@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作マニュアル - 試合記録機能 | JUWA</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --secondary-color: #2c3e50;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #fff;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        header {
+            border-bottom: 3px solid var(--primary-color);
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+        }
+        h1 { color: var(--secondary-color); font-size: 1.8rem; }
+        h2 {
+            color: var(--secondary-color);
+            border-left: 5px solid var(--primary-color);
+            padding-left: 15px;
+            margin-top: 40px;
+            font-size: 1.4rem;
+        }
+        h3 {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-top: 25px;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            padding: 15px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        .bg-strike { background-color: #e67e22; }
+        .bg-ball { background-color: #f1c40f; color: #333; }
+        .bg-out { background-color: #e74c3c; }
+        .bg-hit { background-color: #2ecc71; }
+        
+        .important {
+            background: #fff3cd;
+            border-left: 5px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        code {
+            background: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .btn-ref {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #34495e;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        .screen {
+            margin: 20px 0;
+            border: 1px solid #b9c8d4;
+            border-radius: 10px;
+            overflow: hidden;
+            color: #ecf0f1;
+            background: #1e2c39;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .12);
+        }
+        .screen-bar { padding: 9px 14px; background: #14212c; color: #b9c8d4; font-size: .85rem; }
+        .screen-body { padding: 16px; }
+        .mock-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+        .mock-box { padding: 12px; border: 1px solid #526273; border-radius: 7px; background: #2c3e50; }
+        .mock-box strong { display: block; color: #2ecc71; }
+        .mock-buttons { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+        .mock-btn { padding: 7px 10px; border-radius: 5px; background: #34495e; color: white; font-size: .88rem; }
+        .mock-btn.blue { background: #2874a6; }
+        .mock-btn.red { background: #a93226; }
+        .mock-diamond { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; max-width: 320px; margin: 14px auto; text-align: center; }
+        .mock-base { padding: 11px 4px; border-radius: 7px; background: #263746; border: 1px solid #607487; }
+        .mock-base.runner { background: #8a641d; }
+        .caption { color: #667085; font-size: .85rem; }
+        @media (max-width: 600px) { .container { margin: 0; padding: 22px 16px; border-radius: 0; } .mock-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📝 操作マニュアル：試合記録（記録をつける）</h1>
+        <p>試合を準備し、プレーごとに記録を入力して速報へ反映するまでの流れを説明します。</p>
+        <p><a href="manual_main.html">← 総合マニュアルへ戻る</a></p>
+    </header>
+
+    <section>
+        <h2>1. 試合のセットアップ</h2>
+        <p>アプリを起動すると、まず「試合設定 & 同期」画面が表示されます。</p>
+        
+        <div class="step">
+            <div class="step-number">1</div>
+            <div>
+                <strong>大会を選択:</strong> 「参加する大会を選択」プルダウンから対象のリーグを選びます。
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">2</div>
+            <div>
+                <strong>モード選択:</strong> 「新規試合を作成」または「既存試合を編集」を選択します。
+                <ul>
+                    <li><strong>新規作成:</strong> <span class="btn-ref">自動発行</span> ボタンで試合IDを生成し、先攻・後攻チーム、イニング数、拡張ルールを設定します。両チームの「メンバー編集」で投手と打順を設定してから「この内容で試合開始」を押します。</li>
+                    <li><strong>既存編集:</strong> 過去に作成された試合を選んで「編集を再開する」をクリックします。</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>試合開始前の設定画面イメージ</h2>
+        <div class="screen" role="img" aria-label="試合設定画面の簡易イメージ">
+            <div class="screen-bar">試合設定 &amp; 同期</div>
+            <div class="screen-body">
+                <div class="mock-box"><strong>大会</strong>参加する大会を選択　[ 春季リーグ ▼ ]</div>
+                <div class="mock-row">
+                    <div class="mock-box"><strong>先攻チーム</strong>[ チームA ▼ ]　[メンバー編集]</div>
+                    <div class="mock-box"><strong>後攻チーム</strong>[ チームB ▼ ]　[メンバー編集]</div>
+                </div>
+                <div class="mock-box"><strong>メンバー編集</strong>投手：[選手A ▼]<br>打順：1番 選手B / 2番 選手C / …</div>
+                <div class="mock-row"><div class="mock-box">イニング数　[ 3 ]</div><div class="mock-box">□ 拡張ルールを使用する</div></div>
+                <span class="mock-btn blue">この内容で試合開始</span>
+            </div>
+        </div>
+        <p class="caption">画面イメージです。試合の再開を選んだ場合は、既存試合を選択して「編集を再開する」を押します。</p>
+        <div class="important"><strong>開始前に確認:</strong> 選手名・背番号・投手・打順に誤りがないか確認してください。試合開始後、最初の投球前であれば「先攻・後攻を入れ替える」を使えます。1球でも投じると入れ替えボタンは使えなくなります。</div>
+    </section>
+
+    <section>
+        <h2>2. カウントと打席結果の入力</h2>
+        <p>メイン画面では、以下のボタンを使用して試合を進行させます。</p>
+
+        <div class="screen" role="img" aria-label="試合記録画面の簡易イメージ">
+            <div class="screen-bar">試合ID: LEAGUE-YYMMDD-ABC　/　同期完了</div>
+            <div class="screen-body">
+                <div class="mock-row">
+                    <div class="mock-box"><strong>スコアボード</strong>チームA 1　|　チームB 0</div>
+                    <div class="mock-box"><strong>打者 / 投手</strong>選手B / 選手X　　B 1　S 2　O 1</div>
+                </div>
+                <div class="mock-diamond">
+                    <span></span><div class="mock-base runner">2塁 ●</div><span></span>
+                    <div class="mock-base">3塁 ◇</div><span></span><div class="mock-base runner">1塁 ●</div>
+                </div>
+                <div class="mock-buttons"><span class="mock-btn">ストライク</span><span class="mock-btn">ボール</span><span class="mock-btn">ファウル</span><span class="mock-btn red">アウト</span><span class="mock-btn blue">シングルヒット</span><span class="mock-btn blue">ホームラン</span></div>
+                <div class="mock-buttons"><span class="mock-btn">1つ戻る（修正）</span><span class="mock-btn">投手交代</span><span class="mock-btn red">試合を終了する</span></div>
+            </div>
+        </div>
+        <p class="caption">画面イメージです。拡張ルールを有効にすると、クリーンヒットやダブルプレーなどの操作も表示されます。</p>
+
+        <div class="feature-grid">
+            <div class="feature-item bg-strike">ストライク</div>
+            <div class="feature-item bg-ball">ボール</div>
+            <div class="feature-item bg-out">フライ/ゴロアウト</div>
+            <div class="feature-item bg-hit">ヒット/HR</div>
+        </div>
+
+        <h3>自動判定ロジック</h3>
+        <ul>
+            <li><strong>四球:</strong> ボールが4つたまると自動的に「四球」として処理され、走者が進塁します。</li>
+            <li><strong>三振:</strong> ストライクが3つたまると自動的に「三振（アウト）」として記録されます。</li>
+            <li><strong>チェンジ:</strong> 3アウトになると自動的に表裏の交代、またはイニングの進行が行われます。規定回終了時に同点の場合は、タイブレークを続けるか確認画面が表示されます。</li>
+            <li><strong>打点:</strong> 打席結果で得点が入った場合、その打席で入った得点数を打点としてログに記録します。</li>
+        </ul>
+
+        <div class="important">
+            <strong>💡 ヒント:</strong> 
+            入力を間違えた場合は <span class="btn-ref">1つ戻る（修正）</span> ボタンを押すことで、直前の状態にリセットできます。
+        </div>
+    </section>
+
+    <section>
+        <h2>拡張ルールでアウト・進塁を記録する</h2>
+        <p>試合設定で拡張ルールを有効にした場合、「アウト」または「ダブルプレー」を押すと、アウトにする選手と進塁する選手を選ぶ画面が開きます。</p>
+        <ol>
+            <li>表示された「打者」「1塁」「2塁」「3塁」から対象のランナーをクリックして選択します。</li>
+            <li>アウトにする場合は、選択中のランナーをもう一度クリックします。赤い×印が表示されます。</li>
+            <li>進塁させる場合は、ランナーを選択した状態で進塁先の塁をクリックします。青い矢印で移動先を確認します。</li>
+            <li>表示を確認し、通常アウトは1人、ダブルプレーは2人のアウト指定を行って「確定」を押します。操作をやめる場合は「キャンセル」を押します。</li>
+        </ol>
+        <div class="important">選択した選手はアウトまたは進塁し、指定していないランナーは元の塁に残ります。打者もアウト・進塁のどちらにも指定されていない場合など、内容が不足していると確定できません。犠打・犠飛として記録する場合は、確定前に該当するチェックを付けます。</div>
+    </section>
+
+    <section>
+        <h2>3. スコアボードとダイヤモンドの確認</h2>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div>
+                <strong>スコアボード:</strong> 各イニングの得点と合計点（R）が自動計算されます。現在進行中のイニングは点滅（アクティブ表示）します。
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>
+                <strong>ダイヤモンド表示:</strong> ヒットや四球に応じて、ランナーの状況がオレンジ色でリアルタイムに表示されます。
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div>
+                <strong>同期状態:</strong> 画面上部の「同期完了」「同期失敗」表示を確認してください。プレー操作はサーバーへ保存され、画面を開いたままの同期確認も定期的に行われます。通信に失敗した場合は接続を確認し、再度同期状態を確認してください。
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>4. ログの確認と試合の終了</h2>
+        <h3>試合ログの参照</h3>
+        <p><span class="btn-ref">試合ログ（打席記録）を表示</span> をクリックすると、別ウィンドウでこれまでの全打席の結果と打点を時系列で確認できます。打点は、その打席で得点した人数が自動で記録されます。</p>
+
+        <h3>試合の完了</h3>
+        <div class="step">
+            <div class="step-number">6</div>
+            <div>
+                設定したイニングが終了するか、決着がついた時点で <span class="btn-ref" style="background:var(--danger-color)">試合を終了する</span> をクリックします。
+                <br><small>※終了後は閲覧専用モードとなり、追加の入力はできなくなります。</small>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>試合を共有・修正する</h2>
+        <ul>
+            <li><strong>編集用URL:</strong> 試合画面に表示されたURLをコピーして、記録を再開する担当者と共有できます。同じ試合を複数人が同時に編集すると更新が競合する可能性があるため、記録担当者を決めてください。</li>
+            <li><strong>1つ戻る（修正）:</strong> 直前の操作を取り消します。誤りに気づいたら、次のプレーを続ける前に使って状態を確認します。</li>
+            <li><strong>投手交代:</strong> 交代後の投手を選び、確定します。以降の打席ログには交代後の投手が記録されます。</li>
+            <li><strong>試合を終了する:</strong> 最終スコアと打席記録を確認してから押します。終了後はこの試合を閲覧専用で扱い、入力操作はできません。</li>
+        </ul>
+    </section>
+
+    <footer>
+        <p style="text-align: center; color: #7f8c8d; margin-top: 50px; font-size: 0.8rem;">
+            &copy; 2026 Japan University Wiffleball Association. All Rights Reserved.
+        </p>
+    </footer>
+</div>
+
+</body>
+</html>

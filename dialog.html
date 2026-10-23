@@ -1,0 +1,83 @@
+<!-- dialog.html -->
+<style>
+  /* 画面全体を覆う半透明の背景 */
+  #custom-dialog-overlay {
+    display: none; /* 初期状態は非表示 */
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px); /* 背景を少しぼかす（モダンな演出） */
+  }
+
+  /* ダイアログ本体 */
+  .custom-dialog-box {
+    background: #ffffff;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    text-align: center;
+    animation: dialogFadeIn 0.2s ease-out;
+  }
+
+  @keyframes dialogFadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .custom-dialog-header {
+    background: #007bff;
+    color: white;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+
+  .custom-dialog-body {
+    padding: 25px 20px;
+    font-size: 1rem;
+    color: #333333;
+    line-height: 1.6;
+    white-space: pre-wrap; /* 改行文字(\n)を反映させる */
+  }
+
+  .custom-dialog-footer {
+    padding: 15px;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .custom-dialog-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+
+  .btn-cancel { background: #e0e0e0; color: #333; }
+  .btn-cancel:hover { background: #d0d0d0; }
+  
+  .btn-ok { background: #007bff; color: white; }
+  .btn-ok:hover { background: #0056b3; }
+</style>
+
+<!-- ダイアログのHTML構造 -->
+<div id="custom-dialog-overlay">
+  <div class="custom-dialog-box">
+    <div id="custom-dialog-title" class="custom-dialog-header">お知らせ</div>
+    <div id="custom-dialog-message" class="custom-dialog-body">メッセージ</div>
+    <div class="custom-dialog-footer">
+      <button id="custom-dialog-cancel" class="custom-dialog-btn btn-cancel">キャンセル</button>
+      <button id="custom-dialog-ok" class="custom-dialog-btn btn-ok">OK</button>
+    </div>
+  </div>
+</div>

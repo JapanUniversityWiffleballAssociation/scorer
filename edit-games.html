@@ -5,15 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JUWA 試合速報システム - 試合登録</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        #out-base-select-dialog-overlay .modal-content {
+            max-width: 420px;
+        }
+
+        .out-base-diamond {
+            position: relative;
+            width: min(100%, 280px);
+            aspect-ratio: 1.15;
+            margin: 12px auto;
+        }
+
+        .out-base-arrows,
+        .out-base-options {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .out-base-options {
+            pointer-events: none;
+        }
+
+        .out-base-option {
+            position: absolute;
+            z-index: 1;
+            width: 66px;
+            min-height: 54px;
+            padding: 5px 3px;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            border: 0;
+            background: transparent;
+            color: #333;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .out-base-option:active {
+            transform: translate(-50%, -50%);
+        }
+
+        .out-base-marker {
+            display: block;
+            width: 23px;
+            height: 23px;
+            border: 2px solid #667085;
+            background: #dfe3e8;
+            transform: rotate(45deg);
+        }
+
+        .out-base-marker.runner-marker {
+            border-radius: 50%;
+            border-color: #e67e22;
+            background: #f39c12;
+            transform: none;
+        }
+
+        .out-base-option.is-selected .out-base-marker {
+            box-shadow: 0 0 0 4px #3498db;
+        }
+
+        .out-base-option.is-out .out-base-marker {
+            position: relative;
+            border-color: #c0392b;
+            background: #fff;
+            box-shadow: 0 0 0 3px #c0392b;
+        }
+
+        .out-base-option.is-out .out-base-marker::before,
+        .out-base-option.is-out .out-base-marker::after {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 25px;
+            height: 3px;
+            border-radius: 2px;
+            background: #c0392b;
+            content: "";
+        }
+
+        .out-base-option.is-out .out-base-marker::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .out-base-option.is-out .out-base-marker::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        .out-base-option.is-moving .out-base-marker {
+            border-color: #2980b9;
+            background: #3498db;
+        }
+
+        .out-base-label {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .out-base-arrows {
+            overflow: visible;
+            pointer-events: none;
+        }
+
+        .out-base-arrow {
+            stroke: #2980b9;
+            stroke-width: 4;
+            stroke-linecap: round;
+            marker-end: url(#out-base-arrowhead);
+        }
+
+        #out-base-select-error {
+            min-height: 1.5em;
+            margin: 8px 0 0;
+            color: #c0392b;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
     <div id="setup-screen" class="overlay">
         <div class="container">
         <div class="card">
-        <div class="viewer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <button type="button" class="btn-sm" onclick="location.href='index.html'">メニューに戻る</button>
-            <button type="button" class="btn-sm" onclick="location.href='manual/manual_edit'">操作マニュアル</button>
-        </div>
+        
             <h2>試合設定 & 同期</h2>
             <div class="input-group">
                 <label>参加する大会を選択<br>（大会を選択すると追加の設定画面が表示されます。）</label>
@@ -59,6 +180,15 @@
                 <div class="input-group">
                 <label>イニング数</label>
                 <input type="number" id="input-innings" value="3" min="1" max="12" style="width: 30%;">
+                </div>
+                <div class="input-group">
+                    <label>拡張ルール</label>
+                    <div style="display: flex; gap: 10px;">
+                        <label>
+                            <input type="checkbox" id="extra-rules-checkbox">
+                            拡張ルールを使用する
+                        </label>
+                    </div>
                 </div>
                 <button type="button" id="start-btn" class="btn-save">この内容で試合開始</button>
             </div>
@@ -139,7 +269,10 @@
             </tbody>
         </table>
         </section>
-        <section class="pitch-counter-box">
+            <button type="button" id="swap-teams-btn" class="btn-sm hidden" style="width:100%; margin-bottom: 12px;">
+                先攻・後攻を入れ替える
+            </button>
+            <section class="pitch-counter-box">
             <div class="match-status-bar">
                 <div class="status-item current-pitcher">
                     <span class="label">ピッチャー</span>
@@ -199,6 +332,11 @@
     <button type="button" id="triple-hit-btn" class="btn hit">トリプルヒット</button>
     <button type="button" id="hr-btn" class="btn hr">ホームラン</button>
 </div>
+<div class="button-group hidden" id="additional-style">
+    <button type="button" id="clean-single-hit-btn" class="btn hit">クリーンシングル</button>
+    <button type="button" id="clean-double-hit-btn" class="btn hit">クリーンダブル</button>
+    <button type="button" id="double-play-btn" class="btn out">ダブルプレー</button>
+</div>
             <div class="button-group full-width">
                 <button type="button" id="undo-btn" class="btn undo">1つ戻る（修正） </button>
             </div>
@@ -243,6 +381,28 @@
                 </div>
             </div>
         </div>
+        <div id="out-base-select-dialog-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="out-base-select-title">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="icon">⚠</span>
+                    <h2 id="out-base-select-title">アウト・進塁選択</h2>
+                </div>
+                <div class="modal-body">
+                    <p id="out-base-select-instruction">ランナーをタップして選択し、もう一度タップするとアウト。選択したランナーの前方の塁をタップすると進塁矢印が表示されます。</p>
+                    <div id="out-base-select-board"></div>
+                    <p id="out-base-select-error" role="alert" aria-live="polite"></p>
+                    <input type="checkbox" id="sacrifice-hit">
+                    <label for="sacrifice-hit">犠打として登録する。</label>
+                    <br>
+                    <input type="checkbox" id="sacrifice-fly">
+                    <label for="sacrifice-fly">犠飛として登録する。</label>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-out-base-select-yes" class="btn-primary">確定</button>
+                    <button id="btn-out-base-select-no" class="btn-secondary">キャンセル</button>
+                </div>
+                </div>
+            </div>
     </div>
 
     <script src="js/common.js"></script>

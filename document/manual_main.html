@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA 試合速報システム - 総合操作マニュアル</title>
+    <style>
+        :root {
+            --primary-color: #2ecc71;
+            --secondary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+        }
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 12px;
+        }
+        header {
+            text-align: center;
+            border-bottom: 4px solid var(--primary-color);
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+        }
+        h1 { color: var(--secondary-color); margin-bottom: 10px; }
+        .system-overview {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 6px solid var(--secondary-color);
+            margin-bottom: 40px;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .menu-item {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            padding: 20px;
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .menu-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .menu-item h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+        }
+        .menu-item p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .chapter-number {
+            display: inline-block;
+            background: var(--secondary-color);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .admin-section {
+            background: #fff5f5;
+            border: 1px dashed #feb2b2;
+            padding: 25px;
+            border-radius: 8px;
+        }
+        .admin-section h2 {
+            color: #c53030;
+            margin-top: 0;
+            font-size: 1.3rem;
+        }
+        .admin-section ul {
+            margin-bottom: 0;
+        }
+        .badge-upcoming {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+        .flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 10px;
+            margin: 22px 0;
+        }
+        .flow-step {
+            position: relative;
+            padding: 16px;
+            border: 1px solid #dce5e8;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+        .flow-step strong { display: block; color: var(--secondary-color); }
+        .flow-step span { color: #667085; font-size: .88rem; }
+        .screen {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #1e2c39;
+            color: #f8fafc;
+            margin: 20px 0;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .12);
+        }
+        .screen-bar { padding: 10px 14px; background: #14212c; color: #b8c7d4; font-size: .85rem; }
+        .screen-content { padding: 16px; }
+        .mock-menu { display: grid; gap: 8px; }
+        .mock-menu div {
+            padding: 11px 14px;
+            border-radius: 7px;
+            background: #2c3e50;
+            border-left: 4px solid var(--primary-color);
+        }
+        .caption { color: #667085; font-size: .84rem; margin-top: -12px; }
+        .notice {
+            padding: 14px 18px;
+            border-left: 5px solid #3498db;
+            background: #eef7ff;
+            border-radius: 6px;
+        }
+        @media (max-width: 600px) {
+            .container { margin: 0; padding: 22px 16px; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🏆 JUWA 試合速報システム</h1>
+        <p>初めて使う方のための、準備から試合当日までの操作ガイド</p>
+    </header>
+
+    <section class="system-overview">
+        <h2>システム概要</h2>
+        <p>
+            本システムでは、大会の受付・運営、チームと選手の登録、試合の記録、試合速報の共有を行えます。
+            まずメニューで行いたい作業を選び、画面の上から順番に操作してください。
+        </p>
+    </section>
+
+    <section>
+        <h2>まずは全体の流れを確認</h2>
+        <div class="flow">
+            <div class="flow-step"><strong>1. チームを準備</strong><span>チームとメンバーを登録</span></div>
+            <div class="flow-step"><strong>2. 大会を準備</strong><span>大会を作成し、参加受付</span></div>
+            <div class="flow-step"><strong>3. 参加を申請</strong><span>大会と参加メンバーを選ぶ</span></div>
+            <div class="flow-step"><strong>4. 試合を記録</strong><span>試合を作成してプレーを記録</span></div>
+            <div class="flow-step"><strong>5. 速報を確認</strong><span>共有URLや一覧から観戦</span></div>
+        </div>
+        <p class="notice"><strong>大会運営者とチーム管理者は別の役割です。</strong>大会の作成・運営は大会を管理するユーザー、チームの作成・メンバー編集はチームの管理者が行います。ログインユーザーの権限によって一部のメニューが表示されない場合があります。</p>
+    </section>
+
+    <section>
+        <h2>メニュー画面のイメージ</h2>
+        <div class="screen" role="img" aria-label="メニュー画面の簡易イメージ">
+            <div class="screen-bar">JUWA 試合速報システム　/　メインメニュー</div>
+            <div class="screen-content mock-menu">
+                <div>🏆 大会管理　　› 大会を作成する / 大会を運営する</div>
+                <div>📝 試合記録　　› 大会にエントリーする / 記録をつける</div>
+                <div>📊 試合結果参照　› 速報を見る</div>
+                <div>👥 チーム・メンバー管理</div>
+            </div>
+        </div>
+        <p class="caption">画面イメージです。表示される項目はログインユーザーの権限や利用可能な機能によって異なります。</p>
+    </section>
+
+    <section>
+        <h2 style="text-align: center; margin-bottom: 25px;">目次</h2>
+        <div class="menu-grid">
+            <a href="manual_team.html" class="menu-item">
+                <span class="chapter-number">準備編</span>
+                <h2>チーム・メンバー管理</h2>
+                <p>チーム作成、選手登録、プレイヤーID発行、加入申請の承認・編集手順。</p>
+            </a>
+            <a href="manual_league.html" class="menu-item">
+                <span class="chapter-number">第1章</span>
+                <h2>大会を作成・運営する</h2>
+                <p>大会の登録、募集要項、参加受付の確認や大会情報の変更。</p>
+            </a>
+            <a href="manual_entry.html" class="menu-item">
+                <span class="chapter-number">第2章</span>
+                <h2>大会にエントリーする</h2>
+                <p>大会・チーム・参加選手を選んでエントリー内容を提出。</p>
+            </a>
+            <a href="manual_edit.html" class="menu-item">
+                <span class="chapter-number">第3章</span>
+                <h2>試合記録機能</h2>
+                <p>試合作成、メンバー設定、打席結果・アウト・進塁の入力、修正と終了。</p>
+            </a>
+            <a href="manual_viewer.html" class="menu-item">
+                <span class="chapter-number">第4章</span>
+                <h2>試合速報を見る</h2>
+                <p>試合一覧、スコア・カウント、手動更新と自動更新の使い方。</p>
+            </a>
+        </div>
+    </section>
+
+    <section class="admin-section">
+        <h2>操作前に知っておくこと</h2>
+        <ul>
+            <li>大会へのエントリーには、ログインと管理チームが必要です。</li>
+            <li>試合記録を始める前に、大会・先攻後攻チーム・出場メンバー・投手を確認してください。</li>
+            <li>試合記録画面の「1つ戻る（修正）」は、直前の操作を戻すための機能です。誤操作に気づいたら次の入力をする前に確認してください。</li>
+            <li>終了した試合は閲覧専用になります。終了前にスコアと記録内容をご確認ください。</li>
+        </ul>
+    </section>
+
+    <footer style="margin-top: 50px; text-align: center; color: #999; font-size: 0.8rem;">
+        &copy; 2026 Japan University Wiffleball Association. All Rights Reserved.
+    </footer>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUWA 試合速報システム - メインメニュー</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 40px 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .menu-group {
+            overflow: hidden;
+            border-radius: 12px;
+            background: #233140;
+            border: 1px solid #3b5368;
+        }
+        .menu-group-toggle {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            padding: 18px 20px;
+            border: 0;
+            background: #2c3e50;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+        }
+        .menu-group-toggle:hover,
+        .menu-group-toggle[aria-expanded="true"] {
+            background: #34495e;
+        }
+        .menu-group-icon {
+            font-size: 1.8rem;
+        }
+        .menu-group-title {
+            flex: 1;
+            color: #2ecc71;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+        .menu-group-chevron {
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+        }
+        .menu-group-toggle[aria-expanded="true"] .menu-group-chevron {
+            transform: rotate(180deg);
+        }
+        .menu-submenu {
+            display: grid;
+            gap: 10px;
+            padding: 12px;
+        }
+        .menu-card {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+        }
+        .menu-card:hover {
+            border-color: #2ecc71;
+            transform: translateY(-5px);
+            background: #34495e;
+        }
+        .menu-card h2 {
+            margin: 0 0 6px 0;
+            font-size: 1.05rem;
+            color: #2ecc71;
+        }
+        .menu-card p {
+            font-size: 0.9rem;
+            color: #bdc3c7;
+            margin: 0;
+        }
+        .icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .menu-card.disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+        .menu-card.disabled:hover {
+            border-color: transparent;
+            transform: none;
+            background: #2c3e50;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .menu-card,
+            .menu-group-chevron {
+                transition: none;
+            }
+        }
+        .footer-simple {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        .notice-card {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 10px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+        }
+        .notice-detail-card{ 
+            position: relative;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 1.0em 5%;
+            padding: 7px 10px;
+            min-width: 120px;
+            max-width: 100%;
+            color: #555;
+            font-size: 16px;
+            background: #e0edff;
+            border: #e0edff;
+        }
+
+    </style>
+</head>
+<body>
+    <div id = container class="container">
+        <h3>お知らせ</h3>
+        <div class="notice">
+            <div class="notice-card" onclick="document.getElementById('notice01').classList.toggle('hidden');">
+                β版リリースのお知らせ（2026/01/30）
+            </div>
+            <div class="notice-detail-card hidden" id="notice01">
+                日本ウィッフルボール学生連盟公式の試合速報システムのβ版をリリースしました。<br>
+                β版のため、正式版リリースに向けたメンテナンス等によりアプリが使用できない可能性がございます。あらかじめご了承ください。
+            </div>
+            <br>
+            <div class="notice-card" onclick="document.getElementById('notice02').classList.toggle('hidden');">
+                β版操作マニュアル（2026/01/30）
+            </div>
+            <div class="notice-detail-card hidden" id="notice02">
+                操作マニュアルは、<a href="document/manual_main.html">こちら</a>からご参照いただけます。
+            </div>
+        </div>
+
+        <div class="menu-container">
+            <section class="menu-group">
+                <button type="button" class="menu-group-toggle admin user" aria-expanded="false" aria-controls="league-submenu">
+                    <span class="menu-group-icon" aria-hidden="true">🏆</span>
+                    <span class="menu-group-title">大会管理</span>
+                    <span class="menu-group-chevron" aria-hidden="true">▼</span>
+                </button>
+                <div class="menu-submenu hidden admin user" id="league-submenu">
+                    <a href="league_manager.html" id="manage_league" class="menu-card">
+                        <span class="icon">🏆</span>
+                        <h2>大会を作成する</h2>
+                        <p>大会情報を入力・保存します。</p>
+                    </a>
+                    <a href="league-operation.html" id="operate_league" class="menu-card">
+                        <span class="icon">⚙️</span>
+                        <h2>大会を運営する</h2>
+                        <p>エントリーの申し込み管理や登録情報の変更を行います。</p>
+                    </a>
+                </div>
+            </section>
+
+            <section class="menu-group">
+                <button type="button" class="menu-group-toggle" aria-expanded="false" aria-controls="game-submenu">
+                    <span class="menu-group-icon" aria-hidden="true">📝</span>
+                    <span class="menu-group-title">試合記録</span>
+                    <span class="menu-group-chevron" aria-hidden="true">▼</span>
+                </button>
+                <div class="menu-submenu hidden" id="game-submenu">
+                    <a href="league-entry.html" id="manage_league_entry" class="menu-card admin user">
+                        <span class="icon">📤</span>
+                        <h2>大会にエントリーする</h2>
+                        <p>大会に参加するチームを登録します。</p>
+                    </a>
+                    <a href="edit-games.html" id="manage_game_score" class="menu-card">
+                        <span class="icon">📝</span>
+                        <h2>記録をつける</h2>
+                        <p>試合のスコア、カウント、打席結果をリアルタイムで入力・保存します。</p>
+                    </a>
+                </div>
+            </section>
+
+            <section class="menu-group">
+                <button type="button" class="menu-group-toggle" aria-expanded="false" aria-controls="results-submenu">
+                    <span class="menu-group-icon" aria-hidden="true">📊</span>
+                    <span class="menu-group-title">試合結果参照</span>
+                    <span class="menu-group-chevron" aria-hidden="true">▼</span>
+                </button>
+                <div class="menu-submenu hidden" id="results-submenu">
+                    <a href="viewer.html" rel="noopener noreferrer" class="menu-card">
+                        <span class="icon">📱</span>
+                        <h2>速報を見る</h2>
+                        <p>進行中の試合一覧から、ライブスコアやダイヤモンドの状況を観戦します。</p>
+                    </a>
+                    <div class="menu-card disabled" aria-disabled="true">
+                        <span class="icon">📈</span>
+                        <h2>成績を見る</h2>
+                        <p>今後追加予定です。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="menu-group" id="team-menu-group">
+                <button type="button" class="menu-group-toggle admin user" aria-expanded="false" aria-controls="team-submenu">
+                    <span class="menu-group-icon" aria-hidden="true">👥</span>
+                    <span class="menu-group-title">チーム・メンバー管理</span>
+                    <span class="menu-group-chevron" aria-hidden="true">▼</span>
+                </button>
+                <div class="menu-submenu hidden admin user" id="team-submenu">
+                    <a id="teamMgmtBtn" rel="noopener noreferrer" class="menu-card">
+                        <span class="icon">👥</span>
+                        <h2>チーム・メンバー管理</h2>
+                        <p>チーム・メンバー情報を管理します。</p>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+<div id="teamModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>チーム管理メニュー</h3>
+      <button id="closeModalBtn" class="close-button">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">実行したい手続きを選択してください。</p>
+      
+      <div class="modal-btn-group">
+        <button onclick="location.href='team-create.html'" class="modal-action-btn create-btn">
+          <span class="icon">➕</span>
+          <span class="label">チーム作成</span>
+        </button>
+        
+        <button onclick="location.href='team-join.html'" class="modal-action-btn join-btn">
+          <span class="icon">🙋‍♂️</span>
+          <span class="label">チーム加入申請</span>
+        </button>
+        
+        <button onclick="location.href='team-edit.html'" class="modal-action-btn edit-btn">
+          <span class="icon">⚙️</span>
+          <span class="label">チーム情報編集<br><small>(加入処理)</small></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <footer class="footer-simple">
+            <p>&copy; 2026 Japan University Wiffleball Association. All Rights Reserved.</p>
+        </footer>
+    </div>
+    <script src="js/common.js"></script>
+    <script>
+        document.querySelectorAll('.menu-group-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                const submenu = document.getElementById(toggle.getAttribute('aria-controls'));
+                toggle.setAttribute('aria-expanded', String(!isExpanded));
+                submenu.classList.toggle('hidden', isExpanded);
+            });
+        });
+
+        if (!AuthService.isLoggedIn()) {
+            alert('セッションが切れました。ログインし直してください。');
+            window.location.href = 'index.html';
+        }
+
+        const globalRole = String(AuthService.getUserInfo()?.globalRole || '').toUpperCase();
+        document.querySelectorAll('.admin, .user').forEach(element => {
+            const isAllowed = (globalRole === 'ADMIN' && element.classList.contains('admin'))
+                || (globalRole === 'USER' && element.classList.contains('user'));
+            element.classList.toggle('hidden', !isAllowed);
+        });
+
+        document.querySelectorAll('.menu-group').forEach(group => {
+            const submenu = group.querySelector('.menu-submenu');
+            if (submenu && !submenu.querySelector('.menu-card:not(.hidden)')) {
+                group.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
