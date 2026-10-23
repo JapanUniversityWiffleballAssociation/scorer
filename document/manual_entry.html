@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>大会にエントリーする | JUWA 操作マニュアル</title>
+  <style>
+    :root { --green: #2ecc71; --navy: #2c3e50; --blue: #3498db; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f3f6f8; color: #263238; font: 16px/1.7 "Segoe UI", "Meiryo", sans-serif; }
+    main { max-width: 900px; margin: 30px auto; padding: 32px; background: white; border-radius: 12px; box-shadow: 0 4px 20px #172b3b18; }
+    header { border-bottom: 4px solid var(--green); padding-bottom: 16px; }
+    h1, h2 { color: var(--navy); }
+    h2 { margin-top: 38px; padding-left: 12px; border-left: 5px solid var(--green); }
+    .step { display: flex; gap: 14px; margin: 14px 0; padding: 16px; background: #f7f9fb; border-radius: 8px; }
+    .num { flex: 0 0 30px; height: 30px; border-radius: 50%; color: white; background: var(--blue); text-align: center; line-height: 30px; font-weight: 700; }
+    .screen { margin: 18px 0 8px; border: 1px solid #b9c8d4; border-radius: 10px; overflow: hidden; color: #eef4f8; background: #1e2c39; }
+    .bar { padding: 9px 14px; background: #14212c; color: #b9c8d4; font-size: .88rem; }
+    .panel { padding: 16px; }
+    .mock-title { color: #2ecc71; font-weight: 700; }
+    .field { margin: 10px 0; padding: 10px 12px; background: #2c3e50; border: 1px solid #566777; border-radius: 5px; }
+    .league { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+    .member { display: grid; grid-template-columns: 55px 65px 1fr; gap: 8px; padding: 8px; border-bottom: 1px solid #526273; }
+    .tick { color: #8cf0ac; font-weight: 700; }
+    .note { margin: 18px 0; padding: 14px 16px; background: #fff6df; border-left: 5px solid #e2a91b; }
+    .caption { color: #667085; font-size: .85rem; }
+    a { color: #1769aa; }
+    @media (max-width: 620px) { main { margin: 0; padding: 22px 16px; border-radius: 0; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>大会にエントリーする</h1>
+    <p>管理しているチームを大会に申し込み、参加メンバーを提出する手順です。</p>
+    <a href="manual_main.html">← 総合マニュアルへ戻る</a>
+  </header>
+
+  <section>
+    <h2>申込前に確認すること</h2>
+    <ul>
+      <li>ログインしていること。エントリーには管理しているチームが必要です。</li>
+      <li>チーム・メンバー管理画面で、選手名や背番号に誤りがないこと。</li>
+      <li>大会運営者が受付中にしていること。募集要項や登録人数上限、変更期日も確認します。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>画面の流れ</h2>
+    <div class="screen" role="img" aria-label="大会エントリー画面の簡易イメージ">
+      <div class="bar">大会エントリー申し込み</div><div class="panel">
+        <div class="mock-title">1. 参加する大会を選択</div>
+        <div class="field">開催月 [ 2026年10月 ]　検索 [ 大会名・ID ]</div>
+        <div class="league"><div class="field">2026年度 秋季リーグ　　受付中</div><button type="button">選択</button></div>
+        <hr>
+        <div class="mock-title">2. 参加チームとメンバーの提出</div>
+        <div class="field">管理しているチーム [ サンプルチーム ▼ ]</div>
+        <div class="member"><b>参加</b><b>背番号</b><b>選手名</b></div>
+        <div class="member"><span class="tick">☑</span><span>10</span><span>選手A</span></div>
+        <div class="member"><span class="tick">☑</span><span>7</span><span>選手B</span></div>
+        <div class="field" style="text-align:center;background:#208c51;">この内容で大会にエントリーする</div>
+      </div>
+    </div>
+    <p class="caption">画面イメージです。参加可能な大会と管理チームが選択肢に表示されます。</p>
+  </section>
+
+  <section>
+    <h2>手順</h2>
+    <div class="step"><span class="num">1</span><div>メインメニューの<strong>「試合記録」→「大会にエントリーする」</strong>を開きます。</div></div>
+    <div class="step"><span class="num">2</span><div>開催月の絞り込みや検索欄を使って大会を探し、対象の大会を選択します。選択後、チームとメンバーの入力欄が表示されます。</div></div>
+    <div class="step"><span class="num">3</span><div>参加するチームを選びます。チームの選手一覧が表示されたら、今回参加する選手にチェックを付けます。不参加の選手はチェックを外します。</div></div>
+    <div class="step"><span class="num">4</span><div>参加人数と大会の募集要項を確認し、<strong>「この内容で大会にエントリーする」</strong>を押します。確認画面が出た場合は、内容を見直して確定します。</div></div>
+  </section>
+
+  <section>
+    <h2>オープンリーグの場合</h2>
+    <p>オープンリーグは大会運営者が設定する公開区分です。エントリー画面で大会を選択し、チームと参加メンバーを提出する操作は通常どおり行えます。募集人数の上限の扱いなど、個別の運用ルールは大会運営者の案内を確認してください。</p>
+  </section>
+
+  <div class="note"><strong>提出後に内容を変更したいとき:</strong> 大会の変更期日内であることを確認し、再度エントリー画面で対象大会・チームを選択します。受付が終了している、または選択欄に大会が表示されない場合は大会運営者に確認してください。</div>
+  <p><a href="manual_edit.html">次へ：試合を記録する →</a></p>
+</main>
+</body>
+</html>

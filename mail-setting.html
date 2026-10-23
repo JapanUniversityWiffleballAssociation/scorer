@@ -39,12 +39,7 @@
           authKey: authKey
         };
 
-        const response = await fetch(AuthService.API_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
+        const result = await postToGAS(AuthService.API_URL, payload);
 
         if (result.status === 'success') {
           resultMsg.textContent = result.message;
@@ -54,7 +49,7 @@
           resultMsg.style.color = "red";
         }
       } catch (error) {
-        resultMsg.textContent = "通信エラーが発生しました。";
+        resultMsg.textContent = error.message || "通信エラーが発生しました。";
         resultMsg.style.color = "red";
       }
     });

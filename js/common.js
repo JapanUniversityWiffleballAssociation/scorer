@@ -76,6 +76,7 @@ if(!NO_HEADER.includes(fileName)){
  */
 async function postToGAS(url, payload) {
     const authKey = localStorage.getItem('juwa_api_key');
+    Loading.show();
     try {
         payload.authKey = authKey; // デフォルトの認証キーを使用する場合
         const response = await fetch(url, {
@@ -97,11 +98,12 @@ async function postToGAS(url, payload) {
         if (result.status === "error") {
             throw new Error(result.message || "GAS実行エラー");
         }
-
         return result;
     } catch (e) {
         console.error("GAS送信失敗:", e);
         throw e; // 呼び出し元で個別のエラー表示を行うために再スロー
+    } finally {
+        Loading.hide();
     }
 }
 
@@ -128,12 +130,7 @@ const AuthService = {
       password: await this.hashPassword(password)
     };
 
-    try {
-      const response = await fetch(CONST_GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
+    const result = await postToGAS(this.API_URL, payload);
 
       if (result.status === 'success') {
         // 成功したらLocalStorageに保存（Ver. 2.0.0 の要）
@@ -144,9 +141,6 @@ const AuthService = {
       } else {
         return { success: false, message: result.message };
       }
-    } catch (error) {
-      return { success: false, message: '通信エラーが発生しました。' };
-    }
   },
 
   /**
@@ -172,21 +166,17 @@ const AuthService = {
     return userJson ? JSON.parse(userJson) : null;
   },
   
-  async register(email, displayName, password) {
+  async register(email, displayName, password, playerId = "") {
     const payload = {
       mode: 'registerUser',
       authKey: this.getApiKey(), // 既存の 'JUWA-Auth-Key' 
       userId: email,          // ユーザーIDとしてメールアドレスを送信
       displayName: displayName,
+      playerId: playerId,     // 払い出し済みのプレイヤーID（任意）
       password: await this.hashPassword(password)// パスワードをSHA-256でハッシュ化して送信
     };
 
-    try {
-      const response = await fetch(CONST_GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
+    const result = await postToGAS(this.API_URL, payload);
 
       if (result.status === 'success') {
         // 【自動ログイン処理】受け取ったセッション情報をLocalStorageに保存
@@ -197,32 +187,13 @@ const AuthService = {
       } else {
         return { success: false, message: result.message };
       }
-    } catch (error) {
-      return { success: false, message: '通信エラーが発生しました。バックエンドを確認してください。' };
-    }
   },
   /**
    * 新規チーム作成リクエストをGASに送信する
    * @param {Object} payload チーム名とメンバーリストを含むオブジェクト
    */
   async createTeam(payload) {
-    try {
-      const response = await fetch(CONST_GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      
-      // GASからのレスポンスをパース
-      const result = await response.json();
-      return result;
-      
-    } catch (error) {
-      console.error('チーム作成通信エラー:', error);
-      return { 
-        status: 'error', 
-        message: 'サーバーとの通信に失敗しました。ネットワーク環境を確認してください。' 
-      };
-    }
+    return postToGAS(CONST_GAS_URL, payload);
   },
   // SHA-256でパスワードをハッシュ化する関数
   // @param {string} password - ハッシュ化するパスワード
@@ -355,4 +326,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+});
+
+
+const Loading = {
+    // loading.html を非同期で読み込み、body の末尾に注入する
+    init: async function() {
+        if (document.getElementById('loading-overlay')) return; // 既に注入済みならスキップ
+        
+        try {
+            const response = await fetch('loading.html');
+            if (response.ok) {
+                const html = await response.text();
+                document.body.insertAdjacentHTML('beforeend', html);
+                
+                // 追加した要素を取得し、IDを付与して初期状態を非表示にする
+                const overlay = document.querySelector('.loading-overlay');
+                if (overlay) {
+                    overlay.id = 'loading-overlay';
+                    overlay.style.display = 'none'; // 初期は非表示
+                }
+            }
+        } catch (error) {
+            console.error('ローディング画面の読み込みに失敗しました:', error);
+        }
+    },
+    
+    // ローディングを表示する
+    show: function() {
+        const overlay = document.getElementById('loading-overlay');
+        // loading.html のスタイル（display: grid;）に合わせて表示
+        if (overlay) overlay.style.display = 'grid';
+    },
+    
+    // ローディングを非表示にする
+    hide: function() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+};
+
+// ページ読み込み時に自動でローディング画面を準備する
+document.addEventListener('DOMContentLoaded', () => {
+    Loading.init();
 });

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>チーム・メンバー管理 | JUWA 操作マニュアル</title>
+  <style>
+    :root { color-scheme: light; --green: #2ecc71; --navy: #2c3e50; --blue: #3498db; --red: #c0392b; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f3f6f8; color: #263238; font: 16px/1.7 "Segoe UI", "Meiryo", sans-serif; }
+    main { max-width: 920px; margin: 30px auto; padding: 32px; background: white; border-radius: 12px; box-shadow: 0 4px 20px #172b3b18; }
+    header { border-bottom: 4px solid var(--green); padding-bottom: 16px; }
+    h1, h2 { color: var(--navy); }
+    h2 { margin-top: 40px; padding-left: 12px; border-left: 5px solid var(--green); }
+    .step { display: flex; gap: 14px; margin: 14px 0; padding: 16px; background: #f7f9fb; border-radius: 8px; }
+    .num { flex: 0 0 30px; height: 30px; border-radius: 50%; color: white; background: var(--blue); text-align: center; line-height: 30px; font-weight: 700; }
+    .screen { margin: 18px 0 8px; border: 1px solid #b9c8d4; border-radius: 10px; overflow: hidden; color: #eef4f8; background: #1e2c39; }
+    .bar { padding: 9px 14px; background: #14212c; color: #b9c8d4; font-size: .88rem; }
+    .panel { padding: 16px; }
+    .mock-title { margin-bottom: 12px; font-weight: 700; color: #2ecc71; }
+    .mock-field { margin: 8px 0; padding: 9px 11px; border: 1px solid #566777; border-radius: 5px; background: #2c3e50; }
+    .mock-row { display: grid; grid-template-columns: .6fr 1fr 1fr .7fr; gap: 6px; }
+    .mock-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .mock-table th, .mock-table td { padding: 8px; border: 1px solid #526273; text-align: left; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 14px; background: #1f8b4c; color: white; font-size: .8rem; }
+    .note { margin: 18px 0; padding: 14px 16px; background: #fff6df; border-left: 5px solid #e2a91b; }
+    .caption { color: #667085; font-size: .85rem; }
+    a { color: #1769aa; }
+    @media (max-width: 620px) { main { margin: 0; padding: 22px 16px; border-radius: 0; } .mock-row { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>チーム・メンバー管理</h1>
+    <p>チームを作り、所属選手とプレイヤーIDを管理する手順です。</p>
+    <a href="manual_main.html">← 総合マニュアルへ戻る</a>
+  </header>
+
+  <section>
+    <h2>この作業を行うタイミング</h2>
+    <p>大会にエントリーする前に、チームと選手の情報を整えます。管理者はチーム情報を編集し、一般ユーザーは自分が所属・管理するチームに応じた機能を利用します。</p>
+    <div class="note"><strong>プレイヤーIDについて:</strong> 選手の識別に使うIDです。ログインアカウントを持たない選手にも発行できます。後から本人がアカウント登録する場合は、発行済みIDを使用して選手情報を引き継げます。</div>
+  </section>
+
+  <section>
+    <h2>1. 新しいチームを作成する</h2>
+    <div class="step"><span class="num">1</span><div>メインメニューの<strong>「チーム・メンバー管理」</strong>を開き、チーム管理メニューから<strong>「チーム作成」</strong>を選びます。</div></div>
+    <div class="step"><span class="num">2</span><div>チーム名を入力し、初期メンバーを登録します。選手名を入力し、必要に応じて背番号・利き手・プレイヤーIDを設定します。行を増やすと複数の選手を登録できます。</div></div>
+    <div class="screen" role="img" aria-label="新規チーム作成画面の簡易イメージ">
+      <div class="bar">新規チーム作成</div><div class="panel">
+        <div class="mock-title">チーム情報</div>
+        <div class="mock-field">チーム名　例：JUWAサンプル</div>
+        <div class="mock-title">初期メンバー登録</div>
+        <table class="mock-table"><thead><tr><th>背番号</th><th>選手名</th><th>利き手</th><th>プレイヤーID</th><th>管理者</th></tr></thead>
+          <tbody><tr><td>10</td><td>選手A</td><td>右投右打</td><td>未入力でも可</td><td><span class="tag">管理者</span></td></tr><tr><td>7</td><td>選手B</td><td>未設定</td><td>未入力でも可</td><td>メンバー</td></tr></tbody>
+        </table>
+        <div class="mock-field" style="text-align:center;background:#208c51;">この内容でチームを作成</div>
+      </div>
+    </div>
+    <p class="caption">画面イメージです。作成時にプレイヤーIDが空欄の選手にはシステムがIDを発行します。</p>
+    <div class="step"><span class="num">3</span><div><strong>「この内容でチームを作成」</strong>を押します。完了後、管理者として設定したユーザーがチーム編集などを行えるようになります。</div></div>
+  </section>
+
+  <section>
+    <h2>2. ログインしない選手を追加する</h2>
+    <div class="step"><span class="num">1</span><div>チーム管理メニューから<strong>「チーム情報編集」</strong>を開き、管理するチームを選択します。</div></div>
+    <div class="step"><span class="num">2</span><div>「ログインしない選手を追加」に選手名を入力します。背番号・利き手・ポジションは必要に応じて指定します。</div></div>
+    <div class="step"><span class="num">3</span><div><strong>「選手を追加してプレイヤーIDを発行」</strong>を押します。登録後、画面に表示されるIDをコピーし、本人に安全な方法で伝えてください。</div></div>
+    <div class="note">メンバー情報に未保存の変更がある場合は、先に「メンバー情報を保存する」を押してください。選手追加後はメンバー一覧に反映されます。発行したIDは後から確認できるよう控えておいてください。</div>
+  </section>
+
+  <section>
+    <h2>3. 既存メンバーを編集する</h2>
+    <ul>
+      <li>上部のチーム選択欄から編集対象を切り替えます。</li>
+      <li>一覧で背番号・利き手・ポジションを変更し、<strong>「メンバー情報を保存する」</strong>を押して確定します。</li>
+      <li>選手名とプレイヤーIDは選手の識別情報です。IDはクリックまたはコピー操作で控えられます。</li>
+      <li>管理者バッジはチーム内の権限切り替えに使います。最後の管理者を失わないよう、権限変更は慎重に行ってください。</li>
+      <li>「削除」はチームからメンバーを外す操作です。必要な場合のみ実行してください。</li>
+    </ul>
+    <div class="screen" role="img" aria-label="メンバー編集画面の簡易イメージ">
+      <div class="bar">チーム情報編集　/　サンプルチーム</div><div class="panel">
+        <div class="mock-title">メンバー情報の編集</div>
+        <table class="mock-table"><thead><tr><th>選手名</th><th>プレイヤーID</th><th>背番号</th><th>ポジション</th><th>権限</th></tr></thead>
+          <tbody><tr><td>選手A</td><td>p_********</td><td>10</td><td>投手</td><td><span class="tag">管理者</span></td></tr><tr><td>選手B</td><td>p_********</td><td>7</td><td>未設定</td><td>メンバー</td></tr></tbody>
+        </table>
+        <div class="mock-field" style="text-align:center;">メンバー情報を保存する</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. ログインユーザーの加入申請を処理する</h2>
+    <p>「加入申請待ち」に申請が届くと、申請者名・希望背番号・利き手を確認できます。内容を確認して<strong>「承認」</strong>または<strong>「拒否」</strong>を選び、確認ダイアログで確定します。承認すると申請者がメンバー一覧に加わります。</p>
+  </section>
+
+  <section>
+    <h2>5. ログインユーザーがチームへ加入申請する</h2>
+    <ol>
+      <li>メインメニューの「チーム・メンバー管理」から「チーム加入申請」を選びます。</li>
+      <li>チームを検索して選択し、投打の利き手を指定します。希望背番号は任意です。</li>
+      <li>「加入リクエストを送信」を押します。チーム管理者が承認すると、チームのメンバーとして登録されます。</li>
+    </ol>
+    <p>申請先が検索に出ない場合や申請後に状態を確認したい場合は、チーム管理者に問い合わせてください。</p>
+  </section>
+
+  <p><a href="manual_entry.html">次へ：大会にエントリーする →</a></p>
+</main>
+</body>
+</html>

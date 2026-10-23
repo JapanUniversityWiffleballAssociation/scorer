@@ -74,6 +74,9 @@ async function fetchGameList() {
     try {
         const response = await fetch(`${GAS_URL}?_=${Date.now()}`);
         const gameList = await response.json();
+        if (!Array.isArray(gameList)) {
+            throw new Error(gameList.message || "試合一覧を取得できませんでした。");
+        }
 
         if (!gameList || gameList.length === 0) {
             container.innerHTML = "<p style='text-align:center;'>現在、進行中の試合はありません。</p>";
@@ -81,40 +84,67 @@ async function fetchGameList() {
         }
 
         // リーグごとにグループ化
-        const grouped = gameList.reduce((acc, g) => {
+        const grouped = new Map();
+        gameList.forEach(g => {
             const name = g.leagueName || "その他";
-            if (!acc[name]) acc[name] = [];
-            acc[name].push(g);
-            return acc;
-        }, {});
+            if (!grouped.has(name)) grouped.set(name, []);
+            grouped.get(name).push(g);
+        });
 
         container.innerHTML = "";
-        for (const league in grouped) {
+        for (const [league, games] of grouped) {
             const section = document.createElement('div');
-            section.innerHTML = `<h3 style="border-left:4px solid #2ecc71; padding-left:10px; margin-top:20px;">${league}</h3>`;
-            
-            const gamesHtml = grouped[league].map(g => `
-                <div class="game-card" onclick="location.href='viewer.html?id=${g.id}'">
-                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; margin-bottom:5px;">
-                        <span>${g.isFinished ? '【終了】' : '【LIVE】'}</span>
-                        <span>ID: ${g.id}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-around; align-items:center;">
-                        <div style="text-align:center; flex:1;"><strong>${g.topTeam}</strong></div>
-                        <div style="font-size:1.5rem; font-weight:bold; flex:1; text-align:center;">${g.totalScore.top} - ${g.totalScore.bottom}</div>
-                        <div style="text-align:center; flex:1;"><strong>${g.bottomTeam}</strong></div>
-                    </div>
-                    <div style="text-align:center; font-size:0.9rem; margin-top:5px; color:#2ecc71;">
-                        ${g.isFinished ? '試合終了' : g.inning + '回' + (g.isBottom ? '裏' : '表')}
-                    </div>
-                </div>
-            `).join('');
-            
-            section.innerHTML += gamesHtml;
+            const heading = document.createElement('h3');
+            heading.style.cssText = "border-left:4px solid #2ecc71; padding-left:10px; margin-top:20px;";
+            heading.textContent = league;
+            section.appendChild(heading);
+
+            games.forEach(g => {
+                const card = document.createElement('div');
+                card.className = 'game-card';
+                card.addEventListener('click', () => {
+                    window.location.href = `viewer.html?id=${encodeURIComponent(g.id)}`;
+                });
+
+                const metadata = document.createElement('div');
+                metadata.style.cssText = "display:flex; justify-content:space-between; font-size:0.8rem; color:#aaa; margin-bottom:5px;";
+                const status = document.createElement('span');
+                status.textContent = g.isFinished ? '【終了】' : '【LIVE】';
+                const id = document.createElement('span');
+                id.textContent = `ID: ${g.id}`;
+                metadata.append(status, id);
+
+                const teams = document.createElement('div');
+                teams.style.cssText = "display:flex; justify-content:space-around; align-items:center;";
+                const topTeam = document.createElement('div');
+                topTeam.style.cssText = "text-align:center; flex:1;";
+                const topTeamName = document.createElement('strong');
+                topTeamName.textContent = g.topTeam || "";
+                topTeam.appendChild(topTeamName);
+                const score = document.createElement('div');
+                score.style.cssText = "font-size:1.5rem; font-weight:bold; flex:1; text-align:center;";
+                score.textContent = `${g.totalScore?.top ?? 0} - ${g.totalScore?.bottom ?? 0}`;
+                const bottomTeam = document.createElement('div');
+                bottomTeam.style.cssText = "text-align:center; flex:1;";
+                const bottomTeamName = document.createElement('strong');
+                bottomTeamName.textContent = g.bottomTeam || "";
+                bottomTeam.appendChild(bottomTeamName);
+                teams.append(topTeam, score, bottomTeam);
+
+                const inning = document.createElement('div');
+                inning.style.cssText = "text-align:center; font-size:0.9rem; margin-top:5px; color:#2ecc71;";
+                inning.textContent = g.isFinished
+                    ? '試合終了'
+                    : `${g.inning ?? ""}回${g.isBottom ? '裏' : '表'}`;
+
+                card.append(metadata, teams, inning);
+                section.appendChild(card);
+            });
+
             container.appendChild(section);
         }
     } catch (e) {
-        container.innerHTML = "<p>データ取得エラーが発生しました。</p>";
+        container.textContent = e.message || "データ取得エラーが発生しました。";
     }
 }
 
@@ -127,9 +157,12 @@ async function fetchGameDetail(id) {
     if (statusEl) statusEl.textContent = "更新中...";
 
     try {
-        const response = await fetch(`${GAS_URL}?gameId=${id}&_=${Date.now()}`);
-        const state = await response.json();
-
+        const response = await fetch(`${GAS_URL}?gameId=${id}&mode=getGameDetail`);
+        const result = await response.json();
+        if (result.status === 'error') {
+            throw new Error(result.message || "試合データを取得できませんでした。");
+        }
+        const state = result.state;
         if (!state || state.error) {
             alert("試合データが見つかりません。");
             backToList();
@@ -159,7 +192,8 @@ async function fetchGameDetail(id) {
         
         //ピッチャー、バッターの表示更新
         document.getElementById('display-pitch-count').textContent = state.isBottomInning ? state.pitchingCount.bottom.at(-1) : state.pitchingCount.top.at(-1);
-        document.getElementById('display-pitcher-name').textContent = state.isBottomInning ? state.topPlayers.pitcher.at(-1)||"ピッチャー" : state.bottomPlayers.pitcher.at(-1)||"ピッチャー";
+        const pitcher = (state.isBottomInning ? state.topPlayers : state.bottomPlayers).pitcher.at(-1);
+        document.getElementById('display-pitcher-name').textContent = (typeof pitcher === "string" ? pitcher : pitcher?.name) || "ピッチャー";
         
         if((state.isBottomInning&&state.bottomPlayers.batter.length>0) || (!state.isBottomInning && state.topPlayers.batter.length>0)){
             document.getElementById('display-batter-name').textContent = state.isBottomInning ? state.bottomPlayers.batter[state.battingCount.bottom % state.bottomPlayers.batter.length].name: state.topPlayers.batter[state.battingCount.top % state.topPlayers.batter.length].name;
@@ -176,7 +210,7 @@ async function fetchGameDetail(id) {
             stopAutoUpdate();
         }
     } catch (e) {
-        if (statusEl) statusEl.textContent = "通信エラー";
+        if (statusEl) statusEl.textContent = e.message || "通信エラー";
     }
 }
 

@@ -140,7 +140,6 @@
         members: members
       };
 
-      console.log('拡張された送信データ:', payload);
       errorEl.textContent = 'チームを作成中...';
       errorEl.style.color = '#007bff';
 
@@ -157,7 +156,7 @@
           errorEl.style.color = 'red';
         }
       } catch (e) {
-        errorEl.textContent = '予期せぬエラーが発生しました。';
+        errorEl.textContent = e.message || 'チームを作成できませんでした。';
         errorEl.style.color = 'red';
       }
     });

@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       tbody.innerHTML = '<tr><td colspan="3" class="empty-message">チームの読み込みに失敗しました</td></tr>';
     }
     if (typeof showMessage === 'function') {
-      showMessage('チーム情報の取得に失敗しました。', 'red');
+      showMessage(error.message || 'チーム情報の取得に失敗しました。', 'red');
     }
   }
 
@@ -127,12 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-      const response = await fetch(AuthService.API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      
-      const result = await response.json();
+      const result = await postToGAS(AuthService.API_URL, payload);
 
       if (result.status === 'success') {
         if (typeof showMessage === 'function') {
@@ -151,9 +146,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
       console.error('加入申請エラー:', error);
       if (typeof showMessage === 'function') {
-        showMessage('通信エラーが発生しました。', 'red');
+        showMessage(error.message || '通信エラーが発生しました。', 'red');
       } else {
-        alert('通信エラーが発生しました。');
+        alert(error.message || '通信エラーが発生しました。');
       }
       submitBtn.disabled = false;
     }

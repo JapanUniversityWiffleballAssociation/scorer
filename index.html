@@ -131,6 +131,11 @@
         </footer>
     </div>
 <script>
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        localStorage.clear();
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const userId = document.getElementById('userId').value;
@@ -140,8 +145,8 @@
     // ローディング表示（SE的なUX配慮）
     errorEl.textContent = '認証中...';
     
-    const result = await AuthService.login(userId, pass);
-
+    try {
+        const result = await AuthService.login(userId, pass);
     if (result.success) {
         
         // URLパラメータを確認して遷移先を決定
@@ -155,7 +160,9 @@
     } else {
       errorEl.textContent = result.message;
     }
-
+    } catch (error) {
+        errorEl.textContent = error.message || '通信エラーが発生しました。';
+    }
 
   });
 
@@ -167,11 +174,15 @@
     // ローディング表示（SE的なUX配慮）
     errorEl.textContent = '読み込み中...';
     
-    const result = await AuthService.login(userId, pass);
-    if (result.success) {
-      window.location.href = 'menu.html'; // 遷移先
-    } else {
-      errorEl.textContent = '通信エラーです。再度実行してください。';
+    try {
+        const result = await AuthService.login(userId, pass);
+        if (result.success) {
+            window.location.href = 'menu.html'; // 遷移先
+        } else {
+            errorEl.textContent = result.message || 'ログインに失敗しました。';
+        }
+    } catch (error) {
+        errorEl.textContent = error.message || '通信エラーが発生しました。';
     }
   });
 </script>

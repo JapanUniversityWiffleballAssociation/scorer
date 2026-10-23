@@ -53,12 +53,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (row.querySelector('.empty-message')) return; 
 
       const name = row.cells[0].textContent.trim();
+      const playerId = row.dataset.playerid || "";
       const number = row.querySelector('.edit-number').value;
       const handedness = row.querySelector('.edit-handedness').value;
       const pos = row.querySelector('.edit-pos').value;
 
-      // 保存用オブジェクトとして再構築 (playerId等は既存維持が必要なら工夫の余地あり)
+      // 保存用オブジェクトとして再構築 (playerIdを必ず保持)
       updatedMembers.push({
+        playerId: playerId,
         name: name,
         number: number,
         handedness: handedness,
@@ -74,11 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         members: updatedMembers
       };
 
-      const response = await fetch(AuthService.API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json();
+      const result = await postToGAS(CONST_GAS_URL, payload);
 
       if (result.status === 'success') {
         hasUnsavedChanges = false; // フラグをリセット
@@ -87,7 +85,55 @@ document.addEventListener('DOMContentLoaded', async () => {
         await CustomDialog.alert(result.message, 'エラー');
       }
     } catch (error) {
-      await CustomDialog.alert('通信エラーが発生しました。', 'エラー');
+      await CustomDialog.alert(error.message || '通信エラーが発生しました。', 'エラー');
+    }
+  });
+
+  document.getElementById('addUnregisteredMemberBtn').addEventListener('click', async (event) => {
+    if (!currentTeamId) return;
+    if (hasUnsavedChanges) {
+      await CustomDialog.alert('先にメンバー情報を保存してください。', '未保存の変更');
+      return;
+    }
+
+    const nameInput = document.getElementById('newMemberName');
+    const name = nameInput.value.trim();
+    if (!name) {
+      await CustomDialog.alert('選手名を入力してください。', '入力エラー');
+      nameInput.focus();
+      return;
+    }
+
+    const button = event.currentTarget;
+    button.disabled = true;
+    try {
+      const result = await postToGAS(CONST_GAS_URL, {
+        mode: 'addUnregisteredTeamMember',
+        authKey: authKey,
+        teamId: currentTeamId,
+        name: name,
+        number: document.getElementById('newMemberNumber').value,
+        handedness: document.getElementById('newMemberHandedness').value,
+        pos: document.getElementById('newMemberPos').value
+      });
+
+      if (result.status !== 'success') {
+        await CustomDialog.alert(result.message || '選手を追加できませんでした。', 'エラー');
+        return;
+      }
+
+      const issuedPlayerId = result.playerId;
+      nameInput.value = '';
+      document.getElementById('newMemberNumber').value = '';
+      await loadTeamData(currentTeamId, authKey);
+      document.getElementById('issuedPlayerId').textContent = issuedPlayerId;
+      document.getElementById('issuedPlayerIdMessage').hidden = false;
+      document.getElementById('copyIssuedPlayerIdBtn').onclick = () => copyPlayerId(issuedPlayerId);
+      await CustomDialog.alert(`${result.message}\nプレイヤーID: ${issuedPlayerId}`, '登録完了');
+    } catch (error) {
+      await CustomDialog.alert(error.message || '通信エラーが発生しました。', 'エラー');
+    } finally {
+      button.disabled = false;
     }
   });
 });
@@ -129,7 +175,7 @@ async function loadAdminTeams(authKey) {
     }
   } catch (error) {
     console.error('Error:', error);
-    await CustomDialog.alert('通信エラーが発生しました。');
+    await CustomDialog.alert(error.message || '通信エラーが発生しました。');
   }
 }
 
@@ -141,7 +187,7 @@ async function loadTeamData(teamId, authKey) {
   const memberTableBody = document.getElementById('memberTableBody');
   
   requestTableBody.innerHTML = '<tr><td colspan="5" class="empty-message">読み込み中...</td></tr>';
-  memberTableBody.innerHTML = '<tr><td colspan="4" class="empty-message">読み込み中...</td></tr>';
+  memberTableBody.innerHTML = '<tr><td colspan="7" class="empty-message">読み込み中...</td></tr>';
 
   try {
     const fetchUrl = `${AuthService.API_URL}?mode=getTeamEditData&authKey=${encodeURIComponent(authKey)}&teamId=${encodeURIComponent(teamId)}`;
@@ -159,7 +205,7 @@ async function loadTeamData(teamId, authKey) {
     }
   } catch (error) {
     console.error('Error:', error);
-    await CustomDialog.alert('データの読み込みに失敗しました。');
+    await CustomDialog.alert(error.message || 'データの読み込みに失敗しました。');
   }
 }
 
@@ -221,11 +267,7 @@ function renderRequests(requests) {
           action: action
         };
 
-        const response = await fetch(AuthService.API_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
+        const result = await postToGAS(CONST_GAS_URL, payload);
 
         if (result.status === 'success') {
           await CustomDialog.alert(result.message, '完了');
@@ -235,7 +277,7 @@ function renderRequests(requests) {
           await CustomDialog.alert(result.message, 'エラー');
         }
       } catch (error) {
-        await CustomDialog.alert('通信エラーが発生しました。', 'エラー');
+        await CustomDialog.alert(error.message || '通信エラーが発生しました。', 'エラー');
       }
     });
   });
@@ -249,12 +291,13 @@ function renderMembers(members) {
   memberTableBody.innerHTML = '';
 
   if (members.length === 0) {
-    memberTableBody.innerHTML = '<tr><td colspan="4" class="empty-message">メンバーが登録されていません。</td></tr>';
+    memberTableBody.innerHTML = '<tr><td colspan="7" class="empty-message">メンバーが登録されていません。</td></tr>';
     return;
   }
 
   members.forEach(member => {
     const tr = document.createElement('tr');
+    tr.dataset.playerid = member.playerId || '';
     
     // 利き手の選択肢用ヘルパー関数
     const getHandednessOptions = (selected) => {
@@ -268,8 +311,22 @@ function renderMembers(members) {
       return options.map(opt => `<option value="${opt}" ${opt === selected ? 'selected' : ''}>${opt}</option>`).join('');
     };
 
-tr.innerHTML = `
-      <td>${member.name}</td>
+    const playerIdHtml = member.playerId 
+      ? `<span class="player-id-badge" title="クリックしてコピー" onclick="copyPlayerId('${member.playerId}')">${member.playerId} <span style="font-size:0.75rem;">📋</span></span>`
+      : `<span style="color:#7f8c8d; font-size:0.85rem;">未発行</span>`;
+
+    // 権限バッジ
+    const role = member.role || 'MEMBER';
+    const isAdmin = role === 'ADMIN';
+    const roleLabel = isAdmin ? '👑 管理者' : '👤 メンバー';
+    const roleClass = isAdmin ? 'role-admin' : 'role-member';
+    const roleBadgeHtml = member.playerId
+      ? `<button class="role-badge ${roleClass} toggle-role-btn" data-playerid="${member.playerId}" title="クリックして権限を切り替え">${roleLabel}</button>`
+      : `<span style="color:#7f8c8d; font-size:0.8rem;">-</span>`;
+
+    tr.innerHTML = `
+      <td>${escapeHtml(member.name)}</td>
+      <td style="text-align: center;">${playerIdHtml}</td>
       <td><input type="number" class="form-control number-input edit-number" value="${member.number || ''}" min="0" max="999"></td>
       <td>
         <select class="form-control edit-handedness">
@@ -281,8 +338,9 @@ tr.innerHTML = `
           ${getPosOptions(member.pos || '未設定')}
         </select>
       </td>
+      <td style="text-align: center;">${roleBadgeHtml}</td>
       <td>
-        <button class="btn btn-sm btn-reject remove-member-btn" data-playerid="${member.playerId}">削除</button>
+        <button class="btn btn-sm btn-reject remove-member-btn" data-playerid="${member.playerId || ''}">削除</button>
       </td>
     `;
     memberTableBody.appendChild(tr);
@@ -300,9 +358,45 @@ tr.innerHTML = `
     }
   });
 
-    // ----------------------------------------
+  // ----------------------------------------
+  // 権限切り替えボタンのイベントリスナー
+  // ----------------------------------------
+  document.querySelectorAll('.toggle-role-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const targetPlayerId = e.target.dataset.playerid;
+      const currentRole = e.target.classList.contains('role-admin') ? '管理者' : 'メンバー';
+      const newRole = e.target.classList.contains('role-admin') ? 'メンバー' : '管理者';
+
+      const isOk = await CustomDialog.confirm(
+        `この選手の権限を「${currentRole}」→「${newRole}」に変更しますか？`,
+        '権限の変更'
+      );
+      if (!isOk) return;
+
+      try {
+        const payload = {
+          mode: 'toggleMemberRole',
+          authKey: AuthService.getApiKey(),
+          teamId: currentTeamId,
+          targetPlayerId: targetPlayerId
+        };
+        const result = await postToGAS(CONST_GAS_URL, payload);
+
+        if (result.status === 'success') {
+          await CustomDialog.alert(result.message, '完了');
+          await loadTeamData(currentTeamId, AuthService.getApiKey()); // 表を再描画
+        } else {
+          await CustomDialog.alert(result.message, 'エラー');
+        }
+      } catch (error) {
+        await CustomDialog.alert(error.message || '通信エラーが発生しました。', 'エラー');
+      }
+    });
+  });
+
+  // ----------------------------------------
   // メンバー削除ボタンのイベントリスナー
-    // ----------------------------------------
+  // ----------------------------------------
   document.querySelectorAll('.remove-member-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const targetPlayerId = e.target.dataset.playerid;
@@ -317,8 +411,7 @@ tr.innerHTML = `
           teamId: currentTeamId,
           targetPlayerId: targetPlayerId
         };
-        const response = await fetch(AuthService.API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const result = await response.json();
+        const result = await postToGAS(CONST_GAS_URL, payload);
 
         if (result.status === 'success') {
           await CustomDialog.alert(result.message, '完了');
@@ -327,8 +420,38 @@ tr.innerHTML = `
           await CustomDialog.alert(result.message, 'エラー');
         }
       } catch (error) {
-        await CustomDialog.alert('通信エラーが発生しました。', 'エラー');
+        await CustomDialog.alert(error.message || '通信エラーが発生しました。', 'エラー');
       }
     });
   });
+}
+
+/**
+ * プレイヤーIDをクリップボードにコピーする関数
+ */
+function copyPlayerId(id) {
+  if (!id) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(id).then(() => {
+      if (window.CustomDialog) {
+        CustomDialog.alert(`プレイヤーID「${id}」をクリップボードにコピーしました！\nアカウント登録時にこのIDを指定することができます。`, 'IDコピー完了');
+      } else {
+        alert(`プレイヤーID「${id}」をコピーしました`);
+      }
+    }).catch(() => {
+      prompt("プレイヤーIDをコピーしてください:", id);
+    });
+  } else {
+    prompt("プレイヤーIDをコピーしてください:", id);
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
 }

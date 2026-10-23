@@ -28,7 +28,7 @@
     <h1>🏆 リーグ管理</h1>
 
     <section class="card">
-        <h2>新規リーグ登録</h2>
+        <h2>新規大会（リーグ）登録</h2>
         <div class="input-group">
             <label>大会略称 (ID用・半角英数推奨)</label>
             <input type="text" id="league-id" placeholder="例: JUWA2026S">
@@ -37,6 +37,58 @@
             <label>正式名称 (表示用)</label>
             <input type="text" id="league-name" placeholder="例: 2026年度 春季リーグ">
         </div>
+        
+        <!-- ▼試合レギュレーション設定▼ -->
+        <div class="input-group">
+            <label>試合レギュレーション</label>
+            <select id="league-match-regulation" style="width: 100%; padding: 12px; border: none; border-radius: 5px; background: #34495e; color: white;">
+                <option value="JAPAN">日本ルール</option>
+                <option value="FAST_PITCH">ファストピッチルール</option>
+                <option value="CLASSIC">クラシックルール</option>
+                <option value="ORIGINAL">オリジナルルール</option>
+            </select>
+        </div>
+        <!-- ▼大会フォーマット設定▼ -->
+        <div class="input-group">
+            <label>大会形式（本戦フォーマット）</label>
+            <select id="league-regulation" style="width: 100%; padding: 12px; border: none; border-radius: 5px; background: #34495e; color: white;">
+                <option value="TOURNAMENT">トーナメント（シングル）</option>
+                <option value="TOURNAMENT_DOUBLE">トーナメント（ダブルエリミネーション）</option>
+                <option value="LEAGUE">リーグ戦（総当たり）</option>
+                <option value="OTHER">別フォーマット・特殊</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>予選の有無</label>
+            <select id="league-qualifier" style="width: 100%; padding: 12px; border: none; border-radius: 5px; background: #34495e; color: white;">
+                <option value="false">なし（本戦のみ）</option>
+                <option value="true">あり</option>
+            </select>
+        </div>
+        <!-- ▼「予選あり」の場合のみ表示されるエリア▼ -->
+        <div id="qualifier-settings" class="input-group" style="display: none; padding: 15px; background: rgba(255,255,255,0.05); border-left: 4px solid #f1c40f; border-radius: 4px; margin-bottom: 15px;">
+            <label style="color: #f1c40f;">予選フォーマット</label>
+            <select id="league-qualifier-regulation" style="width: 100%; padding: 12px; border: none; border-radius: 5px; background: #34495e; color: white; margin-top: 5px;">
+                <option value="LEAGUE">総当たりリーグ戦</option>
+                <option value="TOURNAMENT">トーナメント（シングル）</option>
+                <option value="TOURNAMENT_DOUBLE">トーナメント（ダブルエリミネーション）</option>
+                <option value="OTHER">別フォーマット・特殊</option>
+            </select>
+        </div>
+        <!-- ▲追加ここまで▲ -->
+
+        <!-- ▼チーム募集要項の設定（フロート画面）▼ -->
+        <div class="input-group">
+            <label>チーム募集要項</label>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid #34495e; border-radius: 5px; padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div>
+                    <span id="recruitment-summary-badge" style="display: inline-block; background: #3498db; color: white; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; font-weight: bold;">エントリー制</span>
+                    <span id="recruitment-summary-text" style="font-size: 0.85rem; color: #bdc3c7; margin-left: 8px;">上限: 無制限</span>
+                </div>
+                <button type="button" id="open-recruitment-modal-btn" style="background: #34495e; color: #ecf0f1; border: 1px solid #555; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; white-space: nowrap;">⚙️ 要項を設定</button>
+            </div>
+        </div>
+
         <div class="input-group" style="display: flex; gap: 10px;">
             <div style="flex: 1;">
                 <label>開始日</label>
@@ -47,7 +99,7 @@
                 <input type="date" id="league-end">
             </div>
         </div>
-        <button type="button" id="save-btn" class="btn">リーグを開設する</button>
+        <button type="button" id="save-btn" class="btn">大会を開設してエントリーを受付</button>
     </section>
 
     <section class="card">
@@ -57,9 +109,128 @@
 
     <a href="edit-games.html" class="nav-link">記録用アプリへ →</a>
 </div>
+
+<!-- ▼チーム募集要項設定モーダル（フロート画面）▼ -->
+<div id="recruitment-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="background-color: #2c3e50; color: #ecf0f1; max-width: 480px; width: 90%;">
+        <div class="modal-header" style="background-color: #1a252f; border-bottom: 1px solid #34495e; padding: 14px 20px;">
+            <h3 style="margin: 0; color: var(--primary); font-size: 1.1rem;">⚙️ チーム募集要項の設定</h3>
+            <button type="button" id="close-recruitment-modal-btn" class="close-button" style="color: #bdc3c7;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 20px; text-align: left;">
+            <!-- ① オープンリーグ設定 -->
+            <div class="input-group">
+                <label style="font-weight: bold; color: #ecf0f1;">① リーグの公開区分</label>
+                <select id="setting-is-open-league" style="width: 100%; padding: 12px; border: none; border-radius: 5px; background: #34495e; color: white;">
+                    <option value="false">エントリー制（限定リーグ）</option>
+                    <option value="true">オープンリーグ（エントリー不要）</option>
+                </select>
+                <small style="display: block; margin-top: 5px; color: #bdc3c7; font-size: 0.8rem; line-height: 1.4;">
+                    ※オープンリーグはエントリーしなくても試合記録ができます。
+                </small>
+            </div>
+
+            <!-- ▼エントリー制（限定リーグ）の場合のみ表示されるエリア▼ -->
+            <div id="restricted-league-settings" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.25); border-radius: 6px; border-left: 3px solid #3498db;">
+                <!-- ② 参加チーム上限 -->
+                <div class="input-group">
+                    <label style="font-weight: bold; color: #ecf0f1;">② 参加チーム上限</label>
+                    <input type="number" id="setting-max-teams" min="2" placeholder="例: 8（空欄で上限なし）" style="width: 100%; padding: 10px; border: none; border-radius: 5px; background: #34495e; color: white; box-sizing: border-box;">
+                    <small style="display: block; margin-top: 5px; color: #bdc3c7; font-size: 0.8rem;">
+                        ※大会に参加可能な最大チーム数（空欄の場合は上限なし）
+                    </small>
+                </div>
+
+                <!-- ③ 1チームの登録人数上限 -->
+                <div class="input-group" style="margin-top: 15px;">
+                    <label style="font-weight: bold; color: #ecf0f1;">③ 1チームの登録人数上限</label>
+                    <input type="number" id="setting-max-members" min="1" placeholder="例: 15（空欄で上限なし）" style="width: 100%; padding: 10px; border: none; border-radius: 5px; background: #34495e; color: white; box-sizing: border-box;">
+                    <small style="display: block; margin-top: 5px; color: #bdc3c7; font-size: 0.8rem;">
+                        ※1チームあたりエントリーできる最大メンバー数（空欄の場合は上限なし）
+                    </small>
+                </div>
+
+                <!-- ④ エントリー内容の変更期日 -->
+                <div class="input-group" style="margin-top: 15px; margin-bottom: 0;">
+                    <label style="font-weight: bold; color: #ecf0f1;">④ エントリー内容の変更期日</label>
+                    <input type="date" id="setting-entry-change-deadline" style="width: 100%; padding: 10px; border: none; border-radius: 5px; background: #34495e; color: white; box-sizing: border-box;">
+                    <small style="display: block; margin-top: 5px; color: #bdc3c7; font-size: 0.8rem;">
+                        ※エントリー後のメンバー変更や登録内容の修正を受け付ける期限日です（空欄の場合は制限なし）。
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="background-color: #1a252f; border-top: 1px solid #34495e; padding: 12px 20px;">
+            <button type="button" id="confirm-recruitment-modal-btn" class="btn" style="padding: 10px; font-size: 0.95rem;">設定を反映して閉じる</button>
+        </div>
+    </div>
+</div>
 <script src="js/common.js"></script>
 <script>
     const GAS_URL = CONST_GAS_URL;
+
+    // 予選の有無による表示切替
+    document.getElementById('league-qualifier').addEventListener('change', function() {
+        const qualifierSettings = document.getElementById('qualifier-settings');
+        if (this.value === 'true') {
+            qualifierSettings.style.display = 'block';
+        } else {
+            qualifierSettings.style.display = 'none';
+        }
+    });
+
+    // チーム募集要項モーダルの制御
+    const recruitmentModal = document.getElementById('recruitment-modal');
+    document.getElementById('open-recruitment-modal-btn').addEventListener('click', () => {
+        recruitmentModal.style.display = 'flex';
+    });
+    document.getElementById('close-recruitment-modal-btn').addEventListener('click', () => {
+        recruitmentModal.style.display = 'none';
+    });
+    document.getElementById('confirm-recruitment-modal-btn').addEventListener('click', () => {
+        updateRecruitmentSummary();
+        recruitmentModal.style.display = 'none';
+    });
+    recruitmentModal.addEventListener('click', (e) => {
+        if (e.target === recruitmentModal) {
+            updateRecruitmentSummary();
+            recruitmentModal.style.display = 'none';
+        }
+    });
+
+    // オープンリーグ切り替え時の限定設定エリア表示切替
+    document.getElementById('setting-is-open-league').addEventListener('change', function() {
+        const restrictedArea = document.getElementById('restricted-league-settings');
+        if (this.value === 'true') {
+            restrictedArea.style.display = 'none';
+        } else {
+            restrictedArea.style.display = 'block';
+        }
+        updateRecruitmentSummary();
+    });
+
+    // サマリー表示の更新
+    function updateRecruitmentSummary() {
+        const isOpen = document.getElementById('setting-is-open-league').value === 'true';
+        const maxTeams = document.getElementById('setting-max-teams').value.trim();
+        const maxMembers = document.getElementById('setting-max-members').value.trim();
+        const deadline = document.getElementById('setting-entry-change-deadline').value;
+        const badge = document.getElementById('recruitment-summary-badge');
+        const text = document.getElementById('recruitment-summary-text');
+
+        if (isOpen) {
+            badge.textContent = 'オープンリーグ';
+            badge.style.background = '#2ecc71';
+            text.textContent = 'エントリー不要で記録可';
+        } else {
+            badge.textContent = 'エントリー制';
+            badge.style.background = '#3498db';
+            const teamTxt = maxTeams ? `${maxTeams}チーム` : '上限なし';
+            const memberTxt = maxMembers ? `${maxMembers}人` : '上限なし';
+            const deadlineTxt = deadline ? `変更期日: ${deadline}` : '期日なし';
+            text.textContent = `参加チーム: ${teamTxt} / 登録人数: ${memberTxt} / ${deadlineTxt}`;
+        }
+    }
 
     /**
      * 保存処理
@@ -71,31 +242,68 @@
         const end = document.getElementById('league-end').value;
 
         if (!id || !name || !start || !end) {
-            alert("すべての項目を入力してください");
+            await CustomDialog.alert("すべての項目を入力してください");
             return;
         }
         if (id.includes("-")){
-            alert("リーグIDに使用不許可文字「-（半角ハイフン）」が含まれているため登録できません。");
+            await CustomDialog.alert("リーグIDに使用不許可文字「-（半角ハイフン）」が含まれているため登録できません。");
+            return;
+        }
+        if(new Date(start) > new Date(end)) {
+            await CustomDialog.alert("開始日が終了日より後になっています。");
+            return;
+        }
+        const matchRegulation = document.getElementById('league-match-regulation').value;
+        const regulation = document.getElementById('league-regulation').value;
+        const hasQualifier = document.getElementById('league-qualifier').value;
+        const qualifierRegulation = hasQualifier === "true" ? document.getElementById('league-qualifier-regulation').value : null;
+
+        // 募集要項パラメータの取得
+        const isOpenLeague = document.getElementById('setting-is-open-league').value;
+        const maxTeams = isOpenLeague === "true" ? "" : document.getElementById('setting-max-teams').value.trim();
+        const maxMembersPerTeam = isOpenLeague === "true" ? "" : document.getElementById('setting-max-members').value.trim();
+        const entryChangeDeadline = isOpenLeague === "true" ? "" : document.getElementById('setting-entry-change-deadline').value;
+
+        if (entryChangeDeadline && start && new Date(entryChangeDeadline) > new Date(start)) {
+            await CustomDialog.alert("エントリー内容の変更期日は、大会開始日以前の日付を設定してください。");
+            return;
+        }
+
+        // AuthServiceからAPIキーを取得（ログイン状態の確認）
+        const authKey = AuthService.getApiKey();
+        if (!authKey) {
+            await CustomDialog.alert("ログインが必要です。再度ログインしてください。");
             return;
         }
         const btn = document.getElementById('save-btn');
         btn.disabled = true;
         btn.textContent = "送信中...";
 
+
         const payload = {
             mode: "saveLeague",
+            authKey: authKey, // 誰が作成したか特定するため追加
             leagueId: id,
             leagueName: name,
             startDate: start,
-            endDate: end
+            endDate: end,
+            matchRegulation: matchRegulation, // 試合レギュレーション
+            regulation: regulation, // 大会形式
+            hasQualifier: hasQualifier, // 追加
+            qualifierRegulation: qualifierRegulation, // 予選フォーマット(ない場合はnull)
+            isOpenLeague: isOpenLeague, // オープンリーグフラグ ("true" / "false")
+            maxTeams: maxTeams, // 参加チーム上限 (空文字で上限なし)
+            maxMembersPerTeam: maxMembersPerTeam, // 1チーム登録人数上限 (空文字で上限なし)
+            entryChangeDeadline: entryChangeDeadline // エントリー内容の変更期日 (空文字で制限なし)
         };
 
         try {
             await postToGAS(GAS_URL, payload);
-            alert("リーグを登録しました！");
-            location.reload();
+            await CustomDialog.alert("リーグを登録しました！");
+            btn.disabled = false;
+            btn.textContent = "リーグを開設する";
         } catch (e) {
-            alert("エラーが発生しました");
+            await CustomDialog.alert(e.message || "大会を登録できませんでした。");
             btn.disabled = false;
             btn.textContent = "リーグを開設する";
         } 
@@ -109,6 +317,9 @@
         try {
             const res = await fetch(`${GAS_URL}?mode=getLeagues&_=${Date.now()}`);
             const leagues = await res.json();
+            if (!Array.isArray(leagues)) {
+                throw new Error(leagues.message || "大会一覧を取得できませんでした。");
+            }
 
             if (leagues.length === 0) {
                 listEl.innerHTML = "<p>登録されたリーグはありません</p>";
@@ -121,7 +332,11 @@
                 <span class="status-badge">${l.status}</span>
                 <strong>${l.name}</strong><br>
             <small>ID: ${l.id} | 期間: ${l.start} ～ ${l.end}</small>
-            <div style="margin-top: 10px; text-align: right;">
+            <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px;">
+            <button onclick="location.href='league-operation.html?leagueId=${l.id}'" 
+                    style="background: #e67e22; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;">
+                ⚙️ 大会運営・編集
+            </button>
             <button onclick="location.href='edit-games.html?leagueId=${l.id}'" 
                     style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.8rem;">
                 このリーグの試合を記録する
@@ -130,7 +345,7 @@
             </div>
         `).join('');
         } catch (e) {
-            listEl.innerHTML = "<p>データの読み込みに失敗しました</p>";
+            listEl.textContent = e.message || "大会一覧の読み込みに失敗しました。";
         }
     }
 

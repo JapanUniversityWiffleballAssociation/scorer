@@ -95,14 +95,31 @@
             border-radius: 4px;
             font-family: monospace;
         }
+        .screen {
+            margin: 20px 0;
+            border: 1px solid #aebdca;
+            border-radius: 10px;
+            overflow: hidden;
+            color: #ecf0f1;
+            background: #1e2c39;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .12);
+        }
+        .screen-bar { padding: 9px 14px; background: #14212c; color: #b9c8d4; font-size: .85rem; }
+        .screen-body { padding: 16px; }
+        .mock-field { margin: 9px 0; padding: 10px 12px; background: #2c3e50; border: 1px solid #526273; border-radius: 5px; }
+        .mock-button { display: inline-block; padding: 8px 12px; border-radius: 5px; background: #218c52; color: white; }
+        .caption { color: #667085; font-size: .85rem; }
+        .callout { margin: 18px 0; padding: 14px 16px; background: #eef7ff; border-left: 5px solid #3498db; }
+        @media (max-width: 600px) { .container { margin: 0; padding: 22px 16px; border-radius: 0; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>🏆 操作マニュアル：大会作成（リーグ管理）</h1>
-        <p>JUWA 試合速報システムにおいて、新しい大会（リーグ）を開設し、管理する手順を説明します。</p>
+        <h1>🏆 操作マニュアル：大会を作成・運営する</h1>
+        <p>大会を登録して参加受付を始め、申し込み内容を確認・管理する手順です。</p>
+        <p><a href="manual_main.html">← 総合マニュアルへ戻る</a></p>
     </header>
 
     <section>
@@ -117,7 +134,7 @@
 
     <section>
         <h2>2. 新規リーグの登録</h2>
-        <p>「新規リーグ登録」セクションの各項目を入力します。</p>
+        <p>「新規大会（リーグ）登録」セクションを上から入力します。大会を作成すると、受付中の大会として公開されます。</p>
         
         <table>
             <thead>
@@ -140,8 +157,33 @@
                     <td><strong>開始日 / 終了日</strong></td>
                     <td>大会の開催期間を選択します。</td>
                 </tr>
+                <tr>
+                    <td><strong>試合レギュレーション</strong></td>
+                    <td>この大会で使用するルールを選択します。記録担当者が試合設定を行う際の確認にも使います。</td>
+                </tr>
+                <tr>
+                    <td><strong>本戦フォーマット・予選</strong></td>
+                    <td>大会形式を選びます。予選がある場合は「あり」を選び、表示された予選フォーマットも指定します。</td>
+                </tr>
+                <tr>
+                    <td><strong>チーム募集要項</strong></td>
+                    <td>公開区分、参加チーム数・登録人数の上限、エントリー内容の変更期日を設定します。</td>
+                </tr>
             </tbody>
         </table>
+
+        <div class="screen" role="img" aria-label="大会登録画面の簡易イメージ">
+            <div class="screen-bar">リーグ管理 / 新規大会登録</div>
+            <div class="screen-body">
+                <div class="mock-field">大会略称（ID用）　[ JUWA2026S ]</div>
+                <div class="mock-field">正式名称　[ 2026年度 春季リーグ ]</div>
+                <div class="mock-field">試合ルール　[ 日本ルール ▼ ]　大会形式　[ リーグ戦 ▼ ]</div>
+                <div class="mock-field">予選　[ なし ▼ ]　募集要項　[ エントリー制 / 上限設定 ]</div>
+                <div class="mock-field">開始日 [ YYYY/MM/DD ]　終了日 [ YYYY/MM/DD ]</div>
+                <span class="mock-button">大会を開設してエントリーを受付</span>
+            </div>
+        </div>
+        <p class="caption">画面イメージです。実際の画面では選択内容に応じて設定欄が切り替わります。</p>
 
         <div class="step">
             <div class="step-number">2</div>
@@ -171,16 +213,40 @@
         <div class="step">
             <div class="step-number">4</div>
             <div>
-                <strong>「このリーグの試合を記録する」</strong> ボタンをクリックすると、そのリーグに紐付いた試合記録画面へ移動します。
+                一覧の<strong>「大会運営・編集」</strong>を選ぶと、申し込み管理と大会情報の変更ができます。<strong>「このリーグの試合を記録する」</strong>は、試合記録画面を開くショートカットです。
             </div>
         </div>
+    </section>
+
+    <section>
+        <h2>4. 申し込みを確認して参加チームを決める</h2>
+        <div class="step">
+            <div class="step-number">5</div>
+            <div>運営する大会を選び、最初に表示される<strong>「申し込み管理」</strong>タブを開きます。参加確定数、申込総数、変更期日を確認します。</div>
+        </div>
+        <div class="step">
+            <div class="step-number">6</div>
+            <div>各チームの登録選手を確認します。「登録選手」からメンバー一覧を開き、申し込み内容を確認できます。</div>
+        </div>
+        <div class="step">
+            <div class="step-number">7</div>
+            <div>チームごとの状態を確認し、必要に応じて<strong>「参加」</strong>・<strong>「不参加」</strong>・<strong>「保留」</strong>にします。状態の更新後、一覧に反映されたことを確認します。</div>
+        </div>
+        <div class="callout"><strong>状態の意味:</strong>「参加」は参加確定、「不参加」は不参加、「受付中」は審査・確認中として扱います。参加チーム上限が設定されている大会では、確定数を確認しながら処理してください。</div>
+    </section>
+
+    <section>
+        <h2>5. 大会情報・募集要項を変更する</h2>
+        <p>「大会情報の変更」タブでは、正式名称、ステータス、試合ルール、フォーマット、予選、開催期間などを確認・更新できます。変更後は<strong>「大会情報を更新する」</strong>を押します。</p>
+        <p>公開区分や参加上限、登録人数上限、変更期日は「チーム募集要項」の<strong>「要項を変更」</strong>から設定し、モーダル内の<strong>「設定を反映して閉じる」</strong>を押してから大会情報を更新します。</p>
+        <div class="callout">大会略称（ID）は運営画面で変更できません。大会の受付・開催・終了のステータスは、エントリー可否にも影響します。変更前に大会関係者へ共有してください。</div>
     </section>
 
     <hr>
     
     <footer>
         <p style="text-align: center; color: #7f8c8d;">
-            &copy; 2026 Japan University Wiffleball Association
+            &copy; 2026 Japan University Wiffleball Association. <a href="manual_entry.html">大会エントリー手順</a>
         </p>
     </footer>
 </div>

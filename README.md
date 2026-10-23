@@ -63,9 +63,7 @@
     jsファイルを横断的に使用する関数等を定義しています。
 ### edit-games.js
 ### mypage.js
-### refer-performance.js
 ### team-create.js
 ### team-edit.js
 ### team-join.js
-### teams.js
 ### viewer.js

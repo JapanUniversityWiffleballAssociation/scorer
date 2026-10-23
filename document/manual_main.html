@@ -104,6 +104,49 @@
             font-size: 0.7rem;
             margin-left: 5px;
         }
+        .flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+            gap: 10px;
+            margin: 22px 0;
+        }
+        .flow-step {
+            position: relative;
+            padding: 16px;
+            border: 1px solid #dce5e8;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+        .flow-step strong { display: block; color: var(--secondary-color); }
+        .flow-step span { color: #667085; font-size: .88rem; }
+        .screen {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #1e2c39;
+            color: #f8fafc;
+            margin: 20px 0;
+            box-shadow: 0 5px 18px rgba(15, 23, 42, .12);
+        }
+        .screen-bar { padding: 10px 14px; background: #14212c; color: #b8c7d4; font-size: .85rem; }
+        .screen-content { padding: 16px; }
+        .mock-menu { display: grid; gap: 8px; }
+        .mock-menu div {
+            padding: 11px 14px;
+            border-radius: 7px;
+            background: #2c3e50;
+            border-left: 4px solid var(--primary-color);
+        }
+        .caption { color: #667085; font-size: .84rem; margin-top: -12px; }
+        .notice {
+            padding: 14px 18px;
+            border-left: 5px solid #3498db;
+            background: #eef7ff;
+            border-radius: 6px;
+        }
+        @media (max-width: 600px) {
+            .container { margin: 0; padding: 22px 16px; border-radius: 0; }
+        }
     </style>
 </head>
 <body>
@@ -111,53 +154,82 @@
 <div class="container">
     <header>
         <h1>🏆 JUWA 試合速報システム</h1>
-        <p>総合操作マニュアル</p>
+        <p>初めて使う方のための、準備から試合当日までの操作ガイド</p>
     </header>
 
     <section class="system-overview">
         <h2>システム概要</h2>
         <p>
-            本システムは、大学ウィッフルボール（JUWA）の試合経過をリアルタイムで記録・共有するためのプラットフォームです。
-            リーグの開設から、試合現場での直感的なスコア入力、そして全国のファンが閲覧できる速報ビューワー機能を備えています。
+            本システムでは、大会の受付・運営、チームと選手の登録、試合の記録、試合速報の共有を行えます。
+            まずメニューで行いたい作業を選び、画面の上から順番に操作してください。
         </p>
+    </section>
+
+    <section>
+        <h2>まずは全体の流れを確認</h2>
+        <div class="flow">
+            <div class="flow-step"><strong>1. チームを準備</strong><span>チームとメンバーを登録</span></div>
+            <div class="flow-step"><strong>2. 大会を準備</strong><span>大会を作成し、参加受付</span></div>
+            <div class="flow-step"><strong>3. 参加を申請</strong><span>大会と参加メンバーを選ぶ</span></div>
+            <div class="flow-step"><strong>4. 試合を記録</strong><span>試合を作成してプレーを記録</span></div>
+            <div class="flow-step"><strong>5. 速報を確認</strong><span>共有URLや一覧から観戦</span></div>
+        </div>
+        <p class="notice"><strong>大会運営者とチーム管理者は別の役割です。</strong>大会の作成・運営は大会を管理するユーザー、チームの作成・メンバー編集はチームの管理者が行います。ログインユーザーの権限によって一部のメニューが表示されない場合があります。</p>
+    </section>
+
+    <section>
+        <h2>メニュー画面のイメージ</h2>
+        <div class="screen" role="img" aria-label="メニュー画面の簡易イメージ">
+            <div class="screen-bar">JUWA 試合速報システム　/　メインメニュー</div>
+            <div class="screen-content mock-menu">
+                <div>🏆 大会管理　　› 大会を作成する / 大会を運営する</div>
+                <div>📝 試合記録　　› 大会にエントリーする / 記録をつける</div>
+                <div>📊 試合結果参照　› 速報を見る</div>
+                <div>👥 チーム・メンバー管理</div>
+            </div>
+        </div>
+        <p class="caption">画面イメージです。表示される項目はログインユーザーの権限や利用可能な機能によって異なります。</p>
     </section>
 
     <section>
         <h2 style="text-align: center; margin-bottom: 25px;">目次</h2>
         <div class="menu-grid">
+            <a href="manual_team.html" class="menu-item">
+                <span class="chapter-number">準備編</span>
+                <h2>チーム・メンバー管理</h2>
+                <p>チーム作成、選手登録、プレイヤーID発行、加入申請の承認・編集手順。</p>
+            </a>
             <a href="manual_league.html" class="menu-item">
                 <span class="chapter-number">第1章</span>
-                <h2>大会作成機能</h2>
-                <p>新規リーグの登録、開催期間の設定、大会IDの発行手順について解説します。</p>
+                <h2>大会を作成・運営する</h2>
+                <p>大会の登録、募集要項、参加受付の確認や大会情報の変更。</p>
             </a>
-
-            <a href="manual_edit.html" class="menu-item">
+            <a href="manual_entry.html" class="menu-item">
                 <span class="chapter-number">第2章</span>
-                <h2>試合記録機能</h2>
-                <p>カウント更新、進塁処理、スコア入力、リアルタイム同期の方法を解説します。</p>
+                <h2>大会にエントリーする</h2>
+                <p>大会・チーム・参加選手を選んでエントリー内容を提出。</p>
             </a>
-
-            <a href="manual_viewer.html" class="menu-item">
+            <a href="manual_edit.html" class="menu-item">
                 <span class="chapter-number">第3章</span>
-                <h2>試合閲覧機能</h2>
-                <p>速報画面の見方、ライブ状況の確認、自動更新の切り替えについて解説します。</p>
+                <h2>試合記録機能</h2>
+                <p>試合作成、メンバー設定、打席結果・アウト・進塁の入力、修正と終了。</p>
+            </a>
+            <a href="manual_viewer.html" class="menu-item">
+                <span class="chapter-number">第4章</span>
+                <h2>試合速報を見る</h2>
+                <p>試合一覧、スコア・カウント、手動更新と自動更新の使い方。</p>
             </a>
         </div>
     </section>
 
     <section class="admin-section">
-        <h2>🔧 システム外対応（管理者への作業依頼）</h2>
-        <p>以下の操作は現在、ユーザー画面からは行えません。必要な場合はシステム管理者まで直接ご連絡ください。</p>
+        <h2>操作前に知っておくこと</h2>
         <ul>
-            <li><strong>大会（リーグ）の削除・編集：</strong> 一度登録した大会名やIDの変更・削除。</li>
-            <li><strong>試合データの削除：</strong> 誤って作成した試合データの完全消去。</li>
-            <li><strong>試合データの訂正：</strong> 終了した試合のスコアや記録の修正。
-                <span class="badge-upcoming">今後実装予定</span>
-            </li>
+            <li>大会へのエントリーには、ログインと管理チームが必要です。</li>
+            <li>試合記録を始める前に、大会・先攻後攻チーム・出場メンバー・投手を確認してください。</li>
+            <li>試合記録画面の「1つ戻る（修正）」は、直前の操作を戻すための機能です。誤操作に気づいたら次の入力をする前に確認してください。</li>
+            <li>終了した試合は閲覧専用になります。終了前にスコアと記録内容をご確認ください。</li>
         </ul>
-        <p style="margin-top: 15px; font-size: 0.85rem; color: #718096;">
-            ※データの整合性を保つため、DB（Googleスプレッドシート）を直接操作して対応いたします。
-        </p>
     </section>
 
     <footer style="margin-top: 50px; text-align: center; color: #999; font-size: 0.8rem;">

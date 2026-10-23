@@ -68,7 +68,7 @@ async function updateProfile() {
     document.getElementById('profile-password-confirm').value = ""; // 確認用パスワード欄もクリア
   } catch (e) {
     await CustomDialog.init();
-    await CustomDialog.alert("更新に失敗しました: " + e.message, "エラー");
+    await CustomDialog.alert(e.message || "更新に失敗しました。", "エラー");
   } finally {
     document.getElementById('profile-update-btn').disabled = false;
     document.getElementById('profile-update-btn').textContent = "更新する";
@@ -88,7 +88,7 @@ async function toggleMail() {
     const result = await postToGAS(GAS_URL, payload);
     await CustomDialog.alert(result.message, "成功");
   } catch (e) {
-    await CustomDialog.alert("メール配信設定の切り替えに失敗しました: " + e.message, "エラー");
+    await CustomDialog.alert(e.message || "メール配信設定の切り替えに失敗しました。", "エラー");
   }
 }
 
@@ -127,7 +127,7 @@ async function loadJoinRequests() {
       listEl.innerHTML = "<p>現在、チームへの加入申請はありません。</p>";
     }
   } catch (e) {
-    await CustomDialog.alert("データの取得に失敗しました。", "エラー");
+    await CustomDialog.alert(e.message || "データの取得に失敗しました。", "エラー");
   }
 }
 
@@ -164,7 +164,7 @@ async function sendInquiry() {
       document.getElementById('inquiry-message').value = "";
     }
   } catch (e) {
-    await CustomDialog.alert("送信に失敗しました: " + e.message, "エラー");
+    await CustomDialog.alert(e.message || "送信に失敗しました。", "エラー");
   } finally {
     const btn = document.querySelector('button[onclick="sendInquiry()"]');
     btn.disabled = false;

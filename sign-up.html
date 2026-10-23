@@ -168,6 +168,12 @@
     </div>
 
     <div class="form-group">
+      <label for="playerId">プレイヤーID <span style="font-size: 0.8rem; color: #6c757d; font-weight: normal;">(任意 / 払い出し済みの選手のみ)</span></label>
+      <input type="text" id="playerId" placeholder="例: p_12345678" autocomplete="off">
+      <div style="font-size: 0.75rem; color: #6c757d; margin-top: 4px;">※チーム管理者等からIDを案内されている場合は入力してください。未入力の場合は自動発行されます。</div>
+    </div>
+
+    <div class="form-group">
       <label for="password">パスワード</label>
       <input type="password" id="password" placeholder="8文字以上の英数字">
     </div>
@@ -180,8 +186,8 @@
     <div class="checkbox-group">
       <input type="checkbox" id="agreeTerms">
       <label for="agreeTerms">
-        <a href="terms.html" target="_blank">利用規約</a> と 
-        <a href="privacy.html" target="_blank">プライバシーポリシー</a> に同意します
+        <a href="./document/term.html" target="_blank">利用規約</a> と 
+        <a href="./document/privacy.html" target="_blank">プライバシーポリシー</a> に同意します
       </label>
     </div>
 
@@ -196,9 +202,16 @@
 
   <script src="js/common.js"></script>
   <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (window.CustomDialog) {
+        await CustomDialog.init();
+      }
+    });
+
     document.getElementById('registerBtn').addEventListener('click', async () => {
       const email = document.getElementById('email').value.trim();
       const displayName = document.getElementById('displayName').value.trim();
+      const playerId = document.getElementById('playerId').value.trim();
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
       const agreeTerms = document.getElementById('agreeTerms').checked;
@@ -213,7 +226,7 @@
 
       // 2. 必須入力チェック
       if (!email || !displayName || !password || !confirmPassword) {
-        errorEl.textContent = 'すべての項目を入力してください。';
+        errorEl.textContent = 'すべての必須項目を入力してください。';
         errorEl.style.color = 'red';
         return;
       }
@@ -233,26 +246,32 @@
         return;
       }
 
-      //5. パスワードの長さ、文字種チェック
+      // 5. パスワードの長さ、文字種チェック
       const passwordHasBoth = (password) => /[a-zA-Z]/.test(password) && /\d/.test(password);
       if(!passwordHasBoth(password) && password.length < 8){
         errorEl.textContent = 'パスワードは数字とアルファベットの両方を含む8文字以上である必要があります。';
         errorEl.style.color = 'red';
         return;
       }
+      
       // 送信処理
       errorEl.textContent = '登録処理中...';
       errorEl.style.color = '#007bff';
 
-      const result = await AuthService.register(email, displayName, await AuthService.hashPassword(password));
-
-      if (result.success) {
-        alert('ユーザー登録が完了しました！チームに参加する場合はチーム管理メニューから操作してください。');
-        window.location.href = 'menu.html';
-      } else {
-        errorEl.textContent = result.message;
+      try {
+        const result = await AuthService.register(email, displayName, password, playerId);
+        if (!result || !result.success) {
+          errorEl.textContent = (result && result.message) || '登録に失敗しました。';
+          errorEl.style.color = 'red';
+          return;
+        }
+      } catch (error) {
+        errorEl.textContent = error.message || '登録に失敗しました。';
         errorEl.style.color = 'red';
+        return;
       }
+      await CustomDialog.alert('ユーザー登録が完了しました！チームに参加する場合はチーム管理メニューから操作してください。');
+      window.location.href = 'menu.html';
     });
   </script>
 </body>
