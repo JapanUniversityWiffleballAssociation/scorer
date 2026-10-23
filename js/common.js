@@ -1,7 +1,7 @@
 
 //共通変数・定数
 //GASAPIのURL
-const CONST_GAS_URL = "https://script.google.com/macros/s/AKfycbxrrOQLcilVPofC0Vbx9Cwz5G5no6GxpMDZwa4oySwvzHa5Bvrj5Gu_TNBWcEZ0eBA/exec";
+const CONST_GAS_URL = "https://script.google.com/macros/s/AKfycbx7guoxH2Vz_azvxAjcXfv7bnnez0he7UG2aBRED7AG7m4jcFyry5s-duh18kBcES5OuA/exec";
 const NO_HEADER = ["index.html","sign-up.html","forgot-password.html"]; // ヘッダーを表示しないページのリスト
 
 /**
