@@ -24,16 +24,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     teams.forEach(team => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="font-family: monospace; font-size: 0.85rem;">${team.teamId}</td>
-        <td>${team.teamName}</td>
-        <td><button type="button" class="btn btn-sm btn-primary select-team-btn" data-id="${team.teamId}" data-name="${team.teamName}">選択</button></td>
-      `;
+      const idCell = document.createElement('td');
+      idCell.style.cssText = 'font-family: monospace; font-size: 0.85rem;';
+      idCell.textContent = team.teamId;
+      const nameCell = document.createElement('td');
+      nameCell.textContent = team.teamName;
+      const actionCell = document.createElement('td');
+      const selectButton = document.createElement('button');
+      selectButton.type = 'button';
+      selectButton.className = 'btn btn-sm btn-primary select-team-btn';
+      selectButton.dataset.id = team.teamId;
+      selectButton.dataset.name = team.teamName;
+      selectButton.textContent = '選択';
+      actionCell.appendChild(selectButton);
+      tr.append(idCell, nameCell, actionCell);
       tbody.appendChild(tr);
     });
 
     // 「選択」ボタンのイベント
-    document.querySelectorAll('.select-team-btn').forEach(btn => {
+    tbody.querySelectorAll('.select-team-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         selectedTeamId = e.target.dataset.id;
         const tName = e.target.dataset.name;
