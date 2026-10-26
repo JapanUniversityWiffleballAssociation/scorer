@@ -49,7 +49,7 @@
         async function loadLogs() {
             try {
                 
-                const response = await fetch(`${GAS_URL}?mode=getGameLogs&gameId=${gameId}`);
+                const response = await fetch(`${GAS_URL}?mode=getGameLogs&gameId=${encodeURIComponent(gameId)}`);
                 const logs = await response.json();
                 if (!Array.isArray(logs)) {
                     throw new Error(logs.message || "ログを取得できませんでした。");
@@ -59,16 +59,23 @@
                 list.innerHTML = '';
 
                 logs.forEach(log => {
-                    const isBottom = log.inning.includes("裏");
+                    const inning = String(log.inning || '');
+                    const isBottom = inning.includes("裏");
                     const div = document.createElement('div');
                     div.className = `log-item ${isBottom ? 'bottom' : ''}`;
-                    div.innerHTML = `
-                        <div class="log-info">
-                            <div class="log-inning">${log.inning} | ${log.team}</div>
-                            <div class="log-action">${log.batter} | ${log.action} | 打点 ${log.rbi || 0}</div>
-                        </div>
-                        <div class="log-time">${log.time}</div>
-                    `;
+                    const info = document.createElement('div');
+                    info.className = 'log-info';
+                    const inningTeam = document.createElement('div');
+                    inningTeam.className = 'log-inning';
+                    inningTeam.textContent = `${inning} | ${log.team || ''}`;
+                    const action = document.createElement('div');
+                    action.className = 'log-action';
+                    action.textContent = `${log.batter || ''} | ${log.action || ''} | 打点 ${log.rbi || 0}`;
+                    info.append(inningTeam, action);
+                    const time = document.createElement('div');
+                    time.className = 'log-time';
+                    time.textContent = log.time || '';
+                    div.append(info, time);
                     list.appendChild(div);
                 });
             } catch (e) {

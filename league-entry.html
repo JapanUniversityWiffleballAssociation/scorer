@@ -126,12 +126,18 @@
         filtered.forEach(l => {
             const card = document.createElement('div');
             card.className = `league-card ${l.id === selectedLeagueId ? 'selected' : ''}`;
-            card.innerHTML = `
-                <div style="font-weight: bold; font-size: 1.1rem;">${l.name} <span class="badge">受付中</span></div>
-                <div style="font-size: 0.85rem; color: #bdc3c7; margin-top: 5px;">
-                    ID: ${l.id} | 期間: ${new Date(l.start).toLocaleDateString('ja-JP')} ～ ${new Date(l.end).toLocaleDateString('ja-JP')}
-                </div>
-            `;
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight: bold; font-size: 1.1rem;';
+            title.append(document.createTextNode(`${l.name} `));
+            const badge = document.createElement('span');
+            badge.className = 'badge';
+            badge.textContent = '受付中';
+            title.appendChild(badge);
+
+            const details = document.createElement('div');
+            details.style.cssText = 'font-size: 0.85rem; color: #bdc3c7; margin-top: 5px;';
+            details.textContent = `ID: ${l.id} | 期間: ${new Date(l.start).toLocaleDateString('ja-JP')} ～ ${new Date(l.end).toLocaleDateString('ja-JP')}`;
+            card.append(title, details);
             card.onclick = () => {
                 selectedLeagueId = l.id;
                 document.getElementById('selected-league-display').textContent = `選択中の大会: ${l.name} (${l.id})`;
@@ -205,7 +211,9 @@
                 if (isCurrentTeamAlreadyEntered) {
                     const status = json.existingEntry.status || "受付中";
                     noticeEl.style.display = 'block';
-                    noticeEl.innerHTML = `⚠️ このチームは既にエントリー済みです（状態: <strong>${status}</strong>）。<br>内容を変更して再送信すると、エントリー内容が上書き更新されます。`;
+                    noticeEl.replaceChildren(
+                        document.createTextNode(`⚠️ このチームは既にエントリー済みです（状態: ${status}）。内容を変更して再送信すると、エントリー内容が上書き更新されます。`)
+                    );
                     submitBtn.textContent = "この内容でエントリーを上書き更新する";
                     if (Array.isArray(json.existingEntry.entryMembers)) {
                         existingMemberNames = json.existingEntry.entryMembers.map(m => m.name);
@@ -222,16 +230,22 @@
                         ? existingMemberNames.includes(m.name)
                         : true;
 
-                    tr.innerHTML = `
-                        <td><input type="checkbox" class="member-checkbox" ${isChecked ? 'checked' : ''} data-index="${index}"></td>
-                        <td>${m.number || '-'}</td>
-                        <td>${m.name}</td>
-                    `;
+                    const checkboxCell = document.createElement('td');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'member-checkbox';
+                    checkbox.checked = isChecked;
+                    checkbox.dataset.index = String(index);
+                    checkboxCell.appendChild(checkbox);
+                    const numberCell = document.createElement('td');
+                    numberCell.textContent = m.number || '-';
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = m.name || '';
+                    tr.append(checkboxCell, numberCell, nameCell);
                     // 全メンバーデータを保持（あとで送信時に使うため）
                     tr.dataset.memberObj = JSON.stringify(m);
 
-                    const cb = tr.querySelector('.member-checkbox');
-                    cb.addEventListener('change', updateMemberCountDisplay);
+                    checkbox.addEventListener('change', updateMemberCountDisplay);
 
                     tbody.appendChild(tr);
                 });
