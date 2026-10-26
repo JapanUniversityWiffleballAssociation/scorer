@@ -47,7 +47,8 @@
       </div>
       <div class="input-group">
         <label>メールアドレス</label>
-        <input type="email" id="profile-email" placeholder="新しいメールアドレスを入力">
+        <input type="email" id="profile-email" placeholder="登録・変更する場合に入力">
+        <p style="font-size: 0.8rem; color: #bdc3c7;">メールアドレスを登録すると、ログインIDもそのアドレスに変更され、メール通知とメールでのパスワード再発行を利用できます。</p>
       </div>
       <div class="input-group">
         <label>パスワード変更</label>
@@ -63,7 +64,7 @@
     <!-- 2. メール配信の切り替え -->
     <div class="section-card">
       <h3>メール通知設定</h3>
-      <p style="font-size: 0.9rem; color: #bdc3c7;">チーム申請の結果などの通知メールを受け取るか設定します。</p>
+      <p style="font-size: 0.9rem; color: #bdc3c7;">チーム申請の結果などの通知メールを受け取るか設定します。メールアドレス未登録の場合は、先に上のユーザー情報から登録してください。</p>
       <button type="button" class="btn btn-toggle" id="btn-toggle-mail" onclick="toggleMail()">メール配信を切り替える</button>
     </div>
 
