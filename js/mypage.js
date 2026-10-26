@@ -106,23 +106,38 @@ async function loadJoinRequests() {
     const result = await postToGAS(GAS_URL, payload);
     
     if (result.requests && result.requests.length > 0) {
-      let html = '<table style="width: 100%; border-collapse: collapse; text-align: left;">';
-      html += '<tr style="border-bottom: 1px solid #444;"><th>チーム名</th><th>申請日</th><th>状態</th></tr>';
+      const table = document.createElement('table');
+      table.style.cssText = 'width: 100%; border-collapse: collapse; text-align: left;';
+      const header = document.createElement('tr');
+      header.style.borderBottom = '1px solid #444';
+      ['チーム名', '申請日', '状態'].forEach(label => {
+        const th = document.createElement('th');
+        th.textContent = label;
+        header.appendChild(th);
+      });
+      table.appendChild(header);
       
       result.requests.forEach(req => {
-        let badgeClass = 'status-pending';
-        let statusText = '承認待ち';
-        if (req.status === 'APPROVED') { badgeClass = 'status-approved'; statusText = '承認済'; }
-        if (req.status === 'REJECTED') { badgeClass = 'status-rejected'; statusText = '拒否'; }
-
-        html += `<tr style="border-bottom: 1px solid #444;">
-                  <td style="padding: 8px 0;">${req.teamName}</td>
-                  <td>${req.createdAt}</td>
-                  <td><span class="status-badge ${badgeClass}">${statusText}</span></td>
-                 </tr>`;
+        const status = {
+          APPROVED: { className: 'status-approved', label: '承認済' },
+          REJECTED: { className: 'status-rejected', label: '拒否' }
+        }[req.status] || { className: 'status-pending', label: '承認待ち' };
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #444';
+        const teamCell = document.createElement('td');
+        teamCell.style.padding = '8px 0';
+        teamCell.textContent = req.teamName;
+        const dateCell = document.createElement('td');
+        dateCell.textContent = req.createdAt;
+        const statusCell = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = `status-badge ${status.className}`;
+        badge.textContent = status.label;
+        statusCell.appendChild(badge);
+        row.append(teamCell, dateCell, statusCell);
+        table.appendChild(row);
       });
-      html += '</table>';
-      listEl.innerHTML = html;
+      listEl.replaceChildren(table);
     } else {
       listEl.innerHTML = "<p>現在、チームへの加入申請はありません。</p>";
     }

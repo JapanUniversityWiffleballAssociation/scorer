@@ -231,21 +231,29 @@ function renderRequests(requests) {
   // 行の生成
   requests.forEach(req => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${req.applicantName}</td>
-      <td>${req.requestedNumber || '-'}</td>
-      <td>${req.handedness || '-'}</td>
-      <td>${req.createdAt}</td>
-      <td class="action-cell">
-        <button class="btn btn-sm btn-approve" data-id="${req.requestId}">承認</button>
-        <button class="btn btn-sm btn-reject" data-id="${req.requestId}">拒否</button>
-      </td>
-    `;
+    [req.applicantName, req.requestedNumber || '-', req.handedness || '-', req.createdAt]
+      .forEach(value => {
+        const td = document.createElement('td');
+        td.textContent = value;
+        tr.appendChild(td);
+      });
+    const actionCell = document.createElement('td');
+    actionCell.className = 'action-cell';
+    const approveButton = document.createElement('button');
+    approveButton.className = 'btn btn-sm btn-approve';
+    approveButton.dataset.id = req.requestId;
+    approveButton.textContent = '承認';
+    const rejectButton = document.createElement('button');
+    rejectButton.className = 'btn btn-sm btn-reject';
+    rejectButton.dataset.id = req.requestId;
+    rejectButton.textContent = '拒否';
+    actionCell.append(approveButton, rejectButton);
+    tr.appendChild(actionCell);
     requestTableBody.appendChild(tr);
   });
 
   // 承認・拒否ボタンへのイベント割り当て
-  document.querySelectorAll('.btn-approve, .btn-reject').forEach(btn => {
+  requestTableBody.querySelectorAll('.btn-approve, .btn-reject').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const requestId = e.target.dataset.id;
       const isApprove = e.target.classList.contains('btn-approve');
@@ -300,49 +308,95 @@ function renderMembers(members) {
     tr.dataset.playerid = member.playerId || '';
     
     // 利き手の選択肢用ヘルパー関数
-    const getHandednessOptions = (selected) => {
+    const addOptions = (select, options, selected) => {
+      options.forEach(optionValue => {
+        const option = document.createElement('option');
+        option.value = optionValue;
+        option.textContent = optionValue;
+        option.selected = optionValue === selected;
+        select.appendChild(option);
+      });
+    };
+
+    const getHandednessOptions = () => {
       const options = ['未設定', '右投右打', '右投左打', '左投左打', '左投右打'];
-      return options.map(opt => `<option value="${opt}" ${opt === selected ? 'selected' : ''}>${opt}</option>`).join('');
+      const select = document.createElement('select');
+      select.className = 'form-control edit-handedness';
+      addOptions(select, options, member.handedness || '未設定');
+      return select;
     };
 
     // ポジションの選択肢用ヘルパー関数
-    const getPosOptions = (selected) => {
+    const getPosOptions = () => {
       const options = ['未設定', '投手', '内野手', '外野手', '指名打者'];
-      return options.map(opt => `<option value="${opt}" ${opt === selected ? 'selected' : ''}>${opt}</option>`).join('');
+      const select = document.createElement('select');
+      select.className = 'form-control edit-pos';
+      addOptions(select, options, member.pos || '未設定');
+      return select;
     };
 
-    const playerIdHtml = member.playerId 
-      ? `<span class="player-id-badge" title="クリックしてコピー" onclick="copyPlayerId('${member.playerId}')">${member.playerId} <span style="font-size:0.75rem;">📋</span></span>`
-      : `<span style="color:#7f8c8d; font-size:0.85rem;">未発行</span>`;
+    const nameCell = document.createElement('td');
+    nameCell.textContent = member.name || '';
+    const playerIdCell = document.createElement('td');
+    playerIdCell.style.textAlign = 'center';
+    const playerIdText = document.createElement('span');
+    if (member.playerId) {
+      playerIdText.className = 'player-id-badge';
+      playerIdText.title = 'クリックしてコピー';
+      playerIdText.textContent = member.playerId;
+      playerIdText.addEventListener('click', () => copyPlayerId(member.playerId));
+      const copyIcon = document.createElement('span');
+      copyIcon.style.fontSize = '0.75rem';
+      copyIcon.textContent = ' 📋';
+      playerIdText.appendChild(copyIcon);
+    } else {
+      playerIdText.style.cssText = 'color:#7f8c8d; font-size:0.85rem;';
+      playerIdText.textContent = '未発行';
+    }
+    playerIdCell.appendChild(playerIdText);
 
-    // 権限バッジ
+    const numberCell = document.createElement('td');
+    const numberInput = document.createElement('input');
+    numberInput.type = 'number';
+    numberInput.className = 'form-control number-input edit-number';
+    numberInput.value = member.number || '';
+    numberInput.min = '0';
+    numberInput.max = '999';
+    numberCell.appendChild(numberInput);
+
+    const handednessCell = document.createElement('td');
+    handednessCell.appendChild(getHandednessOptions());
+    const positionCell = document.createElement('td');
+    positionCell.appendChild(getPosOptions());
+
     const role = member.role || 'MEMBER';
     const isAdmin = role === 'ADMIN';
     const roleLabel = isAdmin ? '👑 管理者' : '👤 メンバー';
     const roleClass = isAdmin ? 'role-admin' : 'role-member';
-    const roleBadgeHtml = member.playerId
-      ? `<button class="role-badge ${roleClass} toggle-role-btn" data-playerid="${member.playerId}" title="クリックして権限を切り替え">${roleLabel}</button>`
-      : `<span style="color:#7f8c8d; font-size:0.8rem;">-</span>`;
+    const roleCell = document.createElement('td');
+    roleCell.style.textAlign = 'center';
+    if (member.playerId) {
+      const roleButton = document.createElement('button');
+      roleButton.className = `role-badge ${roleClass} toggle-role-btn`;
+      roleButton.dataset.playerid = member.playerId;
+      roleButton.title = 'クリックして権限を切り替え';
+      roleButton.textContent = roleLabel;
+      roleCell.appendChild(roleButton);
+    } else {
+      const roleText = document.createElement('span');
+      roleText.style.cssText = 'color:#7f8c8d; font-size:0.8rem;';
+      roleText.textContent = '-';
+      roleCell.appendChild(roleText);
+    }
 
-    tr.innerHTML = `
-      <td>${escapeHtml(member.name)}</td>
-      <td style="text-align: center;">${playerIdHtml}</td>
-      <td><input type="number" class="form-control number-input edit-number" value="${member.number || ''}" min="0" max="999"></td>
-      <td>
-        <select class="form-control edit-handedness">
-          ${getHandednessOptions(member.handedness || '未設定')}
-        </select>
-      </td>
-      <td>
-        <select class="form-control edit-pos">
-          ${getPosOptions(member.pos || '未設定')}
-        </select>
-      </td>
-      <td style="text-align: center;">${roleBadgeHtml}</td>
-      <td>
-        <button class="btn btn-sm btn-reject remove-member-btn" data-playerid="${member.playerId || ''}">削除</button>
-      </td>
-    `;
+    const actionsCell = document.createElement('td');
+    const removeButton = document.createElement('button');
+    removeButton.className = 'btn btn-sm btn-reject remove-member-btn';
+    removeButton.dataset.playerid = member.playerId || '';
+    removeButton.textContent = '削除';
+    actionsCell.appendChild(removeButton);
+
+    tr.append(nameCell, playerIdCell, numberCell, handednessCell, positionCell, roleCell, actionsCell);
     memberTableBody.appendChild(tr);
   });
 
@@ -351,7 +405,7 @@ function renderMembers(members) {
   // ----------------------------------------
   const markAsChanged = () => { hasUnsavedChanges = true; };
   
-  document.querySelectorAll('.edit-number, .edit-handedness, .edit-pos').forEach(el => {
+  memberTableBody.querySelectorAll('.edit-number, .edit-handedness, .edit-pos').forEach(el => {
     el.addEventListener('change', markAsChanged);
     if (el.tagName === 'INPUT') {
       el.addEventListener('input', markAsChanged); // キーボード入力も検知
@@ -361,7 +415,7 @@ function renderMembers(members) {
   // ----------------------------------------
   // 権限切り替えボタンのイベントリスナー
   // ----------------------------------------
-  document.querySelectorAll('.toggle-role-btn').forEach(btn => {
+  memberTableBody.querySelectorAll('.toggle-role-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const targetPlayerId = e.target.dataset.playerid;
       const currentRole = e.target.classList.contains('role-admin') ? '管理者' : 'メンバー';
@@ -397,7 +451,7 @@ function renderMembers(members) {
   // ----------------------------------------
   // メンバー削除ボタンのイベントリスナー
   // ----------------------------------------
-  document.querySelectorAll('.remove-member-btn').forEach(btn => {
+  memberTableBody.querySelectorAll('.remove-member-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const targetPlayerId = e.target.dataset.playerid;
       
@@ -444,14 +498,4 @@ function copyPlayerId(id) {
   } else {
     prompt("プレイヤーIDをコピーしてください:", id);
   }
-}
-
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, character => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  })[character]);
 }
