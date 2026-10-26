@@ -39,6 +39,37 @@
       margin-bottom: 30px;
     }
 
+    .account-type-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .account-type-button {
+      min-height: 44px;
+      padding: 10px 8px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background: #f8f9fa;
+      color: #495057;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .account-type-button[aria-pressed="true"] {
+      border-color: #007bff;
+      background: #eaf3ff;
+      color: #0056b3;
+    }
+
+    .field-help {
+      margin-top: 6px;
+      color: #6c757d;
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
     /* 入力グループ */
     .form-group {
       margin-bottom: 22px;
@@ -149,6 +180,18 @@
       text-decoration: none;
       font-weight: 600;
     }
+
+    @media (max-width: 480px) {
+      #signup-container {
+        margin: 16px auto;
+        padding: 24px 18px;
+        width: calc(100% - 24px);
+      }
+
+      #signup-container h2 {
+        font-size: 1.35rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -157,9 +200,21 @@
     <h2>JUWA Scorer アカウント作成</h2>
     <div class="subtitle">連盟・チーム管理を行うためのユーザー登録を行います</div>
 
-    <div class="form-group">
-      <label for="email">メールアドレス (ユーザーID)</label>
-      <input type="text" id="email" placeholder="example@juwa.com" autocomplete="email">
+    <div class="account-type-switch" role="group" aria-label="登録するログインIDの種類">
+      <button type="button" id="email-mode-button" class="account-type-button" aria-pressed="true">メールアドレス</button>
+      <button type="button" id="login-id-mode-button" class="account-type-button" aria-pressed="false">任意のログインID</button>
+    </div>
+
+    <div class="form-group" id="email-field">
+      <label for="email">メールアドレス (ログインID)</label>
+      <input type="email" id="email" placeholder="example@juwa.com" autocomplete="email" maxlength="254" required>
+      <div class="field-help">パスワード再発行やメール通知に使用します。</div>
+    </div>
+
+    <div class="form-group" id="login-id-field" hidden>
+      <label for="loginId">任意のログインID</label>
+      <input type="text" id="loginId" placeholder="例: juwa-player01" autocomplete="username" maxlength="32" autocapitalize="none" spellcheck="false" required>
+      <div class="field-help">3～32文字の半角英数字と . _ - が使用できます。メールアドレスは登録されず、メール通知・メールでのパスワード再発行は利用できません。</div>
     </div>
 
     <div class="form-group">
@@ -208,8 +263,30 @@
       }
     });
 
+    let useEmailAsLoginId = true;
+    const emailModeButton = document.getElementById('email-mode-button');
+    const loginIdModeButton = document.getElementById('login-id-mode-button');
+    const emailField = document.getElementById('email-field');
+    const loginIdField = document.getElementById('login-id-field');
+    const emailInput = document.getElementById('email');
+    const loginIdInput = document.getElementById('loginId');
+
+    function setLoginIdMode(useEmail) {
+      useEmailAsLoginId = useEmail;
+      emailField.hidden = !useEmail;
+      loginIdField.hidden = useEmail;
+      emailInput.required = useEmail;
+      loginIdInput.required = !useEmail;
+      emailModeButton.setAttribute('aria-pressed', String(useEmail));
+      loginIdModeButton.setAttribute('aria-pressed', String(!useEmail));
+      (useEmail ? emailInput : loginIdInput).focus();
+    }
+
+    emailModeButton.addEventListener('click', () => setLoginIdMode(true));
+    loginIdModeButton.addEventListener('click', () => setLoginIdMode(false));
+
     document.getElementById('registerBtn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value.trim();
+      const userId = (useEmailAsLoginId ? emailInput.value : loginIdInput.value).trim();
       const displayName = document.getElementById('displayName').value.trim();
       const playerId = document.getElementById('playerId').value.trim();
       const password = document.getElementById('password').value;
@@ -225,16 +302,22 @@
       }
 
       // 2. 必須入力チェック
-      if (!email || !displayName || !password || !confirmPassword) {
+      if (!userId || !displayName || !password || !confirmPassword) {
         errorEl.textContent = 'すべての必須項目を入力してください。';
         errorEl.style.color = 'red';
         return;
       }
 
       // 3. メールアドレス形式チェック
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        errorEl.textContent = '正しいメールアドレスの形式で入力してください。';
+      if (useEmailAsLoginId) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userId) || userId.length > 254) {
+          errorEl.textContent = '正しいメールアドレスの形式で入力してください。';
+          errorEl.style.color = 'red';
+          return;
+        }
+      } else if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{2,31}$/.test(userId)) {
+        errorEl.textContent = 'ログインIDは3～32文字の半角英数字と . _ - で入力してください。';
         errorEl.style.color = 'red';
         return;
       }
@@ -248,7 +331,7 @@
 
       // 5. パスワードの長さ、文字種チェック
       const passwordHasBoth = (password) => /[a-zA-Z]/.test(password) && /\d/.test(password);
-      if(!passwordHasBoth(password) && password.length < 8){
+      if (!passwordHasBoth(password) && password.length < 8) {
         errorEl.textContent = 'パスワードは数字とアルファベットの両方を含む8文字以上である必要があります。';
         errorEl.style.color = 'red';
         return;
@@ -259,7 +342,7 @@
       errorEl.style.color = '#007bff';
 
       try {
-        const result = await AuthService.register(email, displayName, password, playerId);
+        const result = await AuthService.register(userId, displayName, password, playerId, useEmailAsLoginId);
         if (!result || !result.success) {
           errorEl.textContent = (result && result.message) || '登録に失敗しました。';
           errorEl.style.color = 'red';

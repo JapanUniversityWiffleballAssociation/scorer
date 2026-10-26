@@ -1,5 +1,7 @@
 @charset "UTF-8";
 
+*, *::before, *::after { box-sizing: border-box; }
+
 /* =========================================
    1. 変数定義 (CSS Variables)
 ========================================= */
@@ -51,12 +53,17 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
   background-color: #343a40;
   color: var(--text-main);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   padding: 6px 24px;
   font-size: 12px;
   text-align: center;
@@ -67,6 +74,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   padding: 12px 24px;
   border-bottom: 1px solid #495057;
 }
@@ -74,6 +82,7 @@ body {
 .header-left {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 20px;
 }
 
@@ -82,6 +91,15 @@ body {
   font-weight: bold;
   cursor: pointer;
   margin: 0;
+  line-height: 1.25;
+}
+
+.header-right {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }
 
 .header-bottom-row {
@@ -349,4 +367,161 @@ th, td { border: 1px solid var(--border-color); padding: 10px 2px; }
 @media (max-width: 480px) {
   .status-container { flex-direction: row; flex-wrap: wrap; }
   .pitch-counter-box { margin-right: 0; padding: 5px; }
+}
+
+@media (max-width: 600px) {
+  body {
+    min-width: 320px;
+    padding:
+      max(8px, env(safe-area-inset-top, 0px))
+      max(8px, env(safe-area-inset-right, 0px))
+      max(8px, env(safe-area-inset-bottom, 0px))
+      max(8px, env(safe-area-inset-left, 0px)) !important;
+  }
+
+  .container {
+    min-width: 0;
+    padding: 14px;
+    border-radius: 8px;
+  }
+
+  .main-header {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .header-top-row {
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  .logo {
+    font-size: clamp(1rem, 4.5vw, 1.2rem);
+  }
+
+  .version-tag {
+    flex: 0 0 auto;
+    font-size: 0.75rem;
+  }
+
+  .header-middle-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .header-left {
+    justify-content: center;
+  }
+
+  .user-name {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+
+  .header-right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .header-right button {
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 6px;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    white-space: normal;
+  }
+
+  .header-right .logout-button {
+    grid-column: 1 / -1;
+  }
+
+  .header-bottom-row {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  button, .btn {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .btn-sm {
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+
+  .form-group input, .input-group input, select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  #login-container {
+    width: 100%;
+    margin: 24px auto;
+    padding: 24px 18px;
+  }
+
+  .modal-overlay, .overlay {
+    align-items: flex-start;
+    padding: 12px 8px;
+  }
+
+  .modal-content, .setup-box {
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-btn-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-action-btn {
+    min-height: 64px;
+    flex-direction: row;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .modal-action-btn .icon {
+    margin: 0;
+  }
+
+  .status-container {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .match-status-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px 6px;
+  }
+
+  .status-item {
+    min-width: 0;
+  }
+
+  .status-item .value {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .pitch-count .value {
+    font-size: 1rem;
+  }
 }

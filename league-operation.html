@@ -453,28 +453,49 @@
         entries.forEach(entry => {
             const tr = document.createElement('tr');
 
-            // 状態バッジ
-            let statusBadgeClass = 'badge-pending';
-            if (entry.status === '参加') statusBadgeClass = 'badge-approved';
-            if (entry.status === '不参加') statusBadgeClass = 'badge-rejected';
+            const teamCell = document.createElement('td');
+            const teamName = document.createElement('strong');
+            teamName.textContent = entry.teamName || '';
+            teamCell.appendChild(teamName);
 
-            tr.innerHTML = `
-                <td><strong>${escapeHtml(entry.teamName)}</strong></td>
-                <td>
-                    <button type="button" class="btn-sm btn-reset" onclick='showMembersModal(${JSON.stringify(entry.teamName)}, ${JSON.stringify(entry.members)})'>
-                        👤 ${entry.memberCount}名
-                    </button>
-                </td>
-                <td style="font-size: 0.8rem; color: #bdc3c7;">${entry.createdAt || '-'}</td>
-                <td><span class="badge-status ${statusBadgeClass}">${escapeHtml(entry.status)}</span></td>
-                <td>
-                    <div class="entry-action-btns">
-                        ${entry.status !== '参加' ? `<button type="button" class="btn-sm btn-approve" onclick="updateStatus('${entry.entryId}', '参加')">参加</button>` : ''}
-                        ${entry.status !== '不参加' ? `<button type="button" class="btn-sm btn-reject" onclick="updateStatus('${entry.entryId}', '不参加')">不参加</button>` : ''}
-                        ${entry.status !== '受付中' ? `<button type="button" class="btn-sm btn-reset" onclick="updateStatus('${entry.entryId}', '受付中')">保留</button>` : ''}
-                    </div>
-                </td>
-            `;
+            const membersCell = document.createElement('td');
+            const membersButton = document.createElement('button');
+            membersButton.type = 'button';
+            membersButton.className = 'btn-sm btn-reset';
+            membersButton.textContent = `👤 ${entry.memberCount}名`;
+            membersButton.addEventListener('click', () => showMembersModal(entry.teamName, entry.members));
+            membersCell.appendChild(membersButton);
+
+            const dateCell = document.createElement('td');
+            dateCell.style.cssText = 'font-size: 0.8rem; color: #bdc3c7;';
+            dateCell.textContent = entry.createdAt || '-';
+
+            const statusCell = document.createElement('td');
+            const statusBadge = document.createElement('span');
+            statusBadge.className = 'badge-status ' + (
+                entry.status === '参加' ? 'badge-approved' :
+                entry.status === '不参加' ? 'badge-rejected' : 'badge-pending'
+            );
+            statusBadge.textContent = entry.status || '';
+            statusCell.appendChild(statusBadge);
+
+            const actionsCell = document.createElement('td');
+            const actions = document.createElement('div');
+            actions.className = 'entry-action-btns';
+            const addStatusButton = (label, nextStatus, className) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `btn-sm ${className}`;
+                button.textContent = label;
+                button.addEventListener('click', () => updateStatus(entry.entryId, nextStatus));
+                actions.appendChild(button);
+            };
+            if (entry.status !== '参加') addStatusButton('参加', '参加', 'btn-approve');
+            if (entry.status !== '不参加') addStatusButton('不参加', '不参加', 'btn-reject');
+            if (entry.status !== '受付中') addStatusButton('保留', '受付中', 'btn-reset');
+            actionsCell.appendChild(actions);
+
+            tr.append(teamCell, membersCell, dateCell, statusCell, actionsCell);
             tbody.appendChild(tr);
         });
     }
@@ -490,10 +511,13 @@
             members.forEach((m, idx) => {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #444';
-                tr.innerHTML = `
-                    <td style="padding: 6px;">#${m.number || (idx + 1)}</td>
-                    <td style="padding: 6px;">${escapeHtml(m.name || '名前なし')}</td>
-                `;
+                const numberCell = document.createElement('td');
+                numberCell.style.padding = '6px';
+                numberCell.textContent = `#${m.number || (idx + 1)}`;
+                const nameCell = document.createElement('td');
+                nameCell.style.padding = '6px';
+                nameCell.textContent = m.name || '名前なし';
+                tr.append(numberCell, nameCell);
                 list.appendChild(tr);
             });
         } else {

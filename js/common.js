@@ -166,11 +166,12 @@ const AuthService = {
     return userJson ? JSON.parse(userJson) : null;
   },
   
-  async register(email, displayName, password, playerId = "") {
+  async register(userId, displayName, password, playerId = "", isEmail = true) {
     const payload = {
       mode: 'registerUser',
       authKey: this.getApiKey(), // 既存の 'JUWA-Auth-Key' 
-      userId: email,          // ユーザーIDとしてメールアドレスを送信
+      userId: userId,
+      isEmail: isEmail,
       displayName: displayName,
       playerId: playerId,     // 払い出し済みのプレイヤーID（任意）
       password: await this.hashPassword(password)// パスワードをSHA-256でハッシュ化して送信
