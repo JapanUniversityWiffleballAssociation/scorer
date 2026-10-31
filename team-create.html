@@ -92,6 +92,30 @@
       margin-bottom: 15px;
     }
 
+    .member-table-scroll {
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .member-table-scroll .member-table {
+      min-width: 700px;
+    }
+
+    .member-table-scroll-hint {
+      display: none;
+      margin: 0 0 8px;
+      color: #495057;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 720px) {
+      .member-table-scroll-hint {
+        display: block;
+      }
+    }
+
     .member-table th, .member-table td {
       padding: 10px 8px;
       border-bottom: 1px solid #dee2e6;
@@ -182,21 +206,23 @@
           <span>初期メンバー登録</span>
           <button type="button" id="addRowBtn" class="btn-secondary">+ 選手を追加</button>
         </div>
-        
-        <table class="member-table" id="memberTable">
-          <thead>
-            <tr>
-              <th style="width: 18%;">背番号</th>
-              <th style="width: 25%;">選手名 <span style="color:red;">*</span></th>
-              <th style="width: 17%;">投打の利き手</th>
-              <th style="width: 20%;">プレイヤーID</th>
-              <th style="width: 14%; text-align: center;">管理者</th>
-              <th style="width: 8%; text-align: center;">削除</th>
-            </tr>
-          </thead>
-          <tbody id="memberTableBody">
-            </tbody>
-        </table>
+        <p class="member-table-scroll-hint">表は左右にスクロールできます。</p>
+        <div class="member-table-scroll" role="region" aria-label="初期メンバー登録表。左右にスクロールできます" tabindex="0">
+          <table class="member-table" id="memberTable">
+            <thead>
+              <tr>
+                <th style="width: 18%;">背番号</th>
+                <th style="width: 25%;">選手名 <span style="color:red;">*</span></th>
+                <th style="width: 17%;">投打の利き手</th>
+                <th style="width: 20%;">プレイヤーID</th>
+                <th style="width: 14%; text-align: center;">管理者</th>
+                <th style="width: 8%; text-align: center;">削除</th>
+              </tr>
+            </thead>
+            <tbody id="memberTableBody">
+              </tbody>
+          </table>
+        </div>
       </div>
 
       <button id="createTeamBtn" class="btn-submit">この内容でチームを作成</button>
