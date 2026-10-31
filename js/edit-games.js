@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameId = getQueryParam('gameId');
     if(gameId) {
         resumeGame(gameId);
-        startAutoSync();
+        startAutoPull();
     }
 });
 
@@ -323,7 +323,7 @@ async function syncPull() {
             // 実際には updatedAt を比較するロジックが望ましい
             applyState(state);
             showStatus("同期済み");
-            startAutoSync();
+            startAutoPull();
         }
     } catch (e) {
         console.error("Pull Error:", e);
