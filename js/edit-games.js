@@ -641,8 +641,8 @@ async function recordSelectedOuts(operations, actionName) {
         updateScoreboardUI();
         updateShareLinkDisplay();
 
-        const isSacrificeHit = getElementById('sacrifice-hit').checked;
-        const isSacrificeFly = getElementById('sacrifice-fly').checked;
+        const isSacrificeHit = document.getElementById('sacrifice-hit').checked;
+        const isSacrificeFly = document.getElementById('sacrifice-fly').checked;
         if (isSacrificeHit) actionName = '犠打';
         if (isSacrificeFly) actionName = '犠飛';
         await syncPush(actionName, logSnapshot);
